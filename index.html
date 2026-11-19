@@ -64,6 +64,7 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
 .note{font-size:.85rem;color:var(--muted);margin:0}
 .coop{background:var(--slate);border:1px solid var(--lantern-dim);border-radius:10px;padding:14px 16px;margin-bottom:22px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between}
 .coop h3{font-size:1.3rem;color:var(--lantern)}
+.jobpick{display:flex;flex-direction:column;gap:8px;margin:12px 0;max-height:52vh;overflow:auto}.jobpick .btn{text-align:left;display:flex;flex-direction:column;gap:2px;width:100%}
 .coop .tog{display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer}
 .coop .tog input{width:18px;height:18px;accent-color:var(--lantern)}
 .joinrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -151,9 +152,9 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
       <div><b>Payday</b>When every lock is open, anyone can carry out the strongbox.</div>
     </div>
     <section class="coop" id="coop" hidden>
-      <div><h3>Play together</h3><p class="note">Live co-op for up to three, no accounts. Host a job, send friends this page and the room code.</p></div>
+      <div><h3>Play together</h3><p class="note">Live co-op for up to three, no accounts. Open the back room, then send friends this page and the room code.</p></div>
       <div class="joinrow"><label for="nick" class="note">Your name</label><input id="nick" maxlength="16" placeholder="Name" autocomplete="off" style="text-transform:none;letter-spacing:0;width:9em"></div>
-      <label class="tog"><input type="checkbox" id="hostToggle"> Host the next job I start as live co-op</label>
+      <button class="btn primary" id="tavernBtn">Open the back room</button>
       <div class="joinrow"><input id="joinCode" maxlength="4" placeholder="CODE" autocomplete="off" aria-label="Room code"><button class="btn" id="joinBtn">Join a friend</button><span class="note" id="joinMsg"></span></div>
     </section>
     <p class="note" id="coopOff" hidden>Live co-op could not load its networking library. Check your connection and reload.</p>
@@ -486,6 +487,7 @@ const KIT={
     lines:['<b>Fireburst</b> <kbd>1</kbd> or right click: bursts where it lands, 24 damage to every guard nearby. Captains shrug off most of it.','<b>Invisibility</b> <kbd>2</kbd>: unseen for 8 seconds. Striking or casting ends it.','<b>Divine</b> <kbd>3</kbd>: see guards and traps through walls for 8 seconds.','<b>Dispel</b> <kbd>E</kbd>: unravel wards and the vault rune seal.','<b>Scry</b> <kbd>E</kbd> at the pool: maps the job for everyone after you.']},
 };
 let G=null;const R3={ok:undefined};
+const RACK=11,STREET=12,PROP=13;
 /* ---------- live co-op over the claude.ai room channel ---------- */
 const NET={lobby:null,user:null,room:null,code:null,remote:new Map(),actSeq:0,acts:[],hitSeq:0,hitsOut:[],lastHit:0,logSeq:0,logsOut:[],lastLog:0,sendT:0,names:{},hostPeer:null,end:null,lastEnd:0};
 /* PeerJS adapter with the same shape as the room API this game uses: join(name) -> {presence, peers, onPeers, leave}.
@@ -529,11 +531,11 @@ function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ';let s='';for(let i=0;i<4;i+
 async function joinRoom(code,host){const r=await NET.lobby.join(code.toLowerCase(),{host:!!host});NET.room=r;NET.code=code;NET.remote=new Map();NET.hostPeer=null;NET.end=null;NET.lastHit=0;NET.lastLog=0;NET.acts=[];NET.hitsOut=[];NET.logsOut=[];
   r.onPeers(ch=>{for(const p of ch.left){const rr=NET.remote.get(p.peer);if(rr&&rr.mesh&&R3.scene)R3.scene.remove(rr.mesh);NET.remote.delete(p.peer);if(G&&G.mode==='client'&&p.peer===NET.hostPeer&&!G.over)hostGone();else if(G&&rr)log(`${peerName(rr)} left the job.`);}
     for(const p of ch.peers){if(p.sameTab)continue;let rr=NET.remote.get(p.peer);if(!rr){rr={peer:p.peer,by:p.by,acts:{},stepT:.5,lastSw:0};NET.remote.set(p.peer,rr);nameFor(p.by).then(n=>{rr.name=n;G&&(G.sideDirty=true);});}
-      rr.pres=p.presence;rr.p=p.presence.p||null;if(p.presence.h)NET.hostPeer=p.peer;}
+      rr.pres=p.presence;rr.p=p.presence.p||null;if(p.presence.h||p.presence.th)NET.hostPeer=p.peer;}
     if(G)G.sideDirty=true;onRemote();});
   return r;}
 function leaveRoom(){if(NET.room){try{NET.room.leave();}catch(e){}}NET.room=null;NET.code=null;for(const rr of NET.remote.values())if(rr.mesh&&R3.scene)R3.scene.remove(rr.mesh);NET.remote=new Map();NET.hostPeer=null;}
-function sendAct(a){a.n=++NET.actSeq;NET.acts.push(a);if(NET.acts.length>12)NET.acts.shift();pushPresence(true);}
+function sendAct(a){if(G&&G.tavern)return;a.n=++NET.actSeq;NET.acts.push(a);if(NET.acts.length>12)NET.acts.shift();pushPresence(true);}
 function netLog(text,cls){NET.logsOut.push([++NET.logSeq,text,cls||'']);if(NET.logsOut.length>6)NET.logsOut.shift();}
 function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.yaw.toFixed(2),c:G.cls,hp:Math.max(0,Math.round(P.hp)),mx:P.max,cr:P.crouch?1:0,mv:P.moving?1:0,sp:P.sprint?1:0,iv:P.invis>0?1:0,vs:+G.vis.toFixed(2),sw:G.swingN||0,dn:G.down>0?1:0,lt:G.looted?1:0,nm:myNick()};}
 const SCODE={patrol:0,idle:1,sentry:2,suspicious:3,search:4,return:5,alert:6};const SNAME=Object.keys(SCODE);
@@ -551,12 +553,14 @@ function applyWorld(W){const w=G.w;if(!W||!W.g)return;
   if(Object.values(w.locks).every(Boolean)&&w.t[w.door[1]][w.door[0]]===DOOR){w.t[w.door[1]][w.door[0]]=OPEN;walls=true;}
   G.featDirty=true;G.lightT=0;if(walls&&R3.ok)rebuildWalls();G.sideDirty=true;}
 function pushPresence(force){if(!NET.room||!G)return;const o={p:packMe(),a:NET.acts};
-  if(G.mode==='host'){o.h=1;o.m={id:G.m.id,seed:G.m.seed,biome:G.m.biome,roles:G.m.roles,cx:G.m.cx,title:G.m.title,payout:G.m.payout};o.w=NET.end?null:packWorld();o.hits=NET.hitsOut;o.lg=NET.logsOut;o.end=NET.end;}
+  if(G.tavern){o.a=null;o.tv=1;if(G.mode==='host'){o.th=1;o.job=jobSummary(G.job);Object.assign(o,{h:null,m:null,w:null,hits:null,lg:null,end:null,lid:null});}
+    NET.room.presence(o).catch(()=>{});return;}
+  o.tv=null;if(G.mode==='host'){o.th=null;o.job=null;o.lid=NET.lid||null;o.h=1;o.m={id:G.m.id,seed:G.m.seed,biome:G.m.biome,roles:G.m.roles,cx:G.m.cx,title:G.m.title,payout:G.m.payout};o.w=NET.end?null:packWorld();o.hits=NET.hitsOut;o.lg=NET.logsOut;o.end=NET.end;}
   NET.room.presence(o).catch(err=>{if(o.end&&o.end.s){NET.end=Object.assign({},NET.end,{s:null});}});}
 function players(){const out=[];if(G.down<=0)out.push({key:'me',x:G.P.x,y:G.P.y,cls:G.cls,crouch:G.P.crouch,moving:G.P.moving,sprint:G.P.sprint,invis:G.P.invis>0,vis:G.vis});
   for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.dn||p.x==null)continue;out.push({key:rr.peer,x:p.x,y:p.y,cls:p.c,crouch:!!p.cr,moving:!!p.mv,sprint:!!p.sp,invis:!!p.iv,vis:p.vs||0,rr});}return out;}
 function onRemote(){
-  if(!G)return;
+  if(!G)return;if(G.tavern){tavernRemote();return;}
   if(G.mode==='client'){const host=NET.remote.get(NET.hostPeer);if(!host||!host.pres)return;const hp=host.pres;
     if(hp.w)applyWorld(hp.w);
     for(const h of hp.hits||[]){if(h.n>NET.lastHit&&h.to===NET.myPeer){NET.lastHit=h.n;if(G.down<=0)hurt(h.d,`${h.m} hits you.`);}}
@@ -576,12 +580,12 @@ function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peer
 }
 function hostGone(){if(!G||G.over)return;G.over=true;if(document.pointerLockElement)document.exitPointerLock();leaveRoom();
   showModal('The host left',`<p>The host closed the job, so the run is over. Their board keeps whatever the crew got done up to their last save.</p>`);}
-function hostEnded(end){G.over=true;if(document.pointerLockElement)document.exitPointerLock();
+function hostEnded(end){G.over=true;{const h=NET.remote.get(NET.hostPeer);NET.doneLid=h&&h.pres?h.pres.lid:null;}if(document.pointerLockElement)document.exitPointerLock();
   const can=!!end.s;
   showModal(end.lt?'Payday':'Job reposted',`<p>${end.lt?`The host walked out with the strongbox. The crew splits <b class="mono">${(end.pay||0).toLocaleString()} gold</b>.`:'The host led the crew out and reposted the job.'}</p>${end.h&&end.h.length?`<ul>${end.h.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls]?CLS[h.cls].name:'?'}: ${esc((h.did||[]).join('; ')||'came along')}</li>`).join('')}</ul>`:''}
-    ${can&&!end.lt?'<p><button class="btn" id="addJob">Add this job to my board</button></p>':''}`);
+    ${can&&!end.lt?'<p><button class="btn" id="addJob">Add this job to my board</button></p>':''}`,{label:'Back to the back room',fn:()=>{if(NET.room&&NET.remote.get(NET.hostPeer))startTavern('client',G&&G.cls);else{G=null;toBoard();}}});
   const ab=$('#addJob');if(ab)ab.onclick=()=>{const m=Object.assign({},end.m,{id:'m'+end.m.seed.toString(36)+'-'+Date.now().toString(36),state:end.s,history:(end.h||[]).map(h=>Object.assign({},h,{by:h.peer===NET.myPeer?'You':h.by})),status:'open'});board.missions.unshift(m);saveBoard(board);ab.textContent='Added';ab.disabled=true;};
-  leaveRoom();}
+}
 function renderCrew(){const panel=$('#crewPanel');if(!G||!G.mp){panel.hidden=true;$('#roomBadge').hidden=true;return;}panel.hidden=false;
   const rb=$('#roomBadge');rb.hidden=false;rb.textContent='Room '+NET.code;$('#crewLabel').textContent=`Crew · room ${NET.code}`;
   const rows=[`<li><span><span class="dot" style="background:${CLS[G.cls].color}"></span>You (${CLS[G.cls].name}${G.mode==='host'?', host':''})</span><span class="mono">${Math.max(0,Math.round(G.P.hp))}</span></li>`];
@@ -596,6 +600,7 @@ $('#joinBtn').onclick=async()=>{const code=$('#joinCode').value.trim().toUpperCa
   try{await joinRoom(code,false);}catch(e){msg.textContent=String(e&&e.message)==='nohost'?`Nobody is hosting room ${code} right now. Check the code with your host.`:'Could not connect. Try again in a moment.';return;}
   NET.myPeer=null;const t0=Date.now();
   const wait=()=>{const me=NET.room&&NET.room.peers().find(p=>p.sameTab);if(me)NET.myPeer=me.peer;const host=NET.remote.get(NET.hostPeer);
+    if(host&&host.pres&&host.pres.th&&NET.myPeer){msg.textContent='';startTavern('client');return;}
     if(host&&host.pres&&host.pres.m&&host.pres.w&&NET.myPeer){msg.textContent='';pickClass(host);return;}
     if(Date.now()-t0>8000){msg.textContent=`Nobody is hosting room ${code} right now. Check the code with your host.`;leaveRoom();return;}setTimeout(wait,250);};wait();};
 function pickClass(host){const m=host.pres.m;const taken=new Set([...NET.remote.values()].map(r=>r.p&&r.p.c).filter(Boolean));
@@ -610,7 +615,7 @@ function pickClass(host){const m=host.pres.m;const taken=new Set([...NET.remote.
 const now=()=>performance.now()/1000;
 function tileAt(x,y){const tx=Math.floor(x),ty=Math.floor(y);return (tx<0||ty<0||tx>=G.w.W||ty>=G.w.H)?WALL:G.w.t[ty][tx];}
 const walkT=t=>t===FLOOR||t===EXIT||t===OPEN;
-const opaqueT=t=>t===WALL||t===DOOR||t===BARR;
+const opaqueT=t=>t===WALL||t===DOOR||t===BARR||t===RACK||t===STREET;
 function losT(x0,y0,x1,y1){const dx=x1-x0,dy=y1-y0,n=Math.ceil(Math.hypot(dx,dy)/.2);for(let i=1;i<n;i++){const f=i/n;if(opaqueT(tileAt(x0+dx*f,y0+dy*f)))return false;}return true;}
 function angDiff(a,b){let d=a-b;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d;}
 function nameOf(e){const B=BIOMES[G.w.biome];return e.captain?cap(B.boss):'The '+B.foe.toLowerCase();}
@@ -636,6 +641,100 @@ function placeTorches(w,seed){
 }
 function lightAt(x,y){let L=.03;for(const t of G.torches){if(t.out)continue;const d=Math.hypot(t.lx-x,t.ly-y);if(d>6)continue;if(!losT(t.lx,t.ly,x,y))continue;L+=Math.pow(1-d/6,1.3);}return Math.min(1,L);}
 
+/* ---------- the back room: where the crew meets before a co-op job ---------- */
+BIOMES.tavern={name:'Back room',places:[],foe:'Regular',boss:'the barkeep',floor:'#4b3727',floor2:'#45321f',wall:'#1d1510',wallTop:'#6a5040',foeCol:'#c9a37a'};
+const TAVERN_MAP=['#######S#######','#k...........k#','#.............#','#.....TTT.....#','#.....TTT.....#','#.............#','#.............#','#.............#','#k...........k#','####1##2##3####','###############'];
+function tavernWorld(){const H=TAVERN_MAP.length,W=TAVERN_MAP[0].length,racks={};
+  const t=TAVERN_MAP.map((row,y)=>[...row].map((ch,x)=>{if(ch==='.')return FLOOR;if(ch==='T')return TABLE;if(ch==='k')return PROP;if(ch==='S')return STREET;
+    if('123'.includes(ch)){racks[x+','+y]=ROLES[+ch-1];return RACK;}return WALL;}));
+  return {W,H,t,cells:[{x0:1,y0:1,x1:W-2,y1:H-3,role:'tavern'}],biome:'tavern',enemies:[],traps:[],locks:{},poisoned:false,scried:true,cleared:[],snuffed:[],start:[7,6],racks,street:[7,0],door:null};}
+function tavernTorches(){return [[3,1,0,-1],[11,1,0,-1],[1,4,-1,0],[13,4,1,0],[1,7,-1,0],[13,7,1,0]].map(([x,y,dx,dy],id)=>({id,wx:x+.5+dx*.47,wy:y+.5+dy*.47,lx:x+.5+dx*.25,ly:y+.5+dy*.25,dx,dy,out:false}));}
+function jobSummary(m){if(!m)return null;const st=roleStatus(m);return {title:m.title,biome:m.biome,need:m.roles.filter(r=>!st[r]),roles:m.roles,payout:m.payout,cx:m.cx};}
+function prefCls(){try{const c=localStorage.getItem('threelocks.cls');if(ROLES.includes(c))return c;}catch(e){}return 'thief';}
+function startTavern(mode,cls){
+  if(NET.leaveTimer){clearTimeout(NET.leaveTimer);NET.leaveTimer=null;}
+  cls=cls||prefCls();const w=tavernWorld(),S=STATS[cls];NET.acts=[];NET.end=null;
+  G={m:{title:'The back room',biome:'tavern',roles:[],history:[]},w,cls,S,torches:tavernTorches(),time:0,log:[],did:[],kills:0,over:false,looted:false,explored:new Set(),proj:[],prev:{},
+    mode,mp:true,tavern:true,job:null,hostJob:null,down:0,swingN:0,lastActor:'me',credits:{},wsig:'',objs:{},
+    paused:true,glimpse:0,divineAt:null,keys:{},light:0,vis:0,sideDirty:true,featDirty:true,hudT:0,expT:0,miniT:0,lightT:0,focus:null,stick:[0,0],
+    P:{x:w.start[0]+.5+(Math.random()-.5),y:w.start[1]+.5+Math.random()*.8,yaw:0,pitch:0,hp:S.hp,max:S.hp,crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
+  for(let i=0;i<w.W*w.H;i++)G.explored.add(i);
+  $('#board').hidden=true;$('#game').hidden=false;$('#gTitle').textContent='The back room';$('#abandon').textContent='Leave the tavern';
+  tavernBadge();$('#toasts').innerHTML='';
+  const host=NET.remote.get(NET.hostPeer);
+  if(mode==='host'){log('You take the back room. Pick a job at the table, gear up at the racks, then lead the crew out the door.');
+    setPause(true,'The back room',`Room code ${NET.code}. Send friends this page's address and the code; they choose Join a friend. Pick the job at the planning table, gear up at the racks along the back wall, and walk out the door when the crew is ready.`);}
+  else{G.hostJob=host&&host.pres&&host.pres.job||null;log(`You slip down into ${peerName(host)}'s back room. Gear up at the racks while the host picks the job.`);
+    setPause(true,'The back room',`You're in ${peerName(host)}'s crew. Pick your class at the racks along the back wall. The job starts when the host leads everyone out the door.`);}
+  build3D();resize3D();renderSide();renderCrew();pushPresence(true);window.scrollTo(0,0);
+}
+function tavernBadge(){const b=$('#gClass');b.textContent=CLS[G.cls].name;b.style.color=CLS[G.cls].color;$('#abl').innerHTML=KIT[G.cls].lines.map(l=>`<li>${l}</li>`).join('');}
+function setClass(cls){if(!G||cls===G.cls)return;G.cls=cls;G.S=STATS[cls];Object.assign(G.P,{hp:G.S.hp,max:G.S.hp,cd:{},used:{},venom:false,invis:0,swing:0});
+  try{localStorage.setItem('threelocks.cls',cls);}catch(e){}tavernBadge();build3D();G.sideDirty=true;log(`You gear up as the ${CLS[cls].name}.`,'good');pushPresence(true);}
+function crewAtDoor(){const [sx,sy]=G.w.street;let n=Math.hypot(G.P.x-sx-.5,G.P.y-sy-.5)<3?1:0,tot=1;for(const rr of NET.remote.values()){if(!rr.p||rr.p.x==null)continue;tot++;if(Math.hypot(rr.p.x-sx-.5,rr.p.y-sy-.5)<3)n++;}return [n,tot];}
+function tavernLabel(c){const w=G.w;
+  if(c.t===RACK){const r=w.racks[c.x+','+c.y];return r===G.cls?{act:false,text:`The ${CLS[r].name}'s rack. You're already kitted out.`}:{act:true,text:`<b>E</b> Gear up as the ${CLS[r].name}`};}
+  if(c.t===TABLE){if(G.mode==='host')return {act:true,text:G.job?`<b>E</b> Change the job (now: ${esc(G.job.title)})`:'<b>E</b> Pick a job from your board'};
+    return {act:false,text:G.hostJob?`The plan: ${esc(G.hostJob.title)}`:'The host spreads the job out here.'};}
+  if(c.t===STREET){if(G.mode!=='host')return {act:false,text:'The host leads the crew out through here.'};
+    if(!G.job)return {act:false,text:'Pick a job at the planning table first.'};const [n,tot]=crewAtDoor();
+    return {act:true,text:`<b>E</b> Lead the crew out to ${esc(G.job.title)} (${n} of ${tot} at the door)`};}
+  return {act:false,text:''};}
+function tavernUse(c){if(c.t===RACK){setClass(G.w.racks[c.x+','+c.y]);return;}
+  if(c.t===TABLE&&G.mode==='host'){openJobPicker();return;}
+  if(c.t===STREET&&G.mode==='host'&&G.job)launchJob();}
+function openJobPicker(){if(document.pointerLockElement)document.exitPointerLock();
+  const list=board.missions.filter(m=>m.status!=='complete');
+  $('#modalBox').innerHTML=`<h2>Pick the job</h2><p>Contracts from your board. The crew sees your pick on the table.</p>
+    ${list.length?`<div class="jobpick">${list.map(m=>{const s=jobSummary(m);return `<button class="btn" data-job="${m.id}"><b>${esc(m.title)}</b><span class="note">${BIOMES[m.biome].name} · Heat ${'●'.repeat(m.cx)}${'○'.repeat(3-m.cx)} · ${s.need.length?'needs '+s.need.map(r=>CLS[r].name).join(', '):'vault open'} · <span class="mono">${m.payout.toLocaleString()} gold</span></span></button>`;}).join('')}</div>`:'<p class="note">Your board has no open contracts. Leave the tavern and post a new one.</p>'}
+    <div><button class="linkbtn" id="jpCancel">Cancel</button></div>`;
+  $('#modal').hidden=false;
+  $('#modalBox').querySelectorAll('[data-job]').forEach(b=>b.onclick=()=>{$('#modal').hidden=true;G.job=board.missions.find(m=>m.id===b.dataset.job);
+    log(`You spread the plans for ${G.job.title} across the table.`,'good');G.featDirty=true;G.sideDirty=true;pushPresence(true);
+    setPause(true,'Job picked',`${G.job.title}. When the crew is geared up, walk to the door at the top of the room and lead them out.`);});
+  $('#jpCancel').onclick=()=>{$('#modal').hidden=true;setPause(true,'The back room','Pick a job at the planning table, then lead the crew out the door.');};}
+function launchJob(){const m=G.job,cls=G.cls,locked=!!document.pointerLockElement;NET.lid=Date.now();NET.end=null;
+  startRun(m,cls,{mode:'host'});log('You lead the crew up the stairs and out into the night.');if(locked)setPause(false);}
+function tavernRemote(){
+  if(G.mode==='host'){for(const rr of NET.remote.values()){for(const a of (rr.pres&&rr.pres.a)||[])rr.lastAct=Math.max(rr.lastAct||0,a.n);}return;}
+  const host=NET.remote.get(NET.hostPeer);if(!host||!host.pres)return;const hp=host.pres;
+  const js=JSON.stringify(hp.job||null);if(js!==G.jobSig){G.jobSig=js;const had=G.hostJob;G.hostJob=hp.job||null;G.sideDirty=true;G.featDirty=true;if(G.hostJob&&(!had||had.title!==G.hostJob.title)&&G.time>.5)log(`${peerName(host)} picked the job: ${G.hostJob.title}.`,'good');}
+  if(hp.h&&hp.m&&hp.w&&!hp.end&&hp.lid!==NET.doneLid){const locked=!!document.pointerLockElement;const m=Object.assign({},hp.m,{state:null,history:[],status:'open'});
+    startRun(m,G.cls,{mode:'client'});log(`${peerName(host)} leads the crew out into the night.`);if(locked)setPause(false);}}
+function renderTavernSide(){const j=G.mode==='host'?jobSummary(G.job):G.hostJob;let h='';
+  if(j){h+=`<li class="grp" style="color:var(--lantern)"><span>${esc(j.title)}</span><span class="label">${BIOMES[j.biome]?BIOMES[j.biome].name:''}</span></li>`;
+    for(const r of ROLES){if(!j.roles.includes(r))continue;const need=j.need.includes(r);h+=`<li class="o ${need?'':'done'}"><span style="color:${CLS[r].color}">${need?'○':'✓'}</span><span>${CLS[r].name}: ${need?'needed':'already done by an earlier crew'}</span></li>`;}
+    h+=`<li class="o"><span>·</span><span class="mono">${(j.payout||0).toLocaleString()} gold</span></li>`;
+    if(!j.roles.includes(G.cls))h+=`<li class="o other"><span>!</span><span>This job has no ${CLS[G.cls].name} part. You can still come along.</span></li>`;}
+  else h+=`<li class="o other"><span>○</span><span>${G.mode==='host'?'No job yet. Pick one at the planning table.':'Waiting for the host to pick a job.'}</span></li>`;
+  h+=`<li class="grp" style="color:var(--lantern)"><span>Before you go</span></li><li class="o"><span>·</span><span>Gear up at the racks on the back wall.</span></li><li class="o"><span>·</span><span>${G.mode==='host'?'Walk out the door at the top of the room to launch.':'The host walks out the door to launch.'}</span></li>`;
+  $('#objs').innerHTML=h;$('#log').innerHTML=G.log.slice(0,14).map(l=>`<li class="${l.cls||''}">${esc(l.msg)}</li>`).join('');G.sideDirty=false;}
+function labelSprite(text,color,w){const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');x.font='600 44px Alegreya Sans, Georgia, sans-serif';x.textAlign='center';x.lineWidth=7;x.strokeStyle='#000';x.strokeText(text,256,62);x.fillStyle=color;x.fillText(text,256,62);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));sp.scale.set(w||2.4,(w||2.4)*96/512,1);R3.dyn.add(sp);return sp;}
+function syncTavern(){const w=G.w,Gm=R3.geo,Mt=R3.mat;const L=c=>new THREE.MeshLambertMaterial({color:c});
+  for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++){const t=w.t[y][x],cx=(x+.5)*T,cz=(y+.5)*T;
+    if(t===PROP){addMesh(Gm.barrel,Mt.barrel,cx-.3,.52,cz-.25);const b=addMesh(Gm.barrel,Mt.barrel,cx+.35,.52,cz+.3);addMesh(Gm.barrel,Mt.barrel,cx,1.55,cz).rotation.z=Math.PI/2;}
+    else if(t===RACK){const r=w.racks[x+','+y],col=CLS[r].color;addMesh(Gm.door,new THREE.MeshLambertMaterial({map:R3.wallTex}),cx,WALLH/2,cz+.25);
+      const fz=cz-T/2+.3;addMesh(new THREE.BoxGeometry(1.5,.08,.36),Mt.wood,cx,1.0,fz);addMesh(new THREE.BoxGeometry(1.5,.08,.36),Mt.wood,cx,1.9,fz);
+      addMesh(new THREE.BoxGeometry(.9,1.3,.03),L(col),cx,2.3,cz-T/2+.12);
+      if(r==='thief'){addMesh(new THREE.BoxGeometry(.03,.02,.5),L(0xc9ccd2),cx-.2,1.06,fz).rotation.y=.4;addMesh(new THREE.BoxGeometry(.03,.02,.5),L(0xc9ccd2),cx+.2,1.06,fz).rotation.y=-.4;addMesh(new THREE.ConeGeometry(.25,.5,10),L(new THREE.Color(col).multiplyScalar(.55)),cx,2.2,fz);}
+      if(r==='warrior'){const s=addMesh(new THREE.CylinderGeometry(.42,.42,.08,20),L(0x7a5a2a),cx,1.45,fz-.05);s.rotation.x=Math.PI/2;addMesh(new THREE.BoxGeometry(.06,1.1,.03),L(0xb9bcc4),cx+.55,1.5,fz);}
+      if(r==='wizard'){addMesh(new THREE.ConeGeometry(.22,.6,12),L(new THREE.Color(col).multiplyScalar(.75)),cx-.3,2.24,fz);addMesh(new THREE.SphereGeometry(.12,14,10),new THREE.MeshBasicMaterial({color:0xb6b2ff}),cx+.3,1.16,fz);for(let i=0;i<4;i++)addMesh(new THREE.BoxGeometry(.12,.3,.22),L([0x6b2f2f,0x2f4a6b,0x4a6b2f,0x6b5a2f][i]),cx-.5+i*.15,1.19,fz);}
+      labelSprite(CLS[r].name+(r===G.cls?' (you)':''),col,1.6).position.set(cx,2.85,fz-.1);}
+    else if(t===STREET){addMesh(Gm.door,Mt.wood,cx,WALLH/2,cz-.2);const fz=cz+T/2;addMesh(new THREE.BoxGeometry(.14,.14,.14),Mt.gold,cx+.45,1.05,fz+.02);
+      for(const sx of [-.95,.95])addMesh(new THREE.BoxGeometry(.18,2.6,.2),Mt.woodDark,cx+sx,1.3,fz);addMesh(new THREE.BoxGeometry(2.1,.2,.2),Mt.woodDark,cx,2.6,fz);
+      const job=G.mode==='host'?G.job:G.hostJob;labelSprite(job?'Out to the job':'Out to the street','#e7c27a',2).position.set(cx,2.95,fz+.2);}}
+  // the planning table spans the T tiles
+  const tx=6,ty=3,tw=3,th=2,cx=(tx+tw/2)*T,cz=(ty+th/2)*T;addMesh(new THREE.BoxGeometry(tw*T-.3,.12,th*T-.3),Mt.table,cx,.9,cz);
+  for(const [dx,dz] of [[-1,-1],[1,-1],[-1,1],[1,1]])addMesh(Gm.leg,Mt.table,cx+dx*(tw*T/2-.4),.42,cz+dz*(th*T/2-.4));
+  const job=G.mode==='host'?G.job:G.hostJob;
+  if(job){const paper=addMesh(new THREE.BoxGeometry(2.2,.01,1.5),L(0xd8c79a),cx,.97,cz);paper.rotation.y=.08;
+    for(let i=0;i<5;i++){const ln=addMesh(new THREE.BoxGeometry(.6+((i*37)%5)*.12,.012,.04),L(0x5a3e28),cx-.5+(i%2)*.6,.98,cz-.5+i*.24);ln.rotation.y=.08;}
+    addMesh(new THREE.BoxGeometry(.18,.014,.18),L(0xb8392e),cx+.6,.985,cz+.35).rotation.y=.8;}
+  else{addMesh(Gm.die,Mt.bone,cx-.3,1.01,cz);addMesh(Gm.die,Mt.bone,cx+.2,1.01,cz+.3);}
+  for(const [ox,oz] of [[-1.9,-.9],[1.9,.9]]){addMesh(new THREE.CylinderGeometry(.05,.05,.22,8),L(0xeee4c8),cx+ox,1.07,cz+oz);addMesh(Gm.flame,Mt.flame,cx+ox,1.25,cz+oz).scale.setScalar(.5);}
+  labelSprite(job?job.title:(G.mode==='host'?'Planning table: pick a job':'Planning table'),'#e7c27a',job?2.6:2.8).position.set(cx,2.05,cz);
+  G.torches.forEach((t,i)=>{R3.torchMeshes[i].userData.fl.visible=!t.out;});}
 function startRun(m,cls,opts){
   opts=opts||{};
   const w=generate(m);
@@ -667,7 +766,7 @@ function startRun(m,cls,opts){
   if(G.mode==='client'){const host=NET.remote.get(NET.hostPeer);if(host&&host.pres)applyWorld(host.pres.w);G.w.enemies.forEach(e=>{if(e.tx!=null){e.x=e.tx;e.y=e.ty;e.ang=e.tang;}});
     for(const h of (host&&host.pres.hits)||[])NET.lastHit=Math.max(NET.lastHit,h.n);for(const l of (host&&host.pres.lg)||[])NET.lastLog=Math.max(NET.lastLog,l[0]);
     setPause(true,'Joined',`You are the ${CLS[cls].name} in ${peerName(host)}'s crew. The world keeps moving while you are paused.`);}
-  if(G.mode==='host')setPause(true,'Hosting',`Room code ${NET.code}. Send friends this page's address and the code. They choose Join a friend and type it in. The world keeps moving while you are paused.`);
+  if(G.mode==='host')setPause(true,'Hosting',`Room code ${NET.code}. Friends open this same page, choose Join a friend and type the code. The world keeps moving while you are paused.`);
   build3D();resize3D();renderSide();renderCrew();pushPresence();window.scrollTo(0,0);
 }
 async function startMaybeHosted(m,cls){
@@ -675,6 +774,10 @@ async function startMaybeHosted(m,cls){
     if(!code){alertBox('Could not open a co-op room. The matchmaking server may be busy. Try again, or untick co-op to play solo.');return;}
     const me=NET.room.peers().find(p=>p.sameTab);NET.myPeer=me?me.peer:null;startRun(m,cls,{mode:'host'});}
   else startRun(m,cls);}
+async function openRoom(){for(let i=0;i<3;i++){const c=mkCode();try{await joinRoom(c,true);return c;}catch(e){if(String(e&&e.message)!=='taken')break;}}return null;}
+$('#tavernBtn').onclick=async()=>{const msg=$('#joinMsg');if(!NET.lobby){msg.textContent='Co-op is not available here.';return;}msg.textContent='Opening the back room…';
+  const code=await openRoom();if(!code){msg.textContent='Could not open a co-op room. Try again in a moment.';return;}msg.textContent='';
+  const me=NET.room.peers().find(p=>p.sameTab);NET.myPeer=me?me.peer:null;startTavern('host');};
 function setPause(p,title,text){G.paused=p;$('#pauseov').hidden=!p;if(title)$('#pauseTitle').textContent=title;if(text!=null)$('#pauseText').textContent=text;
   $('#pauseGo').textContent=touchMode?'Tap to play':'Click to play';}
 
@@ -946,16 +1049,17 @@ function updProj(dt){
 function findFocus(){
   const P=G.P,w=G.w,C=G.cls,[fx,fy]=fwd(),fa=Math.atan2(fy,fx),cands=[];
   const px=Math.floor(P.x),py=Math.floor(P.y);
-  for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if([DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT].includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
+  for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if((G.tavern?[RACK,STREET,TABLE]:[DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT]).includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
   for(const tr of w.traps)if(C==='thief'&&tr.revealed&&!tr.disarmed)cands.push({kind:'trap',tr,cx:tr.x+.5,cy:tr.y+.5});
-  if(C==='thief')for(const to of G.torches)if(!to.out)cands.push({kind:'torch',to,cx:to.wx,cy:to.wy});
+  if(C==='thief'&&!G.tavern)for(const to of G.torches)if(!to.out)cands.push({kind:'torch',to,cx:to.wx,cy:to.wy});
   let best=null,bs=9;
   for(const c of cands){const dx=c.cx-P.x,dy=c.cy-P.y,d=Math.hypot(dx,dy);
     if(c.kind==='tile'&&c.t===EXIT){if(d<.8){best=c;bs=-1;}continue;}
-    const reach=c.kind==='tile'?1.2:1.1;if(d>reach)continue;const a=Math.abs(angDiff(Math.atan2(dy,dx),fa));if(a>.7&&d>.45)continue;if(a<bs){bs=a;best=c;}}
+    const reach=c.kind==='tile'?(G.tavern?1.5:1.2):1.1;if(d>reach)continue;const a=Math.abs(angDiff(Math.atan2(dy,dx),fa));if(a>.7&&d>.45)continue;if(a<bs){bs=a;best=c;}}
   if(!best)return null;best.label=focusLabel(best);return best;
 }
 function focusLabel(c){
+  if(G.tavern)return tavernLabel(c);
   const w=G.w,C=G.cls;
   if(c.kind==='trap')return {act:true,text:'<b>E</b> Disarm the pressure plate'};
   if(c.kind==='torch')return {act:true,text:'<b>E</b> Snuff the torch'};
@@ -973,6 +1077,7 @@ function focusLabel(c){
 }
 function interact(){
   const c=G.focus;if(!c||!c.label.act||G.over||G.down>0)return;
+  if(G.tavern){tavernUse(c);return;}
   if(c.kind==='tile'&&c.t===EXIT){leave();return;}
   const d={k:c.kind,id:c.kind==='trap'?c.tr.id:c.kind==='torch'?c.to.id:undefined,x:c.x,y:c.y};
   if(G.mode==='client'){sendAct(Object.assign({t:'use'},d));return;}
@@ -998,6 +1103,7 @@ function doUse(d,actor){
   }
 }
 function checkObjectives(){
+  if(G.tavern)return;
   for(const r in G.objs)for(const o of G.objs[r]){const d=objDone(G.w,o.id);if(d&&!G.prev[o.id]){G.prev[o.id]=true;if(G.mode==='client'){G.sideDirty=true;continue;}
     const txt=o.text.replace('Bonus: ','').replace(/ \(.*\)$/,'');
     G.did.push(txt.replace(/^Pick/,'Picked').replace(/^Break/,'Broke').replace(/^Dispel/,'Dispelled').replace(/^Eliminate/,'Eliminated').replace(/^Clear/,'Cleared').replace(/^poison|^Poison/,'Poisoned').replace(/^Scry/,'Scried'));
@@ -1017,32 +1123,34 @@ function leave(){
   const crewH=[];
   if(G.mode==='host'){for(const rr of NET.remote.values()){if(!rr.p)continue;const h={by:peerName(rr),cls:rr.p.c,did:(G.credits[rr.peer]||[]).slice(),peer:rr.peer};crewH.push(h);m.history.push({by:h.by,cls:h.cls,did:h.did});}
     NET.end={lt:G.looted?1:0,pay:m.payout,m:{seed:m.seed,biome:m.biome,roles:m.roles,cx:m.cx,title:m.title,payout:m.payout},s:G.looted?null:m.state,h:[{by:'The host',cls:G.cls,did:entry.did}].concat(crewH)};
-    pushPresence(true);setTimeout(leaveRoom,4000);}
+    pushPresence(true);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G||G.over)leaveRoom();},90000);}
   saveBoard(board);
   const st=roleStatus(m);const need=m.roles.filter(r=>!st[r]);
-  if(G.looted)showModal('Payday',`<p>You walk out with the strongbox. The crew splits <b class="mono">${m.payout.toLocaleString()} gold</b>.</p><ul>${m.history.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls].name}: ${esc(h.did.join('; ')||'scouted')}</li>`).join('')}</ul>`);
+  const back=G.mode==='host'&&NET.room?{label:'Back to the back room',fn:()=>startTavern('host',G.cls)}:null;
+  if(G.looted)showModal('Payday',`<p>You walk out with the strongbox. The crew splits <b class="mono">${m.payout.toLocaleString()} gold</b>.</p><ul>${m.history.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls].name}: ${esc(h.did.join('; ')||'scouted')}</li>`).join('')}</ul>`,back);
   else showModal('Reposted',`<p>${st[G.cls]?`Your part is done. The ${CLS[G.cls].name} is no longer needed on this job.`:`You left before finishing. The ${CLS[G.cls].name} role stays open.`}</p>
     <p>${need.length?'Still needed: <b>'+need.map(r=>CLS[r].name).join(', ')+'</b>. Take one of those on the board to walk into the world exactly as you left it.':'Every lock is open. Anyone can go in and carry out the strongbox.'}</p>
-    ${G.did.length?`<ul>${G.did.map(d=>`<li>${esc(d)}</li>`).join('')}</ul>`:''}`);
+    ${G.did.length?`<ul>${G.did.map(d=>`<li>${esc(d)}</li>`).join('')}</ul>`:''}`,back);
 }
 function die(){
   if(G.mp){G.down=6;G.P.hp=0;G.P.invis=0;log('You go down. Back on your feet at the stairs in a few seconds.','bad');if(G.mode==='host')netLog('A crew member went down.','bad');return;}
   G.over=true;G.P.hp=0;if(document.pointerLockElement)document.exitPointerLock();
   showModal('You fell',`<p>The ${CLS[G.cls].name} goes down in the dark after ${Math.round(G.time)} seconds. Nothing from this run is saved. The contract stays on the board as it was when you took it.</p>`);
 }
-function showModal(title,html){
+function showModal(title,html,back){
   $('#pauseov').hidden=true;
-  $('#modalBox').innerHTML=`<h2>${title}</h2>${html}<div><button class="btn primary" id="toBoard">Back to the board</button></div>`;
+  $('#modalBox').innerHTML=`<h2>${title}</h2>${html}<div>${back?`<button class="btn primary" id="toTavern">${back.label}</button> `:''}<button class="btn ${back?'':'primary'}" id="toBoard">Back to the board</button></div>`;
   $('#modal').hidden=false;$('#toBoard').focus();$('#toBoard').onclick=()=>{$('#modal').hidden=true;toBoard();};
+  if(back){$('#toTavern').focus();$('#toTavern').onclick=()=>{$('#modal').hidden=true;back.fn();};}
 }
-function toBoard(){if(NET.room&&!(G&&G.mode==='host'&&NET.end))leaveRoom();G=null;$('#game').hidden=true;$('#board').hidden=false;renderBoard();window.scrollTo(0,0);}
+function toBoard(){$('#abandon').textContent='Abandon run';if(NET.room&&!(G&&G.mode==='host'&&NET.end&&!G.tavern))leaveRoom();else if(NET.leaveTimer){clearTimeout(NET.leaveTimer);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G)leaveRoom();},4000);}G=null;$('#game').hidden=true;$('#board').hidden=false;renderBoard();window.scrollTo(0,0);}
 let abandonArmed=false;
-$('#abandon').onclick=ev=>{if(!abandonArmed){abandonArmed=true;ev.target.textContent='Click again: lose this run';setTimeout(()=>{abandonArmed=false;ev.target.textContent='Abandon run';},2500);return;}
+$('#abandon').onclick=ev=>{if(G&&G.tavern){if(document.pointerLockElement)document.exitPointerLock();toBoard();return;}if(!abandonArmed){abandonArmed=true;ev.target.textContent='Click again: lose this run';setTimeout(()=>{abandonArmed=false;ev.target.textContent='Abandon run';},2500);return;}
   abandonArmed=false;ev.target.textContent='Abandon run';if(document.pointerLockElement)document.exitPointerLock();toBoard();};
 
 /* ---------- side panel + HUD ---------- */
 function renderSide(){
-  if(!G)return;const w=G.w;let h='';
+  if(!G)return;if(G.tavern){renderTavernSide();return;}const w=G.w;let h='';
   for(const r of ROLES){if(!G.objs[r])continue;const mine=r===G.cls;
     h+=`<li class="grp" style="color:${CLS[r].color}"><span>${CLS[r].name}</span><span class="label">${mine?'you':'not your role'}</span></li>`;
     for(const o of G.objs[r]){const d=objDone(w,o.id);h+=`<li class="o ${d?'done':''} ${mine?'':'other'}"><span>${d?'✓':'○'}</span><span>${o.text}</span></li>`;}}
@@ -1149,23 +1257,52 @@ function build3D(){
   else if(G.cls==='warrior'){const bl=new THREE.Mesh(new THREE.BoxGeometry(.05,.015,.8),L(0xb9bcc4));bl.position.z=-.45;const gd=new THREE.Mesh(new THREE.BoxGeometry(.22,.03,.04),L(0x7a5a2a));const hd=new THREE.Mesh(new THREE.BoxGeometry(.04,.04,.18),L(0x3a2a1a));hd.position.z=.1;wpn.add(bl,gd,hd);wpn.position.set(.26,-.26,-.42);wpn.rotation.x=.25;}
   else{const st=new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,1.1,8),L(0x5a4130));st.rotation.x=-1.25;st.position.z=-.3;const orb=new THREE.Mesh(new THREE.SphereGeometry(.05,12,10),new THREE.MeshBasicMaterial({color:0xb6b2ff}));orb.position.set(0,.16,-.82);wpn.add(st,orb);wpn.position.set(.24,-.32,-.25);}
   R3.wpn=wpn;R3.wpnBase={x:wpn.position.x,y:wpn.position.y,rx:wpn.rotation.x};R3.camera.add(wpn);
+  if(G.tavern){sc.add(new THREE.AmbientLight(0xffc890,.38));sc.fog=new THREE.Fog(0x020203,10,40);}
   G.featDirty=true;R3.lightT=0;
   for(const rr of NET.remote.values())rr.mesh=null;
 }
 function updRemoteAvatars(dt){
   if(!R3.ok)return;
   for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.x==null){if(rr.mesh)rr.mesh.visible=false;continue;}
-    if(!rr.mesh){const g=new THREE.Group();const col=new THREE.Color(CLS[p.c]?CLS[p.c].color:'#aaa');const mat=new THREE.MeshLambertMaterial({color:col});
-      const body=new THREE.Mesh(R3.geo.body,mat);body.position.y=.65;const head=new THREE.Mesh(R3.geo.head,new THREE.MeshLambertMaterial({color:0xd9c8b0}));head.position.y=1.5;
-      const hood=new THREE.Mesh(R3.geo.crown,mat);hood.position.y=1.72;hood.scale.set(1.3,1,1.3);
-      const arm=new THREE.Mesh(R3.geo.arm,R3.mat.iron);arm.position.set(.32,1.0,-.3);g.add(body,head,hood,arm);
-      const c=document.createElement('canvas');c.width=256;c.height=64;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));sp.scale.set(1.6,.4,1);sp.position.y=2.25;sp.renderOrder=997;g.add(sp);
-      g.userData={arm,sp,c,label:'',body};rr.mesh=g;rr.dx=p.x;rr.dy=p.y;rr.dyw=p.yw;R3.scene.add(g);}
+    if(rr.mesh&&rr.mesh.userData.cls!==p.c){R3.scene.remove(rr.mesh);rr.mesh=null;}
+    if(!rr.mesh){const g=buildAvatar(p.c);const U=g.userData;
+      const c=document.createElement('canvas');c.width=256;c.height=64;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));sp.scale.set(1.6,.4,1);sp.position.y=p.c==='wizard'?2.75:2.35;sp.renderOrder=997;g.add(sp);
+      Object.assign(U,{sp,c,label:''});rr.mesh=g;if(rr.dx==null){rr.dx=p.x;rr.dy=p.y;rr.dyw=p.yw;}R3.scene.add(g);}
     const g=rr.mesh,U=g.userData;const k=Math.min(1,dt*12);rr.dx+=(p.x-rr.dx)*k;rr.dy+=(p.y-rr.dy)*k;rr.dyw+=angDiff(p.yw,rr.dyw)*k;
     g.visible=true;g.position.set(rr.dx*T,0,rr.dy*T);g.rotation.set(p.dn?-Math.PI/2:0,rr.dyw,0);if(p.dn)g.position.y=.3;
-    g.scale.set(1,p.cr?.7:1,1);U.body.material.opacity=p.iv?.25:1;U.body.material.transparent=!!p.iv;
+    g.scale.set(U.sc,U.sc*(p.cr?.7:1),U.sc);for(const m of U.mats){m.opacity=p.iv?.22:1;m.transparent=!!p.iv;}
     if(p.sw!==rr.lastSw){rr.lastSw=p.sw;rr.swingT=.3;}if(rr.swingT>0){rr.swingT-=dt;U.arm.rotation.x=-Math.sin((1-rr.swingT/.3)*Math.PI)*1.4;}else U.arm.rotation.x=0;
     const label=peerName(rr)+(p.dn?' (down)':'');if(label!==U.label){U.label=label;const x=U.c.getContext('2d');x.clearRect(0,0,256,64);x.font='600 30px Alegreya Sans, sans-serif';x.textAlign='center';x.lineWidth=5;x.strokeStyle='#000';x.strokeText(label,128,42);x.fillStyle=CLS[p.c]?CLS[p.c].color:'#fff';x.fillText(label,128,42);U.sp.material.map.needsUpdate=true;}}
+}
+/* class silhouettes: thin hooded thief, big burly warrior, robed wizard in a silly pointy hat */
+function buildAvatar(cls){
+  const g=new THREE.Group(),mats=[];const L=c=>{const m=new THREE.MeshLambertMaterial({color:c});mats.push(m);return m;};
+  const add=(geo,mat,x,y,z,o)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(o){if(o.rx)m.rotation.x=o.rx;if(o.rz)m.rotation.z=o.rz;if(o.s)m.scale.set(o.s[0],o.s[1],o.s[2]);}g.add(m);return m;};
+  const skin=L(0xd9b896),col=CLS[cls]?CLS[cls].color:'#aaaaaa';const arm=new THREE.Group();g.add(arm);
+  const cyl=(rt,rb,h,n)=>new THREE.CylinderGeometry(rt,rb,h,n||12),box=(x,y,z)=>new THREE.BoxGeometry(x,y,z),sph=(r)=>new THREE.SphereGeometry(r,14,10),cone=(r,h,n)=>new THREE.ConeGeometry(r,h,n||14);
+  let sc=1;
+  if(cls==='thief'){const cloak=L(new THREE.Color(col).multiplyScalar(.55)),dark=L(0x1c1c20),leather=L(0x4a3826);
+    add(cyl(.17,.24,1.25),cloak,0,.72,0);add(cyl(.07,.07,.6),leather,-.09,.3,0);add(cyl(.07,.07,.6),leather,.09,.3,0);
+    add(sph(.17),dark,0,1.5,0);add(sph(.21),cloak,0,1.53,.04,{s:[1,1.1,1.05]});add(cone(.19,.4),cloak,0,1.78,.08,{rx:.35});
+    add(box(.34,.06,.02),L(0xe9e3d0),0,1.5,-.17);// glinting eyes under the hood
+    add(cyl(.28,.36,.9),cloak,0,.85,.08,{s:[1,1,.6]});
+    const a=new THREE.Mesh(box(.08,.08,.5),cloak);a.position.set(0,0,-.2);arm.add(a);const bl=new THREE.Mesh(box(.02,.02,.32),L(0xc9ccd2));bl.position.set(0,0,-.58);arm.add(bl);arm.position.set(.24,1.05,-.05);sc=.96;}
+  else if(cls==='warrior'){const mail=L(0x777b84),tab=L(col),hide=L(0x5a3e28),hair=L(0x4a2a14);
+    add(box(.72,.75,.46),mail,0,1.08,0);add(box(.76,.5,.5),tab,0,.98,0);add(box(.62,.12,.5),hide,0,.72,0);
+    add(cyl(.13,.12,.72),hide,-.17,.35,0);add(cyl(.13,.12,.72),hide,.17,.35,0);
+    add(sph(.2),mail,-.45,1.4,0,{s:[1.1,.8,1.1]});add(sph(.2),mail,.45,1.4,0,{s:[1.1,.8,1.1]});
+    add(sph(.21),skin,0,1.66,0);add(cone(.17,.32,10),hair,0,1.44,-.15,{rx:Math.PI+.35});add(sph(.215),L(0x8a8f99),0,1.72,0,{s:[1,.65,1]});
+    add(cyl(.12,.14,.66),mail,-.46,1.02,0,{rz:.12});
+    const a=new THREE.Mesh(cyl(.12,.13,.6),mail);a.rotation.x=Math.PI/2;a.position.z=-.22;arm.add(a);const bl=new THREE.Mesh(box(.07,.02,1.05),L(0xb9bcc4));bl.position.set(0,0,-.95);arm.add(bl);const gd=new THREE.Mesh(box(.3,.04,.05),L(0x7a5a2a));gd.position.z=-.45;arm.add(gd);
+    arm.position.set(.46,1.12,0);sc=1.15;}
+  else{const robe=L(col),trim=L(new THREE.Color(col).multiplyScalar(.6)),beard=L(0xe8e4dc),hat=L(new THREE.Color(col).multiplyScalar(.75)),star=new THREE.MeshBasicMaterial({color:0xf1d36a});mats.push(star);
+    add(cone(.42,1.35,16),robe,0,.68,0);add(cyl(.2,.2,.08),trim,0,1.15,0);
+    add(sph(.19),skin,0,1.5,0);add(cone(.14,.5,10),beard,0,1.22,-.12,{rx:Math.PI+.2});
+    add(cyl(.46,.46,.04,20),hat,0,1.64,0);const h1=add(cone(.24,.55,14),hat,0,1.92,0);const h2=add(cone(.13,.42,12),hat,.12,2.3,.04,{rz:-.75});add(sph(.05),star,.3,2.42,.04);
+    add(new THREE.OctahedronGeometry(.06),star,.1,1.95,-.22);
+    const a=new THREE.Mesh(cyl(.07,.1,.5),robe);a.rotation.x=Math.PI/2;a.position.z=-.2;arm.add(a);const st=new THREE.Mesh(cyl(.025,.03,1.7,8),L(0x5a4130));st.position.set(0,.1,-.42);arm.add(st);
+    const orb=new THREE.Mesh(sph(.08),new THREE.MeshBasicMaterial({color:0xb6b2ff}));mats.push(orb.material);orb.position.set(0,.95,-.42);arm.add(orb);arm.position.set(.36,.95,-.05);sc=1;}
+  g.userData={arm,cls,mats,sc};return g;
 }
 function rebuildWalls(){
   const w=G.w,sc=R3.scene;if(R3.walls)sc.remove(R3.walls);
@@ -1176,6 +1313,7 @@ function rebuildWalls(){
 function addMesh(geo,mat,x,y,z,ry){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(ry)m.rotation.y=ry;R3.dyn.add(m);return m;}
 function syncFeatures(){
   const w=G.w,Gm=R3.geo,Mt=R3.mat;while(R3.dyn.children.length)R3.dyn.remove(R3.dyn.children[0]);
+  if(G.tavern){syncTavern();G.featDirty=false;return;}
   for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++){const t=w.t[y][x];if(t===WALL||t===FLOOR)continue;const cx=(x+.5)*T,cz=(y+.5)*T;
     if(t===EXIT){for(let i=0;i<4;i++)addMesh(Gm.step,Mt.stone,cx,.11+i*.22,cz+.6-i*.4);}
     else if(t===DOOR){addMesh(Gm.door,Mt.wood,cx,WALLH/2,cz);const rs=Object.keys(w.locks).filter(r=>!w.locks[r]);
@@ -1233,6 +1371,6 @@ function frame(){
 }
 
 renderBoard();
-window.__NET=NET;window.__TL={get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
+window.__NET=NET;window.__TL={buildAvatar,startTavern,launchJob,setClass,tavernUse,openJobPicker,get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
 </script>
 </body></html>

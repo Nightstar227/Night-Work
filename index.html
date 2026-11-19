@@ -89,6 +89,8 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
 .bar{height:9px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);border-radius:5px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;transition:width .15s}
 #hpFill{background:var(--danger)}
+.bar.stb{height:6px;margin-top:4px}#stFill{background:#d8c27a;transition:width .08s}#stFill.low{background:#8a6a3a}
+.parryov{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 0 rgba(255,255,255,0);transition:box-shadow .08s}.parryov.on{box-shadow:inset 0 0 60px 6px rgba(200,200,220,.35)}.parryov.parry{box-shadow:inset 0 0 90px 14px rgba(255,230,160,.6)}
 .vis{display:flex;align-items:center;gap:8px;font-size:.8rem;text-shadow:0 1px 2px #000}
 .gem{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:#111;flex:none}
 .hudbr{position:absolute;right:12px;bottom:12px;display:flex;gap:6px;pointer-events:none}
@@ -193,15 +195,16 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
         <div class="toasts" id="toasts"></div>
         <div class="hudbl">
           <div class="bar" aria-label="Health"><i id="hpFill"></i></div>
+          <div class="bar stb" aria-label="Stamina"><i id="stFill"></i></div>
           <div class="vis"><span class="gem" id="gem"></span><span id="visTxt">Hidden</span></div>
         </div>
         <div class="hudbr" id="hudAb"></div>
-        <div class="invisov" id="invisov"></div><div class="flashov" id="flashov"></div>
+        <div class="invisov" id="invisov"></div><div class="parryov" id="parryov"></div><div class="flashov" id="flashov"></div>
         <div class="touch" id="touch" hidden>
           <div class="stick" id="stick"><i id="knob"></i></div>
           <div class="tbtns">
-            <button data-t="crouch">Crouch</button><button data-t="use">Use</button><button data-t="attack">Strike</button>
-            <button data-t="1">1</button><button data-t="2">2</button><button data-t="3">3</button>
+            <button data-t="crouch">Crouch</button><button data-t="use">Use</button><button data-t="attack">Strike</button><button data-t="block">Block</button><button data-t="dodge">Dodge</button>
+            <button data-t="1">1</button><button data-t="2">2</button><button data-t="3">3</button><button data-t="4">4</button>
           </div>
         </div>
         <div class="pauseov" id="pauseov">
@@ -215,7 +218,7 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
         <div class="panel" id="crewPanel" hidden><span class="label" id="crewLabel">Crew</span><ul class="crew" id="crew"></ul></div>
         <div class="panel"><span class="label">Contract</span><ul class="objs" id="objs"></ul></div>
         <div class="panel"><span class="label">Your kit</span><ul class="abl" id="abl"></ul></div>
-        <div class="panel"><span class="label">Controls</span><p class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move, mouse looks. <kbd>Shift</kbd> run (loud), <kbd>C</kbd> or <kbd>Ctrl</kbd> crouch. Left click strikes, right click uses ability 1. <kbd>E</kbd> uses what you aim at. <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> abilities. <kbd>Esc</kbd> pauses. Arrow keys also turn.</p></div>
+        <div class="panel"><span class="label">Controls</span><p class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move, mouse looks. <kbd>Shift</kbd> run (loud), <kbd>C</kbd> or <kbd>Ctrl</kbd> crouch. Left click strikes. Hold right click or <kbd>Q</kbd> to block; raise it just before a hit to parry. <kbd>Space</kbd> dodges. Swings, blocks, dodges and running cost stamina. <kbd>E</kbd> uses what you aim at. <kbd>1</kbd>-<kbd>4</kbd> abilities. <kbd>Esc</kbd> pauses. Arrow keys also turn.</p></div>
         <div class="panel"><span class="label">Log</span><ul class="log" id="log"></ul></div>
       </div>
     </div>
@@ -345,13 +348,13 @@ function generate(m){
   t[door[1]][door[0]]=DOOR; world.door=door;
   for(const r of m.roles) world.locks[r]=false;
   const occupied=new Set([sx+','+sy]);
-  const addEnemy=(x,y,o)=>{const e=Object.assign({id:world.enemies.length,x,y,hp:40,max:40,dmg:12,face:pick(DIRS).slice(),base:'patrol',state:'patrol',home:null,group:null},o);e.state=e.base;world.enemies.push(e);occupied.add(x+','+y);return e;};
+  const addEnemy=(x,y,o)=>{const e=Object.assign({id:world.enemies.length,x,y,hp:40,max:40,dmg:20,face:pick(DIRS).slice(),base:'patrol',state:'patrol',home:null,group:null},o);e.state=e.base;world.enemies.push(e);occupied.add(x+','+y);return e;};
   // quiet tile inside a room: not next to a corridor opening
   const quietTile=c=>{const opts=[];for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++){if(x!==c.x0&&x!==c.x1&&y!==c.y0&&y!==c.y1)continue;const open=DIRS.some(([dx,dy])=>{const nx=x+dx,ny=y+dy;return !inRoom(c,nx,ny)&&t[ny]&&t[ny][nx]!==WALL;});if(!open&&!occupied.has(x+','+y))opts.push([x,y]);}
     const corners=opts.filter(([x,y])=>(x===c.x0||x===c.x1)&&(y===c.y0||y===c.y1));return pick(corners.length?corners:opts);};
   if(barracks){const [cx,cy]=center(barracks);t[cy][cx]=TABLE;const n=m.cx>=2?4:3;
     DIRS.slice(0,n).forEach(([dx,dy])=>addEnemy(cx+dx,cy+dy,{base:'idle',face:[-dx,-dy],group:'barracks',home:barracks.i}));}
-  if(captainRoom){const [cx,cy]=center(captainRoom);addEnemy(cx,cy,{base:'sentry',hp:90,max:90,dmg:22,captain:true,home:captainRoom.i});}
+  if(captainRoom){const [cx,cy]=center(captainRoom);addEnemy(cx,cy,{base:'sentry',hp:90,max:90,dmg:34,captain:true,home:captainRoom.i});}
   if(poolRoom){const [cx,cy]=center(poolRoom);t[cy][cx]=POOL;world.pool=[cx,cy];}
   if(larderRoom){const p=quietTile(larderRoom);if(p){t[p[1]][p[0]]=LARDER;world.larder=p;}}
   // patrols
@@ -474,17 +477,17 @@ $('#importBtn').onclick=()=>{const v=$('#shareIn').value.trim();const msg=$('#im
 /* ================= real-time first-person run ================= */
 const T=2, WALLH=3.2, EYE=1.62, CEYE=1.0;
 const STATS={
-  thief:{hp:60,atk:15,reach:1.15,swing:.42,walk:3.1,armor:0},
-  warrior:{hp:140,atk:30,reach:1.3,swing:.75,walk:2.7,armor:.4},
-  wizard:{hp:60,atk:8,reach:1.15,swing:.7,walk:3.0,armor:0},
+  thief:{hp:60,atk:15,reach:1.15,swing:.5,walk:3.1,armor:0,block:.4,parry:.3,cost:14},
+  warrior:{hp:140,atk:30,reach:1.3,swing:.85,walk:2.7,armor:.35,block:.85,parry:.22,cost:22},
+  wizard:{hp:60,atk:8,reach:1.15,swing:.75,walk:3.0,armor:0,block:.25,parry:.18,cost:12},
 };
 const KIT={
-  thief:{abil:[{id:'pebble',key:'1',name:'Pebble',cd:3},{id:'venom',key:'2',name:'Venom blade',cd:18}],
-    lines:['<b>Crouch</b> <kbd>C</kbd>: near silent and very hard to see in shadow.','<b>Backstab</b>: strike a guard who is not hunting you. Instant, silent kill. Captains survive it unless your blade is envenomed.','<b>Duelist</b>: strike a guard mid-swing to interrupt it for double damage.','<b>Venom blade</b> <kbd>2</kbd>: your next strike is poisoned (+20). Prep this before a captain.','<b>Pebble</b> <kbd>1</kbd>: throw where you aim. Guards nearby go to look.','<b>Snuff torches</b> <kbd>E</kbd>: the room stays dark for whoever comes next.','<b>Traps</b>: you spot pressure plates up close, and can disarm them.']},
+  thief:{abil:[{id:'pebble',key:'1',name:'Pebble',cd:3},{id:'venom',key:'2',name:'Venom blade',cd:18},{id:'flash',key:'3',name:'Flash powder',cd:20}],
+    lines:['<b>Parry</b>: raise your blade (right click or <kbd>Q</kbd>) just before a hit lands. Negates it and staggers the attacker. A plain block only stops 40%.','<b>Flash powder</b> <kbd>3</kbd>: blinds everyone in front of you for a few seconds. Captains shake it off faster.','<b>Crouch</b> <kbd>C</kbd>: near silent and very hard to see in shadow.','<b>Backstab</b>: strike a guard who is not hunting you. Instant, silent kill. Captains survive it unless your blade is envenomed.','<b>Duelist</b>: strike a guard mid-swing to interrupt it for double damage.','<b>Venom blade</b> <kbd>2</kbd>: your next strike is poisoned (+20). Prep this before a captain.','<b>Pebble</b> <kbd>1</kbd>: throw where you aim. Guards nearby go to look.','<b>Snuff torches</b> <kbd>E</kbd>: the room stays dark for whoever comes next.','<b>Traps</b>: you spot pressure plates up close, and can disarm them.']},
   warrior:{abil:[{id:'cleave',key:'1',name:'Cleave',cd:4},{id:'second',key:'2',name:'Second wind',cd:0,once:true}],
-    lines:['<b>Heavy blows</b>: 30 damage, 45 against captains. Armor shrugs off 40% of hits.','<b>Cleave</b> <kbd>1</kbd>: a wide sweep that hits everyone in front of you, captains included.','<b>Second wind</b> <kbd>2</kbd>: recover 60 health, once per run.','<b>Smash</b> <kbd>E</kbd>: break barricades and the vault crossbar. Loud.','Your armor clanks. Guards hear you from further away.']},
-  wizard:{abil:[{id:'firebolt',key:'1',name:'Fireburst',cd:1.4},{id:'invis',key:'2',name:'Invisibility',cd:20},{id:'divine',key:'3',name:'Divine',cd:12}],
-    lines:['<b>Fireburst</b> <kbd>1</kbd> or right click: bursts where it lands, 24 damage to every guard nearby. Captains shrug off most of it.','<b>Invisibility</b> <kbd>2</kbd>: unseen for 8 seconds. Striking or casting ends it.','<b>Divine</b> <kbd>3</kbd>: see guards and traps through walls for 8 seconds.','<b>Dispel</b> <kbd>E</kbd>: unravel wards and the vault rune seal.','<b>Scry</b> <kbd>E</kbd> at the pool: maps the job for everyone after you.']},
+    lines:['<b>Shield</b>: hold right click or <kbd>Q</kbd> to block 85% from the front, even a captain\'s heavy blow. Each block costs stamina. Raise it just before a hit to parry and stagger.','<b>Heavy blows</b>: 30 damage, 45 against captains. Armor shrugs off 40% of hits.','<b>Cleave</b> <kbd>1</kbd>: a wide sweep that hits and staggers everyone in front of you. Captains only flinch.','<b>Second wind</b> <kbd>2</kbd>: recover 60 health, once per run.','<b>Smash</b> <kbd>E</kbd>: break barricades and the vault crossbar. Loud.','Your armor clanks. Guards hear you from further away.']},
+  wizard:{abil:[{id:'firebolt',key:'1',name:'Fireburst',cd:1.6},{id:'invis',key:'2',name:'Invisibility',cd:20},{id:'divine',key:'3',name:'Divine',cd:12},{id:'repel',key:'4',name:'Repel',cd:9}],
+    lines:['<b>Repel</b> <kbd>4</kbd>: a crude hex that shoves everyone in front of you back and knocks them off their feet. Captains barely stumble.','<b>Weak guard</b>: your staff only blocks 25%. Keep your distance.','<b>Fireburst</b> <kbd>1</kbd>: bursts where it lands, 24 damage to every guard nearby. Captains shrug off most of it.','<b>Invisibility</b> <kbd>2</kbd>: unseen for 8 seconds. Striking or casting ends it.','<b>Divine</b> <kbd>3</kbd>: see guards and traps through walls for 8 seconds.','<b>Dispel</b> <kbd>E</kbd>: unravel wards and the vault rune seal.','<b>Scry</b> <kbd>E</kbd> at the pool: maps the job for everyone after you.']},
 };
 let G=null;const R3={ok:undefined};
 const RACK=11,STREET=12,PROP=13;
@@ -537,13 +540,13 @@ async function joinRoom(code,host){const r=await NET.lobby.join(code.toLowerCase
 function leaveRoom(){if(NET.room){try{NET.room.leave();}catch(e){}}NET.room=null;NET.code=null;for(const rr of NET.remote.values())if(rr.mesh&&R3.scene)R3.scene.remove(rr.mesh);NET.remote=new Map();NET.hostPeer=null;}
 function sendAct(a){if(G&&G.tavern)return;a.n=++NET.actSeq;NET.acts.push(a);if(NET.acts.length>12)NET.acts.shift();pushPresence(true);}
 function netLog(text,cls){NET.logsOut.push([++NET.logSeq,text,cls||'']);if(NET.logsOut.length>6)NET.logsOut.shift();}
-function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.yaw.toFixed(2),c:G.cls,hp:Math.max(0,Math.round(P.hp)),mx:P.max,cr:P.crouch?1:0,mv:P.moving?1:0,sp:P.sprint?1:0,iv:P.invis>0?1:0,vs:+G.vis.toFixed(2),sw:G.swingN||0,dn:G.down>0?1:0,lt:G.looted?1:0,nm:myNick()};}
+function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.yaw.toFixed(2),c:G.cls,hp:Math.max(0,Math.round(P.hp)),mx:P.max,cr:P.crouch?1:0,mv:P.moving?1:0,sp:P.sprint?1:0,iv:P.invis>0?1:0,vs:+G.vis.toFixed(2),sw:G.swingN||0,dn:G.down>0?1:0,lt:G.looted?1:0,bk:G.P.blocking?1:0,nm:myNick()};}
 const SCODE={patrol:0,idle:1,sentry:2,suspicious:3,search:4,return:5,alert:6};const SNAME=Object.keys(SCODE);
 function packWorld(){const w=G.w;const bits=(a,f)=>a.map(x=>f(x)?1:0).join('');
-  return {g:w.enemies.map(e=>[Math.round(e.x*100),Math.round(e.y*100),Math.round(e.ang*100),SCODE[e.state]??0,Math.max(0,Math.round(e.hp)),(e.dead?1:0)|(e.sick?2:0)|(e.atk>0?4:0)|(G.time-(e.hitT||-9)<.25?8:0)|(e.walking?16:0)]),
+  return {g:w.enemies.map(e=>[Math.round(e.x*100),Math.round(e.y*100),Math.round(e.ang*100),SCODE[e.state]??0,Math.max(0,Math.round(e.hp)),(e.dead?1:0)|(e.sick?2:0)|(e.atk>0?4:0)|(G.time-(e.hitT||-9)<.25?8:0)|(e.walking?16:0)|(e.stag>0?32:0),e.atk>0?Math.round((1-e.atk/(e.atkMax||.85))*9):0]),
     l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0};}
 function applyWorld(W){const w=G.w;if(!W||!W.g)return;
-  W.g.forEach((g,i)=>{const e=w.enemies[i];if(!e)return;e.tx=g[0]/100;e.ty=g[1]/100;e.tang=g[2]/100;e.state=SNAME[g[3]];e.hp=g[4];const wasDead=e.dead;e.dead=!!(g[5]&1);e.sick=!!(g[5]&2);e.atk=g[5]&4?.3:0;if(g[5]&8)e.hitT=G.time;e.walking=!!(g[5]&16);
+  W.g.forEach((g,i)=>{const e=w.enemies[i];if(!e)return;e.tx=g[0]/100;e.ty=g[1]/100;e.tang=g[2]/100;e.state=SNAME[g[3]];e.hp=g[4];const wasDead=e.dead;e.dead=!!(g[5]&1);e.sick=!!(g[5]&2);e.atkMax=1;e.atk=g[5]&4?1-(g[6]||0)/9:0;e.stag=g[5]&32?1:0;if(g[5]&8)e.hitT=G.time;e.walking=!!(g[5]&16);
     if(e.dead&&!wasDead){e.x=e.tx;e.y=e.ty;}if(e.x==null||Math.hypot(e.tx-e.x,e.ty-e.y)>3){e.x=e.tx;e.y=e.ty;e.ang=e.tang;}});
   const sig=JSON.stringify([W.l,W.td,W.tr,W.to,W.cl,W.ps,W.sc,W.lt]);if(sig===G.wsig)return;G.wsig=sig;
   Object.assign(w.locks,W.l);w.traps.forEach((t,i)=>{t.disarmed=W.td[i]==='1';t.revealed=W.tr[i]==='1';});G.torches.forEach((t,i)=>t.out=W.to[i]==='1');
@@ -563,7 +566,7 @@ function onRemote(){
   if(!G)return;if(G.tavern){tavernRemote();return;}
   if(G.mode==='client'){const host=NET.remote.get(NET.hostPeer);if(!host||!host.pres)return;const hp=host.pres;
     if(hp.w)applyWorld(hp.w);
-    for(const h of hp.hits||[]){if(h.n>NET.lastHit&&h.to===NET.myPeer){NET.lastHit=h.n;if(G.down<=0)hurt(h.d,`${h.m} hits you.`);}}
+    for(const h of hp.hits||[]){if(h.n>NET.lastHit&&h.to===NET.myPeer){NET.lastHit=h.n;const ee=G.w.enemies[h.id];if(G.down<=0&&hurt(h.d,`${h.m} hits you.`,ee?{x:ee.x,y:ee.y,heavy:!!h.hv}:null)==='parry')sendAct({t:'parry',id:h.id});}}
     if(hp.hits&&hp.hits.length&&NET.lastHit===0)NET.lastHit=Math.max(0,...hp.hits.filter(h=>h.to!==NET.myPeer).map(h=>0));
     for(const l of hp.lg||[]){if(l[0]>NET.lastLog){if(NET.lastLog>0||G.time>1)log(l[1],l[2]||undefined);NET.lastLog=l[0];}}
     if(hp.end&&!G.over)hostEnded(hp.end);}
@@ -577,6 +580,8 @@ function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peer
   else if(a.t==='trap'){const tr=w.traps[a.id];if(tr&&!tr.disarmed){tr.disarmed=true;tr.revealed=true;G.featDirty=true;noise(tr.x+.5,tr.y+.5,12,.6,.9);netLog(`${actor.name} set off a dart trap.`,'bad');}}
   else if(a.t==='rev'){const tr=w.traps[a.id];if(tr&&!tr.revealed){tr.revealed=true;G.featDirty=true;}}
   else if(a.t==='use')doUse(a,actor);
+  else if(a.t==='parry'){const e=w.enemies[a.id];if(e&&!e.dead&&Math.hypot(e.x-rr.p.x,e.y-rr.p.y)<2.5)stagger(e,e.captain?1.1:1.7);}
+  else if((a.t==='repel'&&actor.cls==='wizard')||(a.t==='flash'&&actor.cls==='thief')){G.lastActor=actor.key;ccCone(rr.p.x,rr.p.y,a.ang,a.t,actor);}
 }
 function hostGone(){if(!G||G.over)return;G.over=true;if(document.pointerLockElement)document.exitPointerLock();leaveRoom();
   showModal('The host left',`<p>The host closed the job, so the run is over. Their board keeps whatever the crew got done up to their last save.</p>`);}
@@ -657,7 +662,7 @@ function startTavern(mode,cls){
   G={m:{title:'The back room',biome:'tavern',roles:[],history:[]},w,cls,S,torches:tavernTorches(),time:0,log:[],did:[],kills:0,over:false,looted:false,explored:new Set(),proj:[],prev:{},
     mode,mp:true,tavern:true,job:null,hostJob:null,down:0,swingN:0,lastActor:'me',credits:{},wsig:'',objs:{},
     paused:true,glimpse:0,divineAt:null,keys:{},light:0,vis:0,sideDirty:true,featDirty:true,hudT:0,expT:0,miniT:0,lightT:0,focus:null,stick:[0,0],
-    P:{x:w.start[0]+.5+(Math.random()-.5),y:w.start[1]+.5+Math.random()*.8,yaw:0,pitch:0,hp:S.hp,max:S.hp,crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
+    P:{x:w.start[0]+.5+(Math.random()-.5),y:w.start[1]+.5+Math.random()*.8,yaw:0,pitch:0,hp:S.hp,max:S.hp,st:100,stDelay:0,blocking:false,blockAt:-9,dodge:0,dodgeCd:0,iframe:0,crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
   for(let i=0;i<w.W*w.H;i++)G.explored.add(i);
   $('#board').hidden=true;$('#game').hidden=false;$('#gTitle').textContent='The back room';$('#abandon').textContent='Leave the tavern';
   tavernBadge();$('#toasts').innerHTML='';
@@ -748,7 +753,7 @@ function startRun(m,cls,opts){
   G={m,w,cls,S,torches:placeTorches(w,m.seed),time:0,log:[],did:[],kills:0,over:false,looted:false,explored:new Set(),proj:[],prev:{},
     mode:opts.mode||'solo',mp:!!opts.mode,down:0,swingN:0,lastActor:'me',credits:{},wsig:'',
     paused:true,glimpse:0,divineAt:null,keys:{},light:0,vis:0,sideDirty:true,featDirty:true,hudT:0,expT:0,miniT:0,lightT:0,focus:null,stick:[0,0],
-    P:{x:w.start[0]+.5,y:w.start[1]+.5,yaw:Math.atan2(-best[0],-best[1]),pitch:0,hp:S.hp,max:S.hp,crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
+    P:{x:w.start[0]+.5,y:w.start[1]+.5,yaw:Math.atan2(-best[0],-best[1]),pitch:0,hp:S.hp,max:S.hp,st:100,stDelay:0,blocking:false,blockAt:-9,dodge:0,dodgeCd:0,iframe:0,crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
   for(const id of (w.snuffed||[]))if(G.torches[id])G.torches[id].out=true;
   G.objs=objList(m,BIOMES[m.biome].boss);
   for(const r in G.objs)for(const o of G.objs[r])G.prev[o.id]=objDone(w,o.id);
@@ -795,9 +800,9 @@ function look(dx,dy){if(!G)return;G.P.yaw-=dx*.0024;G.P.pitch=Math.max(-1.3,Math
 document.addEventListener('mousemove',ev=>{if(!G||G.paused)return;if(document.pointerLockElement)look(ev.movementX,ev.movementY);
   else if(dragging&&dragging.mouse){const dx=ev.clientX-dragging.x,dy=ev.clientY-dragging.y;if(Math.abs(dx)+Math.abs(dy)>3)dragging.moved=true;look(dx*1.4,dy*1.4);dragging.x=ev.clientX;dragging.y=ev.clientY;}});
 view.addEventListener('mousedown',ev=>{if(!G||G.paused||touchMode)return;
-  if(document.pointerLockElement){if(ev.button===0)attack();else if(ev.button===2)useAbility(KIT[G.cls].abil[0].id);return;}
-  if(ev.button===2){useAbility(KIT[G.cls].abil[0].id);return;}dragging={mouse:true,x:ev.clientX,y:ev.clientY,moved:false};});
-document.addEventListener('mouseup',ev=>{if(dragging&&dragging.mouse){if(!dragging.moved&&ev.button===0&&G&&!G.paused)attack();dragging=null;}});
+  if(ev.button===2){G.blockHeld=true;return;}
+  if(document.pointerLockElement){if(ev.button===0)attack();return;}dragging={mouse:true,x:ev.clientX,y:ev.clientY,moved:false};});
+document.addEventListener('mouseup',ev=>{if(ev.button===2&&G)G.blockHeld=false;if(dragging&&dragging.mouse){if(!dragging.moved&&ev.button===0&&G&&!G.paused)attack();dragging=null;}});
 view.addEventListener('contextmenu',ev=>ev.preventDefault());
 // touch: stick + look
 const stick=$('#stick'),knob=$('#knob');let stickId=null,lookId=null,lookLast=null;
@@ -808,7 +813,8 @@ view.addEventListener('touchmove',ev=>{ev.preventDefault();for(const t of ev.cha
   if(t.identifier===lookId&&lookLast){look((t.clientX-lookLast[0])*2,(t.clientY-lookLast[1])*2);lookLast=[t.clientX,t.clientY];}}},{passive:false});
 view.addEventListener('touchend',ev=>{for(const t of ev.changedTouches){if(t.identifier===stickId){stickId=null;if(G)G.stick=[0,0];knob.style.transform='';}if(t.identifier===lookId)lookId=null;}});
 document.querySelectorAll('.tbtns button').forEach(b=>b.addEventListener('touchstart',ev=>{ev.preventDefault();if(!G||G.paused)return;const t=b.dataset.t;
-  if(t==='attack')attack();else if(t==='use')interact();else if(t==='crouch'){G.P.crouch=!G.P.crouch;}else{const A=KIT[G.cls].abil[+t-1];if(A)useAbility(A.id);}},{passive:false}));
+  if(t==='attack')attack();else if(t==='block')G.blockHeld=true;else if(t==='dodge')dodge();else if(t==='use')interact();else if(t==='crouch'){G.P.crouch=!G.P.crouch;}else{const A=KIT[G.cls].abil[+t-1];if(A)useAbility(A.id);}},{passive:false}));
+document.querySelectorAll('.tbtns button[data-t="block"]').forEach(b=>b.addEventListener('touchend',()=>{if(G)G.blockHeld=false;}));
 document.addEventListener('keydown',ev=>{
   if(!G||$('#game').hidden||ev.target.tagName==='TEXTAREA'||!$('#modal').hidden)return;
   G.keys[ev.code]=true;
@@ -816,11 +822,12 @@ document.addEventListener('keydown',ev=>{
   if(G.paused)return;
   if(ev.code==='KeyC'||ev.code==='ControlLeft'||ev.code==='ControlRight'){if(!ev.repeat)G.P.crouch=!G.P.crouch;}
   if(ev.code==='KeyE'||ev.code==='KeyF'){if(!ev.repeat)interact();}
+  if(ev.code==='Space'&&!ev.repeat)dodge();
   if(ev.code==='KeyP'&&!lockMode)setPause(true,'Paused','Take a breath.');
   const A=KIT[G.cls].abil.find(a=>'Digit'+a.key===ev.code);if(A&&!ev.repeat)useAbility(A.id);
 });
 document.addEventListener('keyup',ev=>{if(G)G.keys[ev.code]=false;});
-window.addEventListener('blur',()=>{if(G){G.keys={};if(!G.over&&!G.paused&&!lockMode)setPause(true,'Paused','Take a breath.');}});
+window.addEventListener('blur',()=>{if(G){G.keys={};G.blockHeld=false;if(!G.over&&!G.paused&&!lockMode)setPause(true,'Paused','Take a breath.');}});
 
 /* ---------- simulation ---------- */
 function update(dt){
@@ -835,8 +842,13 @@ function update(dt){
   if(K.ArrowLeft)P.yaw+=2.2*dt;if(K.ArrowRight)P.yaw-=2.2*dt;
   let f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0);
   if(inputOn&&(G.stick[0]||G.stick[1])){s=G.stick[0];f=-G.stick[1];}
-  const len=Math.hypot(f,s);P.sprint=!!(K.ShiftLeft||K.ShiftRight)&&f>0&&!P.crouch;
-  let spd=S.walk*(P.crouch?.5:P.sprint?1.75:1)*(G.looted?.85:1);
+  const wantBlock=inputOn&&(G.blockHeld||K.KeyQ)&&!(P.guardBroken>0)&&P.st>1&&P.swing<=0;if(wantBlock&&!P.blocking){P.blocking=true;P.blockAt=G.time;}else if(!wantBlock)P.blocking=false;
+  if(P.guardBroken>0)P.guardBroken-=dt;if(P.iframe>0)P.iframe-=dt;if(P.dodgeCd>0)P.dodgeCd-=dt;
+  const len=Math.hypot(f,s);P.sprint=!!(K.ShiftLeft||K.ShiftRight)&&f>0&&!P.crouch&&!P.blocking&&P.st>2;
+  if(P.sprint&&len>.1){P.st-=13*dt;P.stDelay=.6;}
+  if(P.stDelay>0)P.stDelay-=dt;else if(!P.blocking)P.st=Math.min(100,P.st+(G.cls==='warrior'?20:24)*dt);
+  if(P.dodge>0){P.dodge-=dt;const k=7.5/T*dt;const mx=P.dodgeDir[0]*k,my=P.dodgeDir[1]*k;if(!blockedAt(P.x+mx,P.y,.24))P.x+=mx;if(!blockedAt(P.x,P.y+my,.24))P.y+=my;}
+  let spd=S.walk*(P.crouch?.5:P.sprint?1.75:1)*(P.blocking?.5:1)*(G.looted?.85:1);
   P.moving=len>.1;
   if(P.moving){const fx=-Math.sin(P.yaw),fy=-Math.cos(P.yaw),rx=Math.cos(P.yaw),ry=-Math.sin(P.yaw);const k=Math.min(1,len)/len*spd/T*dt;
     const mx=(fx*f+rx*s)*k,my=(fy*f+ry*s)*k;const r=.24;
@@ -866,7 +878,25 @@ function update(dt){
   G.focus=findFocus();
 }
 function blockedAt(x,y,r){for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r]])if(!walkT(tileAt(x+ox,y+oy)))return true;return false;}
-function hurt(d,msg){const P=G.P;if(G.down>0)return;const dmg=Math.round(d*(1-G.S.armor));P.hp-=dmg;G.flash=true;log(`${msg} You take ${dmg}.`,'bad');if(P.hp<=0)die();}
+function hurt(d,msg,src){const P=G.P,S=G.S;if(G.down>0)return;
+  if(src&&P.iframe>0){log('You twist aside. The blow whistles past.','good');return 'dodge';}
+  if(src&&P.blocking){const a=Math.abs(angDiff(Math.atan2(src.y-P.y,src.x-P.x),Math.atan2(fwd()[1],fwd()[0])));
+    if(a<1.15){if(G.time-P.blockAt<S.parry){P.st=Math.max(0,P.st-5);G.parryFx=.25;log('Parry! They stagger back.','good');return 'parry';}
+      const bf=src.heavy&&G.cls!=='warrior'?0:S.block;const cost=d*(G.cls==='warrior'?.8:1.3);P.st-=cost;P.stDelay=1;
+      if(P.st<0){P.st=0;P.blocking=false;P.guardBroken=1.4;log('Your guard breaks!','bad');}
+      else if(bf>0){d*=1-bf;G.blockFx=.15;}else log('Too heavy to block without a shield. Dodge or parry it.','bad');}}
+  const dmg=Math.round(d*(1-S.armor));if(dmg<=0)return 'block';P.hp-=dmg;G.flash=true;log(`${msg} You take ${dmg}.`,'bad');if(P.hp<=0)die();return 'hit';}
+function dodge(){const P=G.P;if(G.paused||G.down>0||P.dodgeCd>0||P.st<18)return;
+  const K=G.keys;let f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0);if(G.stick[0]||G.stick[1]){s=G.stick[0];f=-G.stick[1];}if(!f&&!s)f=-1;
+  const fx=-Math.sin(P.yaw),fy=-Math.cos(P.yaw),rx=Math.cos(P.yaw),ry=-Math.sin(P.yaw);const l=Math.hypot(f,s);
+  P.dodgeDir=[(fx*f+rx*s)/l,(fy*f+ry*s)/l];P.dodge=.26;P.iframe=.3;P.dodgeCd=.7;P.st-=18;P.stDelay=.9;P.blocking=false;
+  if(G.mode!=='client')noise(P.x,P.y,G.cls==='warrior'?7:4,.3,.7,true);}
+function ccCone(x,y,ang,kind,actor){const range=kind==='repel'?2.7:2.4,arc=kind==='repel'?.95:.85;let n=0;
+  for(const e of G.w.enemies){if(e.dead)continue;const dx=e.x-x,dy=e.y-y,d=Math.hypot(dx,dy);if(d>range||(Math.abs(angDiff(Math.atan2(dy,dx),ang))>arc&&d>.5)||!losT(x,y,e.x,e.y))continue;n++;
+    if(kind==='repel'){stagger(e,e.captain?.5:2.2);if(!e.captain){const ux=dx/(d||1),uy=dy/(d||1);for(let i=0;i<12;i++){const nx=e.x+ux*.12,ny=e.y+uy*.12;if(!walkT(tileAt(nx,ny)))break;e.x=nx;e.y=ny;}}}
+    else{stagger(e,e.captain?1.4:3.2);e.aw=1;}
+    if(e.state!=='alert')goAlert(e,true,[x,y]);}
+  noise(x,y,kind==='repel'?9:6,1,1);return n;}
 
 /* ---------- guards ---------- */
 function pathTo(e,tx,ty){
@@ -907,6 +937,7 @@ function noise(x,y,radM,amt,cap,footstep){
     if(e.aw>=1&&footstep){goAlert(e);continue;}
     if(e.aw>=.3){if(e.state!=='suspicious'&&e.state!=='search')bark(e);e.state='suspicious';e.inv=[x,y];e.timer=.7;e.look=0;e.path=null;}}
 }
+function stagger(e,t){if(e.dead)return;e.stag=Math.max(e.stag||0,t);e.atk=0;e.cool=Math.max(e.cool,.4);e.hitT=G.time;}
 function bark(e){e.barkT=G.time;}
 function seesPlayer(e){let best=0,who=null;for(const pl of players()){const a=seesOne(e,pl);if(a>best){best=a;who=pl;}}e.seen=who;return best;}
 function seesOne(e,P){
@@ -923,6 +954,7 @@ function seesOne(e,P){
 }
 function updGuard(e,dt){
   const P=G.P;e.walking=false;e.cool-=dt;
+  if(e.stag>0){e.stag-=dt;e.atk=0;if(e.state!=='alert'&&e.stag<=0)goAlert(e,true);return;}
   const amt=seesPlayer(e);const SP=e.seen;
   if(amt>0){e.aw+=amt*dt*1.3;e.last=[SP.x,SP.y];e.tgt=SP.key;e.unseen=0;}
   else{e.unseen+=dt;if(e.state!=='alert')e.aw=Math.max(0,e.aw-dt*(e.state==='suspicious'||e.state==='search'?.07:.14));}
@@ -959,9 +991,11 @@ function updGuard(e,dt){
     case 'alert':{
       const tp=(amt>0&&SP)||players().find(p=>p.key===e.tgt)||null;const d=tp?Math.hypot(tp.x-e.x,tp.y-e.y):99;
       if(amt>0&&tp)turnTo(e,Math.atan2(tp.y-e.y,tp.x-e.x),dt*8);
-      if(e.atk>0){e.atk-=dt;if(e.atk<=0){e.cool=1.1;if(tp&&d<1.0&&!tp.invis&&Math.abs(angDiff(Math.atan2(tp.y-e.y,tp.x-e.x),e.ang))<1.2){
-        if(tp.key==='me')hurt(e.dmg,`${nameOf(e)} hits you.`);else{NET.hitsOut.push({n:++NET.hitSeq,to:tp.key,d:e.dmg,m:nameOf(e)});if(NET.hitsOut.length>8)NET.hitsOut.shift();}}}break;}
-      if(amt>0&&d<.8){if(e.cool<=0)e.atk=.5;break;}
+      if(e.atk>0){e.atk-=dt;if(tp&&e.atk>e.atkMax*.4)turnTo(e,Math.atan2(tp.y-e.y,tp.x-e.x),dt*3);
+        if(e.atk<=0){e.cool=e.captain?1.7:1.35;for(const pl of players()){const dd=Math.hypot(pl.x-e.x,pl.y-e.y);if(dd>1.15||pl.invis||Math.abs(angDiff(Math.atan2(pl.y-e.y,pl.x-e.x),e.ang))>.9)continue;
+          if(pl.key==='me'){if(hurt(e.dmg,`${nameOf(e)} hits you.`,{x:e.x,y:e.y,heavy:!!e.captain})==='parry')stagger(e,e.captain?1.1:1.7);}
+          else{NET.hitsOut.push({n:++NET.hitSeq,to:pl.key,d:e.dmg,m:nameOf(e),id:e.id,hv:e.captain?1:0});if(NET.hitsOut.length>8)NET.hitsOut.shift();}}}break;}
+      if(amt>0&&d<1.0){if(e.cool<=0){e.atkMax=e.captain?1.15:.85;e.atk=e.atkMax;}break;}
       if(e.last)moveTo(e,e.last[0],e.last[1],3.4*sickMul,dt);
       if(e.unseen>5){e.state='search';e.aw=.75;e.inv=e.last?e.last.slice():[e.x,e.y];e.look=0;e.timer=0;e.searchLeft=3;log(`${nameOf(e)} lost you and starts searching.`);}
       break;}
@@ -979,11 +1013,12 @@ function applyHit(e,cls,kind,o){
     e.hp-=60;say(`${who==='You'?'Your':who+"'s"} backstab staggers ${lc(nameOf(e))}, but a captain takes more than one blade.`,'bad');goAlert(e,true,o.src);e.hitT=G.time;return;}
   let d=0;
   if(kind==='melee'){d={thief:18,warrior:30,wizard:8}[cls]||8;
-    if(cls==='thief'&&e.atk>0){d*=2;e.atk=0;e.cool=1.4;say(`${who==='You'?'You catch':who+' catches'} ${lc(nameOf(e))} mid-swing.`,'good');}
+    if(cls==='thief'&&e.atk>0){d*=2;stagger(e,.8);say(`${who==='You'?'You catch':who+' catches'} ${lc(nameOf(e))} mid-swing.`,'good');}
     if(cls==='thief'&&o.venom)d+=20;if(cls==='warrior'&&e.captain)d=Math.round(d*1.5);}
   else if(kind==='cleave'){d=35;}
   else if(kind==='fire'){d=24;if(e.captain)d=Math.round(d*.35);}
-  e.hp-=d;noise(e.x,e.y,10,1,1);
+  if(e.stag>0&&kind!=='fire')d=Math.round(d*1.5);
+  e.hp-=d;noise(e.x,e.y,10,1,1);if(kind==='cleave'&&e.hp>0)stagger(e,e.captain?.35:.9);
   if(e.hp<=0){say(kind==='fire'?`Fire takes ${lc(nameOf(e))}.`:`${who==='You'?'You cut':who+' cuts'} down ${lc(nameOf(e))}.`);kill(e,actor);}
   else{goAlert(e,true,o.src);e.hitT=G.time;}
 }
@@ -991,7 +1026,7 @@ function burstAt(x,y,cls,actor){let n=0;for(const e of G.w.enemies){if(e.dead)co
 function inArc(e,reach,arc){const P=G.P,[fx,fy]=fwd();const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>reach)return false;const a=Math.abs(angDiff(Math.atan2(dy,dx),Math.atan2(fy,fx)));return (a<arc||d<.35)&&losT(P.x,P.y,e.x,e.y);}
 function breakInvis(why){if(G.P.invis>0){G.P.invis=0;log(why);}}
 function attack(){
-  const P=G.P,S=G.S;if(G.over||P.swing>0||G.down>0)return;P.swing=S.swing;G.swingStart=G.time;G.swingN=(G.swingN||0)+1;
+  const P=G.P,S=G.S;if(G.over||P.swing>0||G.down>0||P.blocking)return;if(P.st<S.cost*.5){toast('Out of breath.');return;}P.st-=S.cost;P.stDelay=.8;P.swing=S.swing;G.swingStart=G.time;G.swingN=(G.swingN||0)+1;
   breakInvis('Striking breaks your invisibility.');
   const tg=G.w.enemies.filter(e=>!e.dead&&inArc(e,S.reach,.6)).sort((a,b)=>Math.hypot(a.x-P.x,a.y-P.y)-Math.hypot(b.x-P.x,b.y-P.y))[0];
   if(!tg)return;
@@ -1012,11 +1047,14 @@ function useAbility(id){
   switch(id){
     case 'pebble':G.proj.push({kind:'pebble',pos:cam.position.clone().add(dir.clone().multiplyScalar(.4)),vel:dir.clone().multiplyScalar(11).add(new THREE.Vector3(0,2.2,0)),t:0});break;
     case 'firebolt':breakInvis('Casting breaks your invisibility.');G.proj.push({kind:'fire',pos:cam.position.clone().add(dir.clone().multiplyScalar(.5)).add(new THREE.Vector3(0,-.15,0)),vel:dir.clone().multiplyScalar(16),t:0});if(G.mode!=='client')noise(P.x,P.y,4,.2,.5);break;
-    case 'cleave':{const hit=G.w.enemies.filter(e=>!e.dead&&inArc(e,1.45,1.05));P.swing=.6;G.swingStart=G.time;
+    case 'cleave':{if(P.st<20){toast('Out of breath.');return;}P.st-=20;P.stDelay=.9;const hit=G.w.enemies.filter(e=>!e.dead&&inArc(e,1.45,1.05));P.swing=.6;G.swingStart=G.time;
       G.swingN=(G.swingN||0)+1;
       if(G.mode==='client'){for(const e of hit)sendAct({t:'hit',k:'cleave',id:e.id});}
       else{G.lastActor='me';for(const e of hit)applyHit(e,'warrior','cleave');noise(P.x,P.y,13,1,1);}
       log(hit.length?`You sweep through ${hit.length} foe${hit.length>1?'s':''}.`:'Your sweep cuts only air.');break;}
+    case 'repel':case 'flash':{breakInvis('Casting breaks your invisibility.');const [fx,fy]=fwd(),ang=Math.atan2(fy,fx);G.bursts=G.bursts||[];G.bursts.push({x:P.x+fx*1.2,y:P.y+fy*1.2,t:0,col:id==='repel'?0x9a95f5:0xfff2c0});
+      if(G.mode==='client'){sendAct({t:id,ang:+ang.toFixed(3)});log(id==='repel'?'You hurl the hex.':'You fling a fistful of flash powder.');}
+      else{const n=ccCone(P.x,P.y,ang,id,{key:'me'});log(id==='repel'?(n?`The hex throws back ${n} foe${n>1?'s':''}.`:'The hex stirs only dust.'):(n?`Flash! ${n} foe${n>1?'s are':' is'} blinded.`:'The powder flares at nothing.'),n?'good':undefined);}break;}
     case 'venom':P.venom=true;log('You coat your blade. Your next strike is poisoned.','good');break;
     case 'second':P.hp=Math.min(P.max,P.hp+60);P.used[id]=true;log('You grit your teeth and catch your breath. +60 health.','good');break;
     case 'invis':P.invis=8;log('You fold the light around yourself.');for(const e of G.w.enemies)if(!e.dead&&e.state==='alert')e.unseen=Math.max(e.unseen,2);break;
@@ -1162,7 +1200,7 @@ function renderSide(){
 }
 function renderHUD(){
   const P=G.P;
-  $('#hpFill').style.width=Math.max(0,P.hp/P.max*100)+'%';
+  $('#hpFill').style.width=Math.max(0,P.hp/P.max*100)+'%';$('#stFill').style.width=Math.max(0,P.st)+'%';$('#stFill').classList.toggle('low',P.st<25||P.guardBroken>0);
   const v=G.vis;const g=Math.round(30+v*200);$('#gem').style.background=`radial-gradient(circle at 40% 35%, rgb(${g+25},${g},${Math.round(g*.6)}), rgb(${Math.round(g*.35)},${Math.round(g*.3)},${Math.round(g*.2)}))`;
   const hunting=G.w.enemies.filter(e=>!e.dead&&e.state==='alert').length,sus=G.w.enemies.filter(e=>!e.dead&&(e.state==='suspicious'||e.state==='search')).length;
   $('#visTxt').textContent=(P.invis>0?'Invisible':v<.12?'Hidden':v<.4?'In shadow':v<.7?'Visible':'Exposed')+(P.crouch?' · crouched':'')+(hunting?` · ${hunting} on alert`:sus?` · ${sus} suspicious`:'');
@@ -1256,6 +1294,7 @@ function build3D(){
   if(G.cls==='thief'){const bl=new THREE.Mesh(new THREE.BoxGeometry(.025,.02,.32),L(0xc9ccd2));bl.position.z=-.18;const hd=new THREE.Mesh(new THREE.BoxGeometry(.035,.035,.12),L(0x3a2a1a));wpn.add(bl,hd);wpn.position.set(.22,-.2,-.38);}
   else if(G.cls==='warrior'){const bl=new THREE.Mesh(new THREE.BoxGeometry(.05,.015,.8),L(0xb9bcc4));bl.position.z=-.45;const gd=new THREE.Mesh(new THREE.BoxGeometry(.22,.03,.04),L(0x7a5a2a));const hd=new THREE.Mesh(new THREE.BoxGeometry(.04,.04,.18),L(0x3a2a1a));hd.position.z=.1;wpn.add(bl,gd,hd);wpn.position.set(.26,-.26,-.42);wpn.rotation.x=.25;}
   else{const st=new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,1.1,8),L(0x5a4130));st.rotation.x=-1.25;st.position.z=-.3;const orb=new THREE.Mesh(new THREE.SphereGeometry(.05,12,10),new THREE.MeshBasicMaterial({color:0xb6b2ff}));orb.position.set(0,.16,-.82);wpn.add(st,orb);wpn.position.set(.24,-.32,-.25);}
+  R3.shield=null;if(G.cls==='warrior'){const sh=new THREE.Group();const disc=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.04,20),L(0x7a5a2a));disc.rotation.x=Math.PI/2;const boss=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),L(0x9a9ea6));boss.position.z=-.03;sh.add(disc,boss);R3.camera.add(sh);R3.shield=sh;}
   R3.wpn=wpn;R3.wpnBase={x:wpn.position.x,y:wpn.position.y,rx:wpn.rotation.x};R3.camera.add(wpn);
   if(G.tavern){sc.add(new THREE.AmbientLight(0xffc890,.38));sc.fog=new THREE.Fog(0x020203,10,40);}
   G.featDirty=true;R3.lightT=0;
@@ -1271,7 +1310,7 @@ function updRemoteAvatars(dt){
     const g=rr.mesh,U=g.userData;const k=Math.min(1,dt*12);rr.dx+=(p.x-rr.dx)*k;rr.dy+=(p.y-rr.dy)*k;rr.dyw+=angDiff(p.yw,rr.dyw)*k;
     g.visible=true;g.position.set(rr.dx*T,0,rr.dy*T);g.rotation.set(p.dn?-Math.PI/2:0,rr.dyw,0);if(p.dn)g.position.y=.3;
     g.scale.set(U.sc,U.sc*(p.cr?.7:1),U.sc);for(const m of U.mats){m.opacity=p.iv?.22:1;m.transparent=!!p.iv;}
-    if(p.sw!==rr.lastSw){rr.lastSw=p.sw;rr.swingT=.3;}if(rr.swingT>0){rr.swingT-=dt;U.arm.rotation.x=-Math.sin((1-rr.swingT/.3)*Math.PI)*1.4;}else U.arm.rotation.x=0;
+    if(p.sw!==rr.lastSw){rr.lastSw=p.sw;rr.swingT=.3;}if(rr.swingT>0){rr.swingT-=dt;U.arm.rotation.x=-Math.sin((1-rr.swingT/.3)*Math.PI)*1.4;}else U.arm.rotation.x=p.bk?.9:0;
     const label=peerName(rr)+(p.dn?' (down)':'');if(label!==U.label){U.label=label;const x=U.c.getContext('2d');x.clearRect(0,0,256,64);x.font='600 30px Alegreya Sans, sans-serif';x.textAlign='center';x.lineWidth=5;x.strokeStyle='#000';x.strokeText(label,128,42);x.fillStyle=CLS[p.c]?CLS[p.c].color:'#fff';x.fillText(label,128,42);U.sp.material.map.needsUpdate=true;}}
 }
 /* class silhouettes: thin hooded thief, big burly warrior, robed wizard in a silly pointy hat */
@@ -1342,7 +1381,10 @@ function frame(){
   c.position.set(P.x*T,P.eye+bob,P.y*T);c.rotation.y=P.yaw;c.rotation.x=P.pitch;
   // weapon swing
   const sw=P.swing>0?1-P.swing/G.S.swing:0;const k=sw>0?Math.sin(sw*Math.PI):0;
-  R3.wpn.rotation.x=R3.wpnBase.rx-k*1.1;R3.wpn.position.y=R3.wpnBase.y+k*.08+(P.moving?Math.abs(Math.sin(P.bob))*.012:0);R3.wpn.position.x=R3.wpnBase.x-k*.1;
+  R3.bk=(R3.bk||0)+((P.blocking?1:0)-(R3.bk||0))*Math.min(1,dt*14);const bk=R3.bk;
+  R3.wpn.rotation.x=R3.wpnBase.rx-k*1.1+bk*.5;R3.wpn.rotation.z=bk*(G.cls==='warrior'?0:1.25);R3.wpn.position.y=R3.wpnBase.y+k*.08+bk*.12+(P.moving?Math.abs(Math.sin(P.bob))*.012:0);R3.wpn.position.x=R3.wpnBase.x-k*.1-bk*(G.cls==='warrior'?0:.14);
+  if(R3.shield){R3.shield.position.set(-.3+bk*.2,-.42+bk*.3,-.5+bk*.1);R3.shield.rotation.y=.5-bk*.45;}
+  if(G.parryFx>0){G.parryFx-=dt;}if(G.blockFx>0)G.blockFx-=dt;$('#parryov').classList.toggle('on',G.parryFx>0||G.blockFx>0);$('#parryov').classList.toggle('parry',G.parryFx>0);
   // lights: nearest lit torches
   R3.lightT-=dt;if(R3.lightT<=0){R3.lightT=.2;const lit=G.torches.filter(q=>!q.out).map(q=>[q,Math.hypot(q.lx-P.x,q.ly-P.y)]).sort((a,b)=>a[1]-b[1]).slice(0,8);
     R3.lights.forEach((l,i)=>{const q=lit[i];if(q){l.position.set(q[0].lx*T,2.0,q[0].ly*T);l.userData.on=true;l.userData.seed=q[0].id;}else{l.userData.on=false;l.intensity=0;}});}
@@ -1355,12 +1397,14 @@ function frame(){
     if(e.dead){g.rotation.set(-Math.PI/2,Math.atan2(-Math.cos(e.ang),-Math.sin(e.ang)),0);g.position.y=.3;U.sp.visible=false;U.gh.visible=false;U.arm.visible=false;return;}
     g.rotation.set(0,Math.atan2(-Math.cos(e.ang),-Math.sin(e.ang)),0);
     if(e.walking)e.walkPh+=dt*9;U.inner.position.y=e.walking?Math.abs(Math.sin(e.walkPh))*.06:0;
-    U.inner.rotation.x=e.atk>0?-.35:(G.time-(e.hitT||-9)<.2?.25:0);U.arm.rotation.x=e.atk>0?-1.2:0;
-    const s=e.state;U.sp.visible=s==='alert'||s==='suspicious'||s==='search';U.sp.material=s==='alert'?R3.sX:R3.sQ;
+    const wp=e.atk>0?1-e.atk/(e.atkMax||1):0;
+    if(e.stag>0){U.inner.rotation.x=.3;U.inner.rotation.z=Math.sin(t*9)*.18;U.arm.rotation.x=-.6;}
+    else{U.inner.rotation.z=0;U.inner.rotation.x=e.atk>0?-.25*wp:(G.time-(e.hitT||-9)<.2?.25:0);U.arm.rotation.x=e.atk>0?(wp<.85?2.3*wp/.85:2.3-(wp-.85)/.15*3.4):0;}
+    const s=e.state;U.sp.visible=(s==='alert'||s==='suspicious'||s==='search')&&!(e.atk>0);U.sp.material=s==='alert'?R3.sX:R3.sQ;
     const gl=G.glimpse>0&&(!G.divineAt||Math.hypot(e.x-G.divineAt[0],e.y-G.divineAt[1])<10);U.gh.visible=gl;
-    U.bodyMat.color.set(e.sick?'#8fbf6a':BIOMES[G.w.biome].foeCol);if(e.hp<e.max)U.bodyMat.color.multiplyScalar(.7+.3*e.hp/e.max);});
+    U.bodyMat.color.set(e.sick?'#8fbf6a':BIOMES[G.w.biome].foeCol);if(e.hp<e.max)U.bodyMat.color.multiplyScalar(.7+.3*e.hp/e.max);if(e.atk>0)U.bodyMat.color.lerp(new THREE.Color(0xff3020),.55*wp);U.bodyMat.emissive&&U.bodyMat.emissive.setRGB(e.atk>0?.35*wp:0,0,0);});
   // bursts
-  for(const b of (G.bursts||[])){b.t+=dt;if(!b.mesh){b.mesh=new THREE.Mesh(R3.geo.fire,new THREE.MeshBasicMaterial({color:0xff8a3c,transparent:true,opacity:.7,depthWrite:false}));b.mesh.position.set(b.x*T,1,b.y*T);R3.scene.add(b.mesh);}const s=1+b.t*22;b.mesh.scale.setScalar(s);b.mesh.material.opacity=Math.max(0,.7-b.t*1.6);if(b.t>.45){R3.scene.remove(b.mesh);b.done=true;}}
+  for(const b of (G.bursts||[])){b.t+=dt;if(!b.mesh){b.mesh=new THREE.Mesh(R3.geo.fire,new THREE.MeshBasicMaterial({color:b.col||0xff8a3c,transparent:true,opacity:.7,depthWrite:false}));b.mesh.position.set(b.x*T,1,b.y*T);R3.scene.add(b.mesh);}const s=1+b.t*22;b.mesh.scale.setScalar(s);b.mesh.material.opacity=Math.max(0,.7-b.t*1.6);if(b.t>.45){R3.scene.remove(b.mesh);b.done=true;}}
   if(G.bursts)G.bursts=G.bursts.filter(b=>!b.done);
   // projectiles
   for(const p of G.proj){if(!p.mesh){p.mesh=new THREE.Mesh(p.kind==='fire'?R3.geo.fire:R3.geo.pebble,p.kind==='fire'?R3.mat.fire:R3.mat.pebble);R3.scene.add(p.mesh);}p.mesh.position.copy(p.pos);}

@@ -147,6 +147,8 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
 .ccard:hover,.ccard:focus-visible{border-color:var(--cc)}.cchead{display:flex;justify-content:space-between;gap:8px}.cchead b{color:var(--cc)}
 .xpbar{display:inline-block;height:5px;background:#0b0c10;border-radius:3px;overflow:hidden;min-width:80px;vertical-align:middle}.xpbar i{display:block;height:100%;background:var(--lantern)}
 .gearrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:4px 0 10px}.beltH{margin:12px 0 0;font-family:var(--display);font-weight:400;font-size:1.1rem;color:var(--lantern)}
+.crattr{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.crattr span{display:flex;flex-direction:column;align-items:center;min-width:52px;padding:5px 6px;border:1px solid var(--line);border-radius:8px;background:var(--slate2);font-size:.75rem;color:var(--muted)}.crattr span b{font-size:1.15rem;color:var(--text)}.crattr span.pri{border-color:var(--lantern);color:var(--lantern)}
+.drw{font-size:.8rem;color:#d98a7a}
 #creov{position:fixed;inset:0;z-index:62;background:rgba(6,7,10,.9);overflow:auto;padding:16px max(12px,env(safe-area-inset-left,0px))}
 .crebox{max-width:1100px;margin:0 auto;background:var(--slate);border:1px solid var(--lantern-dim);border-radius:12px;padding:16px 18px}
 .crtop{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}.crtop h2{margin:0;color:var(--lantern);font-size:1.6rem}
@@ -155,8 +157,8 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
 .crleft input{flex:1;min-width:0;background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font:inherit}
 .crleft .row{display:flex;gap:6px}.crsum{display:flex;flex-direction:column;gap:2px}.crsum b{font-family:var(--display);font-size:1.3rem;color:var(--lantern)}
 .crright{display:flex;flex-direction:column;gap:14px;min-width:0}.crright h4{margin:0 0 6px;font-size:1.05rem}.crright section .note{font-weight:400}
-.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{all:unset;cursor:pointer;padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--slate2);font-size:.88rem}
-.chip.on{border-color:var(--cc,var(--lantern));box-shadow:inset 0 0 0 1px var(--cc,var(--lantern));color:var(--cc,var(--lantern))}.chip:disabled{opacity:.45;cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:6px}#creov .chip{all:unset;cursor:pointer;padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--slate2);font-size:.88rem}
+#creov .chip.on{border-color:var(--cc,var(--lantern));box-shadow:inset 0 0 0 1px var(--cc,var(--lantern));color:var(--cc,var(--lantern))}#creov .chip:disabled{opacity:.45;cursor:default}
 .opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}.opt{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:3px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--slate2)}
 .opt.on{border-color:var(--lantern);box-shadow:inset 0 0 0 1px var(--lantern)}.opt:disabled{opacity:.5;cursor:default}.opt.on:disabled{opacity:1}.opt .mods{font-size:.8rem;color:var(--good)}
 .pts{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}.pt{display:flex;flex-direction:column;gap:2px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--slate2)}.pt .row{display:flex;align-items:center;gap:8px}.pt b{min-width:2ch;text-align:center;font-size:1.1rem}
@@ -204,6 +206,7 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
 .skill:hover,.skill:focus-visible{border-color:var(--lantern)}.skill.lock{opacity:.55}.skill.lv1{border-color:rgba(233,169,75,.55)}.skill.lv2{border-color:var(--lantern);background:color-mix(in srgb,var(--lantern) 10%,var(--slate2))}
 .skn{display:flex;justify-content:space-between;font-weight:700}.skn i{font-style:normal;color:var(--lantern);letter-spacing:2px}.skb,.sku{color:var(--muted)}.skb.on,.sku.on{color:var(--text)}.sku{font-size:.8rem}.skc{font-size:.75rem;color:var(--lantern)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.skulls{color:var(--lantern);display:inline-flex;gap:1px;vertical-align:-1px}.mtags{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 6px}.mtag{font-size:.74rem;padding:2px 7px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--slate2)}.jgoal{margin:2px 0 4px}.card .roles{grid-template-columns:repeat(2,1fr)}
 </style>
 </head><body>
 <div id="app">
@@ -303,7 +306,7 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
 <script>
 "use strict";
 /* ---------- constants ---------- */
-const WALL=0,FLOOR=1,DOOR=2,OPEN=3,BARR=4,WARD=5,LARDER=6,POOL=7,CHEST=8,EXIT=9,TABLE=10,PATIENT=22,MIASMA=23;
+const WALL=0,FLOOR=1,DOOR=2,OPEN=3,BARR=4,WARD=5,LARDER=6,POOL=7,CHEST=8,EXIT=9,TABLE=10,PATIENT=22,MIASMA=23,SLAB=24,WINCH=25,IRONDOOR=26,RUNE=27,RATS=28;
 const DIRS=[[0,-1],[1,0],[0,1],[-1,0]];
 const ROLES=['thief','warrior','wizard','doctor'];
 const CLS={
@@ -334,6 +337,30 @@ const BIOMES={
   lair:{name:'Goblin warren',places:['Warren','Den','Burrow','Midden'],foe:'Goblin cutthroat',boss:'the Goblin Chief',floor:'#3d3a26',floor2:'#383522',wall:'#18170e',wallTop:'#5f5a3a',foeCol:'#8fa860'},
   keep:{name:'Keep',places:['Bastion','Keep','Countinghouse'],foe:'House guard',boss:'Castellan Vorne',floor:'#463c34',floor2:'#41382f',wall:'#1d1916',wallTop:'#6d5c4d',foeCol:'#e2bf98'},
 };
+const JOBTYPES={
+  burglary:{n:'Burglary',fam:'Heist',g:'Empty the strongbox and slip out.',need:[['thief']],sk:[1,3],bi:['keep','sewer']},
+  ledger:{n:'Lift the ledger',fam:'Heist',g:'Steal the house ledger without anyone knowing it went.',need:[['thief'],['wizard']],sk:[2,4],bi:['keep']},
+  debt:{n:'Debt collection',fam:'Street job',g:'Take what the mark owes, plus a lesson.',need:[],sk:[1,2],bi:['keep','sewer','lair']},
+  hit:{n:'The hit',fam:'Street job',g:'Take out the boss. Poison or steel, your call.',need:[['thief','warrior']],sk:[2,5],bi:['keep','sewer','lair']},
+  jailbreak:{n:'Jailbreak',fam:'Rescue',g:'Spring a mate from the cells.',need:[['warrior']],sk:[2,4],bi:['keep']},
+  graverob:{n:'Grave robbing',fam:'Delve',g:'Recover the grave goods before the sexton wakes.',need:[['warrior'],['wizard','doctor']],sk:[2,4],bi:['crypt']},
+  sabotage:{n:'Sabotage',fam:'Street job',g:'Spoil the stores and be gone before anyone knows.',need:[],sk:[1,3],bi:['keep','sewer','lair']},
+  bounty:{n:'Bounty',fam:'Delve',g:'Clear the den and bring back the chief\'s strongbox.',need:[['warrior'],['wizard','doctor']],sk:[2,5],bi:['lair','crypt','sewer']},
+  turf:{n:'Turf war',fam:'Street job',g:'Wreck a rival gang\'s den. Loud is the point.',need:[['warrior'],['wizard','doctor']],sk:[2,4],bi:['lair','sewer'],loud:1},
+  plague:{n:'Plague district heist',fam:'Heist',g:'Rob a merchant\'s house inside a quarantined block.',need:[['doctor'],['thief']],sk:[2,4],bi:['sewer','keep'],mod:'outbreak'},
+  cryptrob:{n:'Crypt robbery',fam:'Delve',g:'Loot a sealed noble tomb. Pin the dead, mind the traps.',need:[['doctor'],['thief','warrior']],sk:[2,5],bi:['crypt']},
+  rescue:{n:'Prisoner rescue',fam:'Rescue',g:'Bring the beaten informant out alive.',need:[['doctor'],['warrior']],sk:[2,4],bi:['keep','sewer']},
+  snatch:{n:'Body-snatch',fam:'Delve',g:'Steal one particular corpse for a rival surgeon.',need:[['doctor'],['warrior']],sk:[1,3],bi:['crypt']},
+  well:{n:'Poisoned-well cleanup',fam:'Contract',g:'City work: cure the well and find whoever fouled it.',need:[['doctor']],sk:[1,3],bi:['sewer']},
+  big:{n:'Big score',fam:'Heist',g:'Everything a full crew can do, in one night.',need:[['thief'],['warrior'],['wizard'],['doctor']],sk:[5,5],bi:['keep','crypt','sewer','lair']},
+};
+const MODS={night:{n:'Night',d:'More darkness: half the torches are out.',p:0},rain:{n:'Rain',d:'Footsteps are muffled.',p:5},fog:{n:'Fog',d:'Everyone is harder to see.',p:5},
+  payday:{n:'Payday',d:'Guards are drunk and careless, but there are twice as many.',p:10},trapped:{n:'Trapped to the rafters',d:'Twice the traps, all hidden.',p:15},
+  doubleshift:{n:'Double shift',d:'Guard changes overlap: more patrols, fewer gaps.',p:15},inside:{n:'Inside man',d:'A bribed servant left a note: the vault and the boss are on your map.',p:-10},
+  outbreak:{n:'Plague outbreak',d:'Miasma pockets everywhere. Bring a Plague Doctor.',p:15,need:'doctor'}};
+const JOBPOOL=[300,500,1000,1800,3000],CREWN=[2,2,0,3,4];
+function skullTxt(m){const k=m.sk||m.cx||1;const ic='<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M6 .8C3.1.8 1.2 2.8 1.2 5.3c0 1.5.7 2.6 1.8 3.3v1.6c0 .5.4.9.9.9h4.2c.5 0 .9-.4.9-.9V8.6c1.1-.7 1.8-1.8 1.8-3.3C10.8 2.8 8.9.8 6 .8zM4.1 7.2a1.2 1.2 0 110-2.4 1.2 1.2 0 010 2.4zm3.8 0a1.2 1.2 0 110-2.4 1.2 1.2 0 010 2.4z"/></svg>';return `<span class="skulls" title="${k} skull${k>1?'s':''}" aria-label="${k} skull${k>1?'s':''}">${ic.repeat(k)}</span>`;}
+function modTags(m){return (m.mods||[]).map(k=>MODS[k]?`<span class="mtag" title="${MODS[k].d}">${MODS[k].n}${MODS[k].p?' '+(MODS[k].p>0?'+':'')+MODS[k].p+'%':''}</span>`:'').join('');}
 const ADJ=['Salt','Ember','Hollow','Gilded','Drowned','Quiet','Iron','Crooked','Lantern','Widow\'s'];
 
 function objList(m,boss){
@@ -343,7 +370,7 @@ function objList(m,boss){
     wizard:[{id:'zlock',text:'Dispel the rune seal on the vault door'},{id:'scry',text:'Scry at the pool (maps the job for everyone after you)'}],
     doctor:[{id:'dlock',text:'Burn away the plague seal on the vault door'},{id:'stab',text:'Stabilise the dying informant (marks every trap for everyone after you)'}],
   };
-  const out={}; for(const r of m.roles) out[r]=L[r]; return out;
+  const out={}; for(const r of m.roles) out[r]=(m.sk===1)?L[r].filter(o=>/lock$/.test(o.id)||o.bonus):L[r]; return out;
 }
 
 /* ---------- rng ---------- */
@@ -352,12 +379,20 @@ function mulberry(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Ma
 /* ---------- mission + world generation ---------- */
 function makeMission(seed,force){
   const R=mulberry(seed*7919+13); const ri=(a,b)=>a+Math.floor(R()*(b-a+1)); const pick=a=>a[Math.floor(R()*a.length)];
-  const biome=(force&&force.biome)||pick(Object.keys(BIOMES));
+  const sk=(force&&force.sk)||pick([1,1,2,2,2,3,3,4,4,5]);
+  const tks=Object.keys(JOBTYPES).filter(k=>JOBTYPES[k].sk[0]<=sk&&JOBTYPES[k].sk[1]>=sk&&(!force||!force.biome||JOBTYPES[k].bi.includes(force.biome)));
+  const type=(force&&force.type)||pick(tks.length?tks:['burglary']);const J=JOBTYPES[type];
+  const biome=(force&&force.biome)||pick(J.bi);
   let roles=force&&force.roles;
-  if(!roles){const n=pick([1,2,2,3,3,3,4,4]); const sh=ROLES.slice().sort(()=>R()-.5); roles=ROLES.filter(r=>sh.slice(0,n).includes(r));}
-  const cx=(force&&force.cx)||ri(1,3);
-  const title='The '+pick(ADJ)+' '+pick(BIOMES[biome].places)+' Job';
-  return {id:'m'+seed.toString(36),seed,biome,roles,cx,title,payout:350*roles.length+150*cx+50*ri(0,4),state:null,history:[],status:'open'};
+  if(!roles){const set=new Set();for(const g of J.need){const free=g.filter(r=>!set.has(r));set.add(pick(free.length?free:g));}
+    const want=Math.max(set.size,CREWN[sk-1]||ri(2,3));const rest=ROLES.filter(r=>!set.has(r)).sort(()=>R()-.5);while(set.size<want&&rest.length)set.add(rest.shift());roles=ROLES.filter(r=>set.has(r));}
+  const cx=sk<=1?1:sk<=3?2:3;
+  let mods=force&&force.mods;
+  if(!mods){mods=[];if(J.mod&&roles.includes('doctor'))mods.push(J.mod);const nm=[0,1,ri(1,2),2,ri(2,3)][sk-1]-(sk===1&&R()<.5?0:0);
+    const pool=Object.keys(MODS).filter(k=>!mods.includes(k)&&(!MODS[k].need||roles.includes(MODS[k].need))&&!(k==='inside'&&J.loud));for(let i=mods.length;i<nm&&pool.length;i++)mods.push(pool.splice(Math.floor(R()*pool.length),1)[0]);}
+  const pct=mods.reduce((a,k)=>a+(MODS[k]?MODS[k].p:0),0);
+  const title=J.n+': the '+pick(ADJ)+' '+pick(BIOMES[biome].places);
+  return {id:'m'+seed.toString(36),seed,biome,roles,cx,sk,type,mods,title,payout:Math.round(JOBPOOL[sk-1]*(1+pct/100)*(1+.04*ri(0,3))/10)*10,state:null,history:[],status:'open'};
 }
 
 function generate(m){
@@ -436,17 +471,34 @@ function generate(m){
   if(patientRoom){const p=quietTile(patientRoom);if(p){t[p[1]][p[0]]=PATIENT;world.patient=p;}}
   // patrols
   const halls=cells.filter(c=>c.role==='hall'||c.role==='larder'||c.role==='pool'||c.role==='patient');
-  const np=1+m.cx+m.roles.length;
+  const crew=Math.max(1,Math.min(4,(m.state&&m.state.crew)||m.crew||1)),mods=m.mods||[];world.crewN=crew;
+  let np=Math.round((1+m.cx+m.roles.length)*(1+.1*(crew-1)));if(mods.includes('payday'))np*=2;if(mods.includes('doubleshift'))np+=2;
   for(let i=0;i<np;i++){const c=pick(halls);for(let tries=0;tries<20;tries++){const x=ri(c.x0,c.x1),y=ri(c.y0,c.y1);if(t[y][x]===FLOOR&&!occupied.has(x+','+y)){addEnemy(x,y,{home:c.i});break;}}}
   // traps in corridors
   const corr=[];for(const e of edges)for(const [x,y] of e.tiles){if(t[y][x]!==FLOOR)continue;if(Math.abs(x-sx)+Math.abs(y-sy)<5)continue;if(cells.some(c=>inRoom(c,x,y)))continue;corr.push([x,y]);}
   const used=new Set();const addTrap=(x,y)=>{const k=x+','+y;if(used.has(k))return;used.add(k);world.traps.push({id:world.traps.length,x,y,revealed:false,disarmed:false});};
   const vt=vEdge.tiles.filter(([x,y])=>t[y][x]===FLOOR&&!(x===door[0]&&y===door[1]));if(vt.length)addTrap(...pick(vt));
-  shuffle(corr).slice(0,2+2*m.cx).forEach(p=>addTrap(...p));
+  shuffle(corr).slice(0,(2+2*m.cx)*(mods.includes('trapped')?2:1)).forEach(p=>addTrap(...p));
   // barricades and wards on the loop corridors (shortcuts for the right class)
   const blockers=[];if(m.roles.includes('warrior'))blockers.push(BARR);if(m.roles.includes('wizard'))blockers.push(WARD);if(m.roles.includes('doctor'))blockers.push(MIASMA);
   for(const e of edges){if(e.tree||!blockers.length)continue;const mid=e.tiles[Math.floor(e.tiles.length/2)];if(!mid||t[mid[1]][mid[0]]!==FLOOR)continue;
     world.traps=world.traps.filter(tr=>!(tr.x===mid[0]&&tr.y===mid[1]));t[mid[1]][mid[0]]=pick(blockers);}
+  // class-only obstacles: heavy work for the warrior, rune lines for the wizard, plague rats for the doctor
+  if(mods.includes('outbreak')&&m.roles.includes('doctor'))for(const c of shuffle(cells.filter(c=>c.role==='hall')).slice(0,3)){const p=quietTile(c);if(p&&t[p[1]][p[0]]===FLOOR){t[p[1]][p[0]]=MIASMA;occupied.add(p[0]+','+p[1]);}}
+  world.slabs=[];world.winches=[];
+  const cellI=i=>cells.find(c=>c.i===i);
+  if(m.roles.includes('warrior')){
+    const qs=shuffle(cells.filter(c=>['hall','captain','larder','pool','patient'].includes(c.role)));
+    for(const c of qs.slice(0,m.cx>=2?2:1)){const p=quietTile(c);if(!p)continue;t[p[1]][p[0]]=SLAB;occupied.add(p[0]+','+p[1]);world.slabs.push(p);}
+    for(const e of shuffle(edges.filter(e=>!e.tree&&e.tiles.length>=3))){const mid=e.tiles[Math.floor(e.tiles.length/2)];if(!mid||t[mid[1]][mid[0]]===WALL)continue;
+      const c=cellI(e.a)||cellI(e.b);const p=c&&quietTile(c);if(!p)continue;t[mid[1]][mid[0]]=IRONDOOR;t[p[1]][p[0]]=WINCH;occupied.add(p[0]+','+p[1]);world.winches.push({x:p[0],y:p[1],d:mid});break;}}
+  if(m.roles.includes('wizard')){
+    const [vx,vy]=center(vault);for(let y=vy-1;y<=vy+1;y++)for(let x=vx-1;x<=vx+1;x++)if(inRoom(vault,x,y)&&t[y][x]===FLOOR)t[y][x]=RUNE;
+    shuffle(corr.filter(([x,y])=>t[y][x]===FLOOR&&!used.has(x+','+y))).slice(0,1+m.cx).forEach(([x,y])=>t[y][x]=RUNE);}
+  if(m.roles.includes('doctor')){
+    for(const e of shuffle(edges.filter(e=>e.tiles.length>=5)).slice(0,1+(m.cx>=2?1:0))){const k=Math.floor(e.tiles.length/2)-1;
+      for(let i=k;i<k+3;i++){const p=e.tiles[i];if(p&&t[p[1]][p[0]]===FLOOR&&!cells.some(c=>inRoom(c,p[0],p[1]))&&!(p[0]===door[0]&&p[1]===door[1]))t[p[1]][p[0]]=RATS;}}}
+  world.traps=world.traps.filter(tr=>t[tr.y][tr.x]===FLOOR);
   world.traps.forEach((tr,i)=>tr.id=i);
   return world;
 }
@@ -463,7 +515,7 @@ function applyState(w,s){
 }
 function snapshot(w){
   const pos={};w.enemies.forEach(e=>pos[e.id]=[+e.x.toFixed(2),+e.y.toFixed(2),e.hp,e.sick?1:0]);
-  return {dead:w.enemies.filter(e=>e.dead).map(e=>e.id),pos,dis:w.traps.filter(t=>t.disarmed).map(t=>t.id),rev:w.traps.filter(t=>t.revealed).map(t=>t.id),locks:{...w.locks},poisoned:!!w.poisoned,scried:!!w.scried,cleared:w.cleared.slice(),snuffed:(w.snuffed||[]).slice(),rt:true,stab:!!w.stab};
+  return {dead:w.enemies.filter(e=>e.dead).map(e=>e.id),pos,dis:w.traps.filter(t=>t.disarmed).map(t=>t.id),rev:w.traps.filter(t=>t.revealed).map(t=>t.id),locks:{...w.locks},poisoned:!!w.poisoned,scried:!!w.scried,cleared:w.cleared.slice(),snuffed:(w.snuffed||[]).slice(),rt:true,stab:!!w.stab,crew:w.crewN||1};
 }
 function objDone(w,id){
   switch(id){
@@ -480,12 +532,12 @@ function roleStatus(m){
 }
 
 /* ---------- board storage ---------- */
-const STORE='threelocks.rt.board.v2';
+const STORE='threelocks.rt.board.v3';
 let memBoard=null;
 function loadBoard(){try{const s=localStorage.getItem(STORE);if(s)return JSON.parse(s);}catch(e){}return memBoard;}
 function saveBoard(b){memBoard=b;try{localStorage.setItem(STORE,JSON.stringify(b));}catch(e){}}
 function freshBoard(){
-  const demo=makeMission(4242,{roles:['thief','warrior','wizard','doctor'],biome:'keep',cx:2});
+  const demo=makeMission(4242,{roles:['thief','warrior','wizard','doctor'],biome:'keep',sk:4,type:'hit',mods:['night','rain']});
   const w=generate(demo);
   w.enemies.filter(e=>e.captain).forEach(e=>e.dead=true);
   w.locks.thief=true;w.poisoned=true;
@@ -495,11 +547,12 @@ function freshBoard(){
   demo.state=snapshot(w);delete demo.state.rt;
   demo.history=[{by:'Sample crew',cls:'thief',did:['Eliminated '+BIOMES.keep.boss,'Picked the needle-trapped lock','Poisoned the larder'],turns:131}];
   return {missions:[
-    makeMission(1107,{roles:['thief','warrior','wizard','doctor']}),
-    makeMission(5519,{roles:['doctor','thief'],biome:'crypt'}),
+    makeMission(1107,{sk:5,type:'big'}),
+    makeMission(5519,{sk:3,type:'cryptrob',roles:['thief','doctor']}),
     demo,
-    makeMission(2311,{roles:['thief']}),
-    makeMission(3593,{roles:['warrior','wizard','doctor']}),
+    makeMission(2311,{sk:1,type:'burglary',roles:['thief','warrior']}),
+    makeMission(3593,{sk:4,type:'bounty'}),
+    makeMission(7741,{sk:2,type:'rescue'}),
   ]};
 }
 let board=loadBoard()||freshBoard();saveBoard(board);
@@ -525,8 +578,8 @@ function renderBoard(){
     const playable=m.status==='complete'?[]:(allDone?m.roles:m.roles.filter(r=>!st[r]));
     const take=playable.map(r=>`<button class="btn ${r}" data-play="${m.id}" data-cls="${r}">Play as ${CLS[r].name}</button>`).join('');
     return `<article class="card ${m.status==='complete'?'done':''}">
-      <div class="meta"><span>${B.name} · Heat <span class="mono">${'●'.repeat(m.cx)}${'○'.repeat(3-m.cx)}</span></span><span class="mono">#${m.seed}</span></div>
-      <h3>${esc(m.title)}</h3>
+      <div class="meta"><span>${skullTxt(m)} ${m.type&&JOBTYPES[m.type]?JOBTYPES[m.type].fam+' · ':''}${B.name}</span><span class="mono">#${m.seed}</span></div>
+      <h3>${esc(m.title)}</h3>${m.type&&JOBTYPES[m.type]?`<p class="note jgoal">${JOBTYPES[m.type].g}${JOBTYPES[m.type].loud?' <b>Loud only.</b>':''}</p>`:''}${(m.mods||[]).length?`<div class="mtags">${modTags(m)}</div>`:''}
       <div class="roles">${chips}</div>
       <p class="note">${status}</p>
       ${hist?`<ul class="hist">${hist}</ul>`:''}
@@ -643,7 +696,7 @@ function applyWorld(W){const w=G.w;if(!W||!W.g)return;
 function pushPresence(force){if(!NET.room||!G)return;const o={p:packMe(),a:NET.acts};
   if(G.tavern){o.a=null;o.tv=1;if(G.mode==='host'){o.th=1;o.job=jobSummary(G.job);Object.assign(o,{h:null,m:null,w:null,hits:null,lg:null,end:null,lid:null});}
     NET.room.presence(o).catch(()=>{});return;}
-  o.tv=null;if(G.mode==='host'){o.th=null;o.job=null;o.lid=NET.lid||null;o.h=1;o.m={id:G.m.id,seed:G.m.seed,biome:G.m.biome,roles:G.m.roles,cx:G.m.cx,title:G.m.title,payout:G.m.payout};o.w=NET.end?null:packWorld();o.hits=NET.hitsOut;o.lg=NET.logsOut;o.end=NET.end;}
+  o.tv=null;if(G.mode==='host'){o.th=null;o.job=null;o.lid=NET.lid||null;o.h=1;o.m={id:G.m.id,seed:G.m.seed,biome:G.m.biome,roles:G.m.roles,cx:G.m.cx,sk:G.m.sk,type:G.m.type,mods:G.m.mods,crew:G.m.crew,title:G.m.title,payout:G.m.payout};o.w=NET.end?null:packWorld();o.hits=NET.hitsOut;o.lg=NET.logsOut;o.end=NET.end;}
   NET.room.presence(o).catch(err=>{if(o.end&&o.end.s){NET.end=Object.assign({},NET.end,{s:null});}});}
 function players(){const out=[];if(G.down<=0)out.push({key:'me',x:G.P.x,y:G.P.y,cls:G.cls,crouch:G.P.crouch,moving:G.P.moving,sprint:G.P.sprint,invis:G.P.invis>0,vis:G.vis});
   for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.dn||p.x==null)continue;out.push({key:rr.peer,x:p.x,y:p.y,cls:p.c,crouch:!!p.cr,moving:!!p.mv,sprint:!!p.sp,invis:!!p.iv,vis:p.vs||0,rr});}return out;}
@@ -659,6 +712,7 @@ function onRemote(){
 }
 function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peerName(rr)};if(!actor.cls)return;
   if(a.t==='doc'){docHostAct(rr,a,actor);return;}
+  if(a.t==='rune'){runeTrip(a.x|0,a.y|0,actor);return;}
   if(a.t==='hit'){const e=w.enemies[a.id];if(!e||e.dead)return;G.lastActor=actor.key;actor.rr=rr;
     const fx={};if(Array.isArray(a.fx))for(const k of a.fx)if(LEGS[k])fx[k]=1;
     applyHit(e,actor.cls,(a.k==='cleave'||a.k==='charge')&&actor.cls==='warrior'?a.k:a.k==='arrow'&&actor.cls==='thief'?'arrow':'melee',{ua:!!a.ua,actor,bs:!!a.bs,venom:!!a.venom&&actor.cls==='thief',src:[rr.p.x,rr.p.y],bj:+a.bj||0,hid:Math.min(2,+a.hid||0),ram:!!a.ram,kd:!!a.kd,boot:+a.boot||0,stag:!!a.stag,dm:Math.min(150,Math.max(0,+a.dm||0)),stg:Math.min(1.5,Math.max(0,+a.stg||0)),pw:Math.min(2.5,Math.max(.5,+a.pw||1)),bsx:!!a.bsx,fx,mk:actor.cls==='doctor'?Math.min(2,+a.mk||0):0,amp:actor.cls==='doctor'?Math.min(2,+a.amp||0):0});}
@@ -716,8 +770,8 @@ function pickClass(host){const m=host.pres.m;const taken=new Set([...NET.remote.
 
 const now=()=>performance.now()/1000;
 function tileAt(x,y){const tx=Math.floor(x),ty=Math.floor(y);return (tx<0||ty<0||tx>=G.w.W||ty>=G.w.H)?WALL:G.w.t[ty][tx];}
-const walkT=t=>t===FLOOR||t===EXIT||t===OPEN||t===ROPE||t===LADDER||t===GATEUP;
-const opaqueT=t=>t===WALL||t===DOOR||t===BARR||t===RACK||t===STREET;
+const walkT=t=>t===FLOOR||t===EXIT||t===OPEN||t===ROPE||t===LADDER||t===GATEUP||t===RUNE||t===RATS;
+const opaqueT=t=>t===WALL||t===DOOR||t===BARR||t===RACK||t===STREET||t===IRONDOOR;
 function losT(x0,y0,x1,y1){const dx=x1-x0,dy=y1-y0,n=Math.ceil(Math.hypot(dx,dy)/.2);for(let i=1;i<n;i++){const f=i/n;if(opaqueT(tileAt(x0+dx*f,y0+dy*f)))return false;}return true;}
 function angDiff(a,b){let d=a-b;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d;}
 function nameOf(e){const tn=!e.captain&&e.type&&TYPE_NAMES[G.w.biome]&&TYPE_NAMES[G.w.biome][e.type];if(tn)return 'The '+tn.toLowerCase();const B=BIOMES[G.w.biome];return e.captain?cap(B.boss):'The '+B.foe.toLowerCase();}
@@ -751,7 +805,7 @@ function tavernWorld(){const H=TAVERN_MAP.length,W=TAVERN_MAP[0].length,racks={}
     if('1234'.includes(ch)){racks[x+','+y]=ROLES[+ch-1];return RACK;}return WALL;}));
   return {W,H,t,cells:[{x0:1,y0:1,x1:W-2,y1:H-3,role:'tavern'}],biome:'tavern',enemies:[],traps:[],locks:{},poisoned:false,scried:true,cleared:[],snuffed:[],start:[7,6],racks,street:[7,0],door:null};}
 function tavernTorches(){return [[3,1,0,-1],[11,1,0,-1],[1,2,-1,0],[13,2,1,0],[1,7,-1,0],[13,7,1,0]].map(([x,y,dx,dy],id)=>({id,wx:x+.5+dx*.47,wy:y+.5+dy*.47,lx:x+.5+dx*.25,ly:y+.5+dy*.25,dx,dy,out:false}));}
-function jobSummary(m){if(!m)return null;const st=roleStatus(m);return {title:m.title,biome:m.biome,need:m.roles.filter(r=>!st[r]),roles:m.roles,payout:m.payout,cx:m.cx};}
+function jobSummary(m){if(!m)return null;const st=roleStatus(m);return {title:m.title,biome:m.biome,need:m.roles.filter(r=>!st[r]),roles:m.roles,payout:m.payout,cx:m.cx,sk:m.sk,type:m.type,mods:m.mods};}
 function prefCls(){try{const c=localStorage.getItem('threelocks.cls');if(ROLES.includes(c))return c;}catch(e){}return 'thief';}
 function startTavern(mode,cls){
   if(NET.leaveTimer){clearTimeout(NET.leaveTimer);NET.leaveTimer=null;}
@@ -791,7 +845,7 @@ function tavernUse(c){if(c.t===VENDOR){openInv('tavern','vendor');return;}if(c.t
 function openJobPicker(){if(document.pointerLockElement)document.exitPointerLock();
   const list=board.missions.filter(m=>m.status!=='complete');
   $('#modalBox').innerHTML=`<h2>Pick the job</h2><p>Contracts from your board. The crew sees your pick on the table.</p>
-    ${list.length?`<div class="jobpick">${list.map(m=>{const s=jobSummary(m);return `<button class="btn" data-job="${m.id}"><b>${esc(m.title)}</b><span class="note">${BIOMES[m.biome].name} · Heat ${'●'.repeat(m.cx)}${'○'.repeat(3-m.cx)} · ${s.need.length?'needs '+s.need.map(r=>CLS[r].name).join(', '):'vault open'} · <span class="mono">${m.payout.toLocaleString()} gold</span></span></button>`;}).join('')}</div>`:'<p class="note">Your board has no open contracts. Leave the tavern and post a new one.</p>'}
+    ${list.length?`<div class="jobpick">${list.map(m=>{const s=jobSummary(m);return `<button class="btn" data-job="${m.id}"><b>${esc(m.title)}</b><span class="note">${BIOMES[m.biome].name} · ${skullTxt(m)} ${modTags(m)} · ${s.need.length?'needs '+s.need.map(r=>CLS[r].name).join(', '):'vault open'} · <span class="mono">${m.payout.toLocaleString()} gold</span></span></button>`;}).join('')}</div>`:'<p class="note">Your board has no open contracts. Leave the tavern and post a new one.</p>'}
     <div><button class="linkbtn" id="jpCancel">Cancel</button></div>`;
   $('#modal').hidden=false;
   $('#modalBox').querySelectorAll('[data-job]').forEach(b=>b.onclick=()=>{$('#modal').hidden=true;G.job=board.missions.find(m=>m.id===b.dataset.job);
@@ -1089,7 +1143,7 @@ function ensureChars(){PROF.chars=PROF.chars||{};for(const c of ROLES){if(!PROF.
     if(!ch.v2){ch.v2=1;if(!ch.eq.tool)ch.eq.tool=makeItem(STARTKIT[c].tool,0,1);if(c==='warrior'){const h=makeItem('warhorn',0,1);const p=findSpot(ch.bag,1,2,BAGW,bagH(c));if(p)ch.bag.push({it:h,x:p[0],y:p[1]});}}}PROF.stashG=PROF.stashG||[];
   for(const k of Object.keys(ITEMS)){PROF.stash[k]=PROF.stash[k]||0;PROF.belt[k]=Math.min(PROF.belt[k]||0,PROF.stash[k]);}}
 function xpNeed(l){return 200+l*150;}
-function attrsOf(cls){const c=PROF.chars[cls],a=Object.assign({},CBASE[cls]);for(const k in LVGAIN[cls])a[k]+=LVGAIN[cls][k]*(c.lvl-1);{const m=idMods(c.id);for(const k in m)a[k]+=m[k];}
+function attrsOf(cls){const c=PROF.chars[cls],a=Object.assign({},CBASE[cls]);for(const k in LVGAIN[cls])a[k]+=LVGAIN[cls][k]*(c.lvl-1);{const ia=idAttrs(cls,c.id);if(ia)for(const k in ia)a[k]+=ia[k]-CBASE[cls][k];}
   for(const s of SLOTS){if(s==='pocket'||s==='pocket2')continue;const it=c.eq[s];if(!it)continue;for(const [k,v] of it.a)if(a[k]!==undefined)a[k]+=v;const b=GB[it.b];if(b.per)a.per+=b.per;}return a;}
 /* everything the run uses, computed from class, level and gear */
 function calcStats(cls){ensureChars();const c=PROF.chars[cls],A=attrsOf(cls),S=Object.assign({},STATS[cls]),B0=CBASE[cls];
@@ -1118,7 +1172,7 @@ function runStats(cls){return calcStats(cls);}
 function gridOcc(list,W,H,skip){const g=[];for(let y=0;y<H;y++)g.push(new Array(W).fill(null));for(const e of list){if(e===skip)continue;const b=GB[e.it.b];for(let y=0;y<b.h;y++)for(let x=0;x<b.w;x++)if(g[e.y+y])g[e.y+y][e.x+x]=e;}return g;}
 function fitsAt(list,W,H,w,h,x,y,skip){if(x<0||y<0||x+w>W||y+h>H)return false;const g=gridOcc(list,W,H,skip);for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++)if(g[y+yy][x+xx])return false;return true;}
 function findSpot(list,w,h,W,H){for(let x=0;x<=W-w;x++)for(let y=0;y<=H-h;y++)if(fitsAt(list,W,H,w,h,x,y))return [x,y];return null;}
-function bagH(cls){const c=PROF.chars&&PROF.chars[cls];return c&&c.sk&&c.sk.packmule>=2?BAGH+1:BAGH;}
+function bagH(cls){const c=PROF.chars&&PROF.chars[cls];return (c&&c.sk&&c.sk.packmule>=2?BAGH+1:BAGH)+bagRows(cls);}
 function bagAdd(cls,it){const c=PROF.chars[cls],b=GB[it.b];const p=findSpot(c.bag,b.w,b.h,BAGW,bagH(cls));if(!p)return false;c.bag.push({it,x:p[0],y:p[1]});return true;}
 function stashAdd(it){const b=GB[it.b];const p=findSpot(PROF.stashG,b.w,b.h,STW,STH);if(!p)return false;PROF.stashG.push({it,x:p[0],y:p[1]});return true;}
 /* ---------- XP ---------- */
@@ -1172,7 +1226,7 @@ function putGrid(src,it,x,y){const L=refList(src),W=src==='bag'?BAGW:STW,H=src==
   if(x==null){const p=findSpot(L,b.w,b.h,W,H);if(!p)return false;x=p[0];y=p[1];}if(!fitsAt(L,W,H,b.w,b.h,x,y))return false;L.push({it,x,y});return true;}
 function equipCheck(it,slot){const c=PROF.chars[INV.cls],b=GB[it.b];if(!slotFits(b,slot))return `That doesn't go in the ${SLOTNAME[slot].toLowerCase()} slot.`;
   if(slot!=='pocket'&&!canUse(b,INV.cls))return b.val?'You can\'t wear that.':b.cls&&!b.cls.includes(INV.cls)?`Only ${b.cls.map(x=>CLS[x].name).join(' or ')} can use that.`:`Too heavy for the ${CLS[INV.cls].name}.`;
-  if(slot==='off'&&c.eq.main&&GB[c.eq.main.b].two)return 'Your weapon needs both hands.';if(slot==='pocket2'&&!Object.values(c.eq).some(i=>i&&i.lg==='thimble'&&i!==it))return "Only Grandmother's Thimble sews a second pocket.";return null;}
+  if(slot==='off'&&c.eq.main&&GB[c.eq.main.b].two)return 'Your weapon needs both hands.';if(slot==='pocket2'&&!bgOf(INV.cls,'smuggler')&&!Object.values(c.eq).some(i=>i&&i.lg==='thimble'&&i!==it))return "Only Grandmother's Thimble sews a second pocket.";return null;}
 /* move an item; dest {src:'bag'|'stash', x,y} | {src:'eq', key} | {src:'sell'} */
 function moveItem(r,dest){const c=PROF.chars[INV.cls];const it0=refItem(r);if(!it0)return;
   if(dest.src==='sell'){if(r.src==='shop')return;if(!INV.shop){say('Nobody here to sell to.',1);return;}const t=takeOut(r);const p=sellPrice(t.it);PROF.gold+=p;say(`Sold ${itemName(t.it)} for ${p} gold.`);INV.sel=null;return;}
@@ -1193,7 +1247,7 @@ function moveItem(r,dest){const c=PROF.chars[INV.cls];const it0=refItem(r);if(!i
   if(!ok){t.undo();say('No room there.',1);return;}
   if(t.shop){const price=buyPrice(it0);PROF.gold-=price;INV.stock.splice(r.key,1);say(`Bought ${itemName(it0)} for ${price} gold.`);}
   INV.sel=null;}
-function gamble(slot){const g=GAMBLE[slot];if(PROF.gold<g.p){say(`The gambler wants ${g.p} gold.`,1);renderInv();return;}
+function gamble(slot){const g={...GAMBLE[slot]};g.p=Math.round(g.p*(bgIs('cardsharp')?.9:1));if(PROF.gold<g.p){say(`The gambler wants ${g.p} gold.`,1);renderInv();return;}
   const R=mulberry((Math.random()*1e9)>>>0);let it=null;for(let i=0;i<20&&!it;i++){const cand=randomGear(R,INV.cls,true,slot);if(cand)it=cand;}
   if(!it){say('He has nothing like that for you.',1);renderInv();return;}
   if(!putGrid('bag',it)){say('Make room in your bag first.',1);renderInv();return;}
@@ -1215,11 +1269,11 @@ function statsHTML(){const S=calcStats(INV.cls),A=S.attrs,c=PROF.chars[INV.cls];
    ${S.cdr?`<dt>Cooldowns</dt><dd>${pc(S.cdr)} faster</dd>`:''}<dt>Fence pays</dt><dd>${pc(S.fence)}</dd></dl>
    <p class="note">${({thief:'Each level: +1 Agility, +1 Perception, +1 Vitality and 2 skill points.',warrior:'Each level: +1 Strength, +1 Vitality, +1 Agility and 2 skill points.',wizard:'Each level: +1 Intellect, +1 Perception, +1 Vitality and 2 skill points.'})[INV.cls]} Levels and skills are never lost, even when your gear is.</p></div>`;}
 function renderInv(){CELL=Math.max(28,Math.min(38,Math.floor((window.innerWidth-56)/10)));const c=PROF.chars[INV.cls];const el=$('#invbox');const ctx=INV.ctx;
-  const thim=Object.values(c.eq).some(i=>i&&i.lg==='thimble')||c.eq.pocket2;const doll=`<div class="doll">${SLOTS.filter(s=>s!=='pocket2'||thim).map(s=>{const it=c.eq[s];return `<div class="slot s-${s}" data-drop="eq" data-key="${s}"><span class="sl">${SLOTNAME[s]}</span>${it?itemEl(it,'eq',s):''}</div>`;}).join('')}<div class="figure f-${INV.cls}"></div></div>`;
+  const thim=Object.values(c.eq).some(i=>i&&i.lg==='thimble')||c.eq.pocket2||bgOf(INV.cls,'smuggler');const doll=`<div class="doll">${SLOTS.filter(s=>s!=='pocket2'||thim).map(s=>{const it=c.eq[s];return `<div class="slot s-${s}" data-drop="eq" data-key="${s}"><span class="sl">${SLOTNAME[s]}</span>${it?itemEl(it,'eq',s):''}</div>`;}).join('')}<div class="figure f-${INV.cls}"></div></div>`;
   let side='';
   if(INV.shop==='vendor'){side=`<h3>The vendor</h3><p class="note">Drag to buy. Drop your things here to sell them.</p><div class="shop" data-drop="sell">${INV.stock.map((it,i)=>`<div class="shoprow">${itemEl(it,'shop',i)}<span><b style="color:${itemColor(it)}">${esc(itemName(it))}</b><br><span class="mono">${buyPrice(it)}g</span></span></div>`).join('')||'<p class="note">Sold out.</p>'}</div>
       <div class="consbuy">${CONS().map(k=>`<button class="btn sm" data-cons="${k}">${ITEMS[k].name} ${ITEMS[k].price}g</button>`).join('')}</div><button class="linkbtn" id="restock">New stock (25g)</button>`;}
-  else if(INV.shop==='gambler'){side=`<h3>The gambler</h3><p class="note">Pay for a covered item. Most are junk. Some aren't.</p><div class="gamble">${Object.entries(GAMBLE).map(([k,g])=>`<button class="btn" data-gamble="${k}">${g.n}<span class="mono">${g.p}g</span></button>`).join('')}</div>
+  else if(INV.shop==='gambler'){side=`<h3>The gambler</h3><p class="note">Pay for a covered item. Most are junk. Some aren't.</p><div class="gamble">${Object.entries(GAMBLE).map(([k,g])=>`<button class="btn" data-gamble="${k}">${g.n}<span class="mono">${Math.round(g.p*(bgIs('cardsharp')?.9:1))}g</span></button>`).join('')}</div>
       ${INV.gambled?`<div class="gambled">${iconSVG(INV.gambled,48)}<b style="color:${itemColor(INV.gambled)}">${esc(itemName(INV.gambled))}</b></div>`:''}<p class="note">Odds here: about 1 in 3 is Fine, 1 in 5 Rare, 1 in 10 Masterwork, 1 in 25 Legendary.</p>`;}
   else if(ctx!=='run')side=`<h3>Stash</h3><p class="note">Shared by all three of your characters.</p>${gridHTML('stash',STW,STH)}`;
   else side=`<h3>On the job</h3><p class="note">Your stash is back home. Anything in your bag or on you is lost if you fall, except what's in your sewn-in pocket.</p>`;
@@ -1397,7 +1451,7 @@ function cofferOpen(l){const R=mulberry((l.it.s^0x5eed)>>>0);let r=Math.max(l.it
 function canPick(e){if(G.cls!=='thief'||e.dead||e.picked||e.undead)return false;const P=G.P;const d=Math.hypot(e.x-P.x,e.y-P.y);if(d>1.05)return false;
   const unaware=['idle','patrol','sentry','return'].includes(e.state)||(SK('lightfingers')>1&&(e.state==='suspicious'||e.state==='search'));if(!unaware)return false;
   if(G.S.fx.sixfingers)return true;return Math.abs(angDiff(Math.atan2(P.y-e.y,P.x-e.x),e.ang))>1.9;}
-function pickPocket(e){e.picked=true;const R=Math.random();const bk=R<.08?'gems':R<.3?'signet':'purse';const it=makeItem(bk,0,1);
+function pickPocket(e){e.picked=true;const R=Math.random();const gr=bgIs('gutter');const bk=R<(gr?.15:.08)?'gems':R<(gr?.45:.3)?'signet':'purse';const it=makeItem(bk,0,1);
   if(!bagAdd(G.cls,it)){toast('No room in your bag.');e.picked=false;return;}gainXP(8);log(`You lift a ${GB[bk].n.toLowerCase()} off ${lc(nameOf(e))}.`,'good');G.sideDirty=true;
   if(!SK('lightfingers')){if(G.mode==='client')sendAct({t:'pick',id:e.id});else{e.aw=Math.min(.95,e.aw+.45);if(e.aw>=.3&&e.state!=='suspicious'){e.state='suspicious';e.inv=[G.P.x,G.P.y];e.timer=.8;e.look=0;e.path=null;}}}}
 /* ---------- skills screen ---------- */
@@ -1636,6 +1690,8 @@ function placeLoot(w,seed,taken){const R=mulberry(seed^0x10071);const out=[];con
     const spots=[];for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++){if(w.t[y][x]!==FLOOR||occ.has(x+','+y))continue;if(DIRS.some(([dx,dy])=>w.t[y+dy][x+dx]===WALL))spots.push([x,y]);}
     if(!spots.length)continue;const [x,y]=spots[Math.floor(R()*spots.length)];occ.add(x+','+y);const tier=c.role==='vault'||c.crew?3:c.role==='captain'?2:R()<.3?2:1;
     const g=randomGear(R,null,tier>=2,null);out.push({id:out.length,x:x+.5,y:y+.5,it:{b:g.b,r:g.r,s:g.s},cf:{tier,kind:R()<.4?'ward':'lock'},taken:false});}
+  {const crew=w.crewN||1;if(crew>1)for(const c of w.cells){if(c.role==='entrance'||R()>.2*(crew-1))continue;const spots=[];for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++)if(w.t[y][x]===FLOOR&&!occ.has(x+','+y))spots.push([x,y]);if(!spots.length)continue;const [x,y]=spots[Math.floor(R()*spots.length)];occ.add(x+','+y);out.push({id:out.length,x:x+.5,y:y+.5,it:{b:pickW(R,LOOTT[c.role]||LOOTT.hall),r:0,s:1},taken:false});}}
+  for(const [x,y] of w.slabs||[]){const g=randomGear(R,null,true,null);out.push({id:out.length,x:x+.5,y:y+.5,it:{b:g.b,r:g.r,s:g.s},taken:false});out.push({id:out.length,x:x+.3,y:y+.7,it:{b:pickW(R,LOOTT.vault),r:0,s:1},taken:false});}
   for(const id of taken||[])if(out[id])out[id].taken=true;return out;}
 function lootItem(l){if(!l.item)l.item=makeItem(l.it.b,l.it.r,l.it.s);return l.item;}
 /* the host (or solo player) rolls drops when something dies */
@@ -1652,7 +1708,7 @@ function useBelt(i){const P=G.P,k=G.belt[i];if(!k||G.over||G.down>0||G.tavern)re
     G.proj.push({kind:'fire',pot:true,pos:cam.position.clone().add(dir.clone().multiplyScalar(.5)),vel:dir.clone().multiplyScalar(10).add(new THREE.Vector3(0,2.5,0)),t:0});log('You hurl a firepot.');}
   else if(ITEMS[k].throw){breakInvis('Throwing breaks your invisibility.');const cam=R3.camera;const dir=new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion);const sp=SK('flaskbelt')>1?12:9;
     G.proj.push({kind:'throw',what:k,pos:cam.position.clone().add(dir.clone().multiplyScalar(.5)),vel:dir.clone().multiplyScalar(sp).add(new THREE.Vector3(0,2.3,0)),t:0});log(`You throw the ${ITEMS[k].name.toLowerCase()}.`);}
-  else if(k==='bandage'){P.heal=P.max*.25;P.bandage=6;log('You wrap a bandage tight. Slow going for a few seconds.','good');}
+  else if(k==='bandage'){P.heal=P.max*.25*(bgIs('barber')?1.25:1);P.bandage=6;log('You wrap a bandage tight. Slow going for a few seconds.','good');}
   else if(k==='mana'){if(G.cls!=='wizard'){toast('Only a Wizard can use the mana.');return;}P.cd={};log('The mana draught fizzes behind your eyes. Every spell is ready.','good');}
   else if(k==='stub'){G.glimpse=6;G.divineAt=[P.x,P.y];const px=Math.floor(P.x),py=Math.floor(P.y);for(let y=py-6;y<=py+6;y++)for(let x=px-6;x<=px+6;x++)if(x>=0&&y>=0&&x<G.w.W&&y<G.w.H)G.explored.add(y*G.w.W+x);
     for(const tr of G.w.traps)if(!tr.disarmed&&Math.hypot(tr.x-P.x,tr.y-P.y)<6)tr.revealed=true;G.featDirty=true;log('The stub flares blue. For a moment you see through the walls.','good');}
@@ -1744,9 +1800,16 @@ function updMove(dt){const P=G.P;
       const co={ram:SK('ram')?1:0,kd:SK('shouldercharge')>1||SK('ram')>1?1:0,boot:SK('boot')};if(G.mode==='client')sendAct(Object.assign({t:'hit',k:'charge',id:en.id},co));else{G.lastActor='me';applyHit(en,'warrior','charge',co);}}}
   if(P.climb){P.climb.t-=dt;if(P.climb.t<=0){P.x=P.climb.dest[0];P.y=P.climb.dest[1];log(P.climb.msg,'good');P.climb=null;}}}
 
+function jobRunStart(){const m=G.m,w=G.w,mods=m.mods||[];
+  if(mods.includes('inside'))for(const c of w.cells)if(c.role==='vault'||c.role==='captain')for(let y=c.y0-1;y<=c.y1+1;y++)for(let x=c.x0-1;x<=c.x1+1;x++)if(x>=0&&y>=0&&x<w.W&&y<w.H)G.explored.add(y*w.W+x);
+  const J=m.type&&JOBTYPES[m.type];if(J)log(`${J.n}, ${m.sk||1} skull${(m.sk||1)>1?'s':''}. ${J.g}`);
+  if(mods.length)log('Tonight: '+mods.map(k=>MODS[k]?MODS[k].n.toLowerCase():k).join(', ')+'.');
+  if((w.crewN||1)>1)log(`A crew of ${w.crewN}: more patrols, and more loot lying about.`);}
 function startRun(m,cls,opts){
   opts=opts||{};
+  /*JOBSIN*/if(!(m.state&&m.state.crew)){if(opts.mode==='host')m.crew=Math.min(4,1+[...NET.remote.values()].filter(r=>r.p&&r.p.c).length);else if(opts.mode!=='client')m.crew=1;}
   const w=generate(m);retype(w,m);crewRoutes(w,m);
+  {const k=(m.sk||m.cx||1)-1;if(k>0)for(const e of w.enemies){e.max=Math.round((e.max||e.hp)*(1+.12*k));e.hp=e.max;e.dmg=Math.round(e.dmg*(1+.08*k));}}
   w.enemies.forEach(e=>{e.seat=[e.x+.5,e.y+.5];e.homeAng=Math.atan2(e.face[1],e.face[0]);});
   applyState(w,m.state);
   const rt=m.state&&m.state.rt;
@@ -1759,6 +1822,7 @@ function startRun(m,cls,opts){
     paused:true,glimpse:0,divineAt:null,keys:{},light:0,vis:0,sideDirty:true,featDirty:true,hudT:0,expT:0,miniT:0,lightT:0,focus:null,stick:[0,0],
     P:{x:w.start[0]+.5,y:w.start[1]+.5,yaw:Math.atan2(-best[0],-best[1]),pitch:0,hp:S.hp,max:S.hp,st:100,stDelay:0,blocking:false,blockAt:-9,dodge:0,dodgeCd:0,iframe:0,arrows:{broad:8,water:3,rope:2},arrowSel:'broad',crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
   for(const id of (w.snuffed||[]))if(G.torches[id])G.torches[id].out=true;
+  if((m.mods||[]).includes('night'))G.torches.forEach((t,i)=>{if(i%2===0)t.out=true;});
   G.objs=objList(m,BIOMES[m.biome].boss);
   G.haz=[];G.belt=packBelt();G.xpRun=0;G.gearFound=0;G.fromTav=!!opts.fromTav;w.loot=placeLoot(w,m.seed,m.state&&m.state.lo);
   G.eproj=[];G.eprojV=[];
@@ -1777,13 +1841,13 @@ function startRun(m,cls,opts){
   if(G.alarm>0)log('The guards are still jumpy from the last crew. The alarm is already up.','bad');
   if(w.bellCut)log('Someone already cut the alarm bell rope.','good');
   if(w.poisoned&&m.roles.includes('warrior'))log('The barracks guards look green. Someone poisoned their supper.','good');
-  const snuffed=G.torches.filter(t=>t.out).length;if(snuffed)log(`${snuffed} torch${snuffed>1?'es were':' was'} snuffed by an earlier crew.`,'good');
+  const snuffed=(w.snuffed||[]).length;if(snuffed)log(`${snuffed} torch${snuffed>1?'es were':' was'} snuffed by an earlier crew.`,'good');
   setPause(true,'Ready',`You are the ${CLS[cls].name}. Find your objectives on the right, then get back to the stairs you start on.`);
   if(G.mode==='client'){const host=NET.remote.get(NET.hostPeer);if(host&&host.pres)applyWorld(host.pres.w);G.w.enemies.forEach(e=>{if(e.tx!=null){e.x=e.tx;e.y=e.ty;e.ang=e.tang;}});
     for(const h of (host&&host.pres.hits)||[])NET.lastHit=Math.max(NET.lastHit,h.n);for(const l of (host&&host.pres.lg)||[])NET.lastLog=Math.max(NET.lastLog,l[0]);
     setPause(true,'Joined',`You are the ${CLS[cls].name} in ${peerName(host)}'s crew. The world keeps moving while you are paused.`);}
   if(G.mode==='host')setPause(true,'Hosting',`Room code ${NET.code}. Friends open this same page, choose Join a friend and type the code. The world keeps moving while you are paused.`);
-  build3D();resize3D();renderSide();renderCrew();pushPresence();window.scrollTo(0,0);
+  jobRunStart();idRunStart();build3D();resize3D();renderSide();renderCrew();pushPresence();window.scrollTo(0,0);
 }
 async function startMaybeHosted(m,cls){
   if($('#hostToggle')&&$('#hostToggle').checked&&NET.lobby){let code=null;for(let i=0;i<3&&!code;i++){const c=mkCode();try{await joinRoom(c,true);code=c;}catch(e){if(String(e&&e.message)!=='taken')break;}}
@@ -1795,42 +1859,63 @@ $('#tavernBtn').onclick=async()=>{const msg=$('#joinMsg');if(!NET.lobby){msg.tex
   const code=await openRoom();if(!code){msg.textContent='Could not open a co-op room. Try again in a moment.';return;}msg.textContent='';
   const me=NET.room.peers().find(p=>p.sameTab);NET.myPeer=me?me.peer:null;startTavern('host');};
 /*CREATORIN*/
-/* ---------- character creator: identity, starting stats and looks ---------- */
+/* ---------- character creator (design doc: class, sex and body, race, background, stats, face/name) ---------- */
 const ATTRN={str:'Strength',vit:'Vitality',agi:'Agility',int:'Intellect',per:'Perception'};
+const PRIM={thief:['agi','per'],warrior:['str','vit'],wizard:['int','per'],doctor:['int','vit']};
+const SUG={thief:{str:0,vit:2,agi:4,int:1,per:3},warrior:{str:4,vit:3,agi:2,int:0,per:1},wizard:{str:0,vit:2,agi:2,int:4,per:2},doctor:{str:1,vit:3,agi:1,int:3,per:2}};
+for(const c in SUG){CBASE[c]={};for(const k in ATTRN)CBASE[c][k]=5+SUG[c][k]+(PRIM[c].includes(k)?2:0);}
 const RACES={
-  human:{n:'Human',sub:'Gutterborn',d:'Born in the lanes, raised on the docks. Nobody looks twice at another human.',a:{vit:1,per:1},perk:'Knows the street: the fence pays you 5% more.',eye:1,sc:1,xz:1},
-  dwarf:{n:'Dwarf',sub:'Hill-mine exile',d:'Came down from the hill mines when the seams ran dry. Short, broad and very hard to move.',a:{vit:2,str:1,agi:-1},perk:'Thick-boned: +5 armor.',eye:.86,sc:.84,xz:1.2},
-  halfling:{n:'Halfling',sub:'Burrow-kin',d:'Small enough to fit through a coal chute, quiet enough that nobody hears them try.',a:{agi:2,per:1,str:-2},perk:'Underfoot: 10% quieter and a little harder to spot.',eye:.74,sc:.72,xz:1},
-  halforc:{n:'Half-orc',sub:'Tusker',d:'Half the city crosses the street when you walk by. The other half wants to hire you.',a:{str:2,vit:1,int:-1,per:-1},perk:'Hard to kill: +8% health.',eye:1.03,sc:1.05,xz:1.08,tusks:1},
-  halfelf:{n:'Half-elf',sub:'Fey-blooded',d:'A grandmother nobody talks about, and eyes that catch the light wrong.',a:{int:1,per:1,agi:1,str:-1,vit:-1},perk:'Night eyes: traps glint from further away.',eye:1,sc:.98,xz:.94,ears:1}};
+  human:{n:'Human',sub:'the city\'s own',d:'Born in the lanes and never left them.',a:{},pick:2,perk:'Common face: in houses and keeps, guards notice you 10% slower.',draw:'None.',eye:1,sc:1,xz:1},
+  dwarf:{n:'Dwarf',sub:'exiled miners and smiths',d:'Came down from the hill mines when the seams ran dry. Short, broad and hard to move.',a:{vit:2,agi:-1},perk:'Stonesense: you sense coffers and valuables within 5 paces, through walls.',draw:'Short legs: 3% slower on your feet.',eye:.86,sc:.84,xz:1.2},
+  halfling:{n:'Halfling',sub:'dockside smallfolk',d:'Small enough to fit through a coal chute, quiet enough that nobody hears them try.',a:{agi:2,str:-1},perk:'Underfoot: your footsteps are 10% quieter.',draw:'Small back: your bag is one row shorter.',eye:.74,sc:.72,xz:1},
+  halforc:{n:'Half-orc',sub:'ogre-blooded labourers',d:'Half the city crosses the street when you walk by. The other half wants to hire you.',a:{str:2,int:-1},perk:'Thick skin: +8% health.',draw:'Stands out: guards notice you 10% faster.',eye:1.03,sc:1.05,xz:1.08,tusks:1},
+  goblin:{n:'Goblin',sub:'sewer-born city goblins',d:'Grew up in the drains under the Tanneries. Sees in the dark, trusted by nobody.',a:{per:2,vit:-1},perk:'Gutter eyes: your lantern-sight reaches further in the dark, and warren goblins are slow to raise the alarm on you.',draw:'Distrusted: the fence pays you 5% less.',eye:.8,sc:.78,xz:.95,ears:1}};
 const BGS={
-  urchin:{n:'Gutter urchin',d:'You learned to run before you learned to read.',a:{agi:1},kit:'2 smoke bombs',items:{smoke:2}},
-  dockhand:{n:'Dockhand',d:'Ten years of hauling crates for coin. The crates were heavier than the coin.',a:{str:1},kit:'2 bandages',items:{bandage:2}},
-  deserter:{n:'Deserter',d:'You walked away from the Duke\'s war with your boots and your life.',a:{vit:1},kit:'2 healing draughts',items:{draught:2}},
-  acolyte:{n:'Defrocked acolyte',d:'Thrown out of the temple for reading the wrong books. You kept the books.',a:{int:1},kit:'2 tonics',items:{tonic:2}},
-  runner:{n:'Fence\'s runner',d:'You carried hot goods across town for a fence who paid on time, mostly.',a:{per:1},kit:'100 gold',gold:100},
-  cardsharp:{n:'Cardsharp',d:'Every table in the Low Quarter has thrown you out at least once.',a:{per:1},kit:'a Fine ring',ring:1},
-  debtor:{n:'Debtor',d:'You owe the wrong people. They lent you a stake to make sure you can pay.',a:{},kit:'250 gold, and someone watching',gold:250}};
-const SEXES=['Man','Woman'];
-const SKINS=['#f1d2b6','#d9b896','#c18e66','#9a6a45','#6e4a30','#4a3122'],ORCSKINS=['#9aa677','#7d8a5c','#8a9488','#66705a','#a39a7a','#5a6250'];
+  gutter:{n:'Gutter rat',a:{agi:1},item:'Spare lockpicks',perk:'Pickpockets turn up better loot.',d:'You learned to run before you learned to read.'},
+  dockhand:{n:'Dockhand',a:{str:1},item:'Crowbar (a pry bar)',perk:'Carrying the strongbox doesn\'t slow you.',d:'Ten years of hauling crates for coin.'},
+  watchman:{n:'Disgraced watchman',a:{vit:1},item:'Old watch badge (sells well)',perk:'Guard ranks at a glance: the captain\'s room is marked on your map.',d:'Thrown off the watch. You know how guards think.'},
+  apprentice:{n:'Failed apprentice',a:{int:1},item:'A Fine charm',perk:'You know a ward on sight: wards and warded coffers are marked on your map.',d:'Three years with a hedge-wizard, then the fire.'},
+  resurrection:{n:'Resurrection man',a:{per:1},item:'Shovel and shuttered lantern (2 divining stubs)',perk:'The restless dead are slower to notice you.',d:'You dug up the fresh ones and sold them to surgeons.'},
+  pitfighter:{n:'Pit fighter',a:{str:1},item:'Knuckle-dusters',perk:'Parry window 15% wider.',d:'Bare knuckles in the cellar rings under the Fen Road.'},
+  cardsharp:{n:'Card sharp',a:{per:1},item:'Marked deck and 50 extra gold',perk:'The gambler gives you 10% off.',d:'Every table in the Low Quarter has thrown you out at least once.'},
+  deserter:{n:'Deserter',a:{vit:1},item:'Battered shield (a buckler)',perk:'Blocking costs 15% less stamina.',d:'You walked away from the Duke\'s war with your boots and your life.'},
+  barber:{n:'Barber\'s boy',a:{int:1},item:'Two bandages',perk:'Bandages heal 25% more.',d:'Shaves, teeth and the odd leg, all in one chair.'},
+  smuggler:{n:'Smuggler',a:{agi:1},item:'False-bottom pouch',perk:'A second sewn-in pocket: one more item kept if you fall.',d:'Contraband up the river, past every toll and customs man.'}};
+Object.assign(GB,{knuckles:{n:'Knuckle-dusters',slot:'hands',w:1,h:1,arm:1,v:20,ic:'glove',d:'Brass. Makes a point.'},deck:{n:'Marked deck',val:true,w:1,h:1,v:30,ic:'book'}});
+const SEXES=['Male','Female'];
+const SKINS=['#f1d2b6','#d9b896','#c18e66','#9a6a45','#6e4a30','#4a3122'],ORCSKINS=['#9aa677','#7d8a5c','#8a9488','#66705a','#a39a7a','#5a6250'],GOBSKINS=['#7f9a4a','#6a8a3a','#8aa060','#5a7a3a','#9a9a5a','#4f6a34'];
 const HAIRC=['#1c1714','#4a2a14','#7a4a22','#b98a4a','#d9c49a','#8a8a8a','#e8e4dc','#8a2f1c'];
-const HAIRS=['Cropped','Shaved','Long','Tail','Wild'],FHAIR=['None','Stubble','Beard','Long beard'],FACES=['Plain','Scarred','Eyepatch','Tattooed'],BUILDS=['Lean','Average','Heavy'];
+const HAIRS=['Cropped','Shaved','Long','Tail','Wild'],FHAIR=['None','Stubble','Beard','Long beard'],FACES=['Plain','Scarred','Eyepatch','Tattooed'],BUILDS=['Lean','Average','Heavy'],HEIGHTS=['Short','Average','Tall'],AGES=['Young','Grown','Grizzled'];
 const OUTFIT=[null,'#7a2f2f','#2f4a7a','#3f6a3a','#6a4a2a','#4a3a6a','#3a3a3a','#8a7a3a'];
 const NAMES={m:['Bram','Tobin','Garrick','Wat','Osric','Jory','Hask','Mott','Fenwick','Corin'],f:['Nell','Ysolde','Marta','Wren','Agna','Tilly','Sabeth','Corra','Maud','Isk'],last:['Fenn','Crowe','Ashby','Tallow','Quill','Marsh','Coyle','Rook','Pike','Hollow','Blackmore','Sallow']};
-function defLook(cls){return cls==='doctor'?{skin:1,hs:0,hc:0,fh:0,face:0,build:1,col:0}:cls==='wizard'?{skin:1,hs:2,hc:6,fh:3,face:0,build:1,col:0}:cls==='warrior'?{skin:2,hs:0,hc:1,fh:2,face:0,build:2,col:0}:{skin:1,hs:0,hc:0,fh:0,face:0,build:0,col:0};}
-function defId(cls){return {nm:'',sex:0,race:'human',bg:'urchin',pts:{},lk:defLook(cls),made:0};}
-function idOf(cls){const c=PROF.chars[cls];if(!c.id)c.id=defId(cls);return c.id;}
-function idMods(id){const o={str:0,vit:0,agi:0,int:0,per:0};if(!id)return o;const R=RACES[id.race],B=BGS[id.bg];for(const k in o)o[k]+=(R&&R.a[k]||0)+(B&&B.a[k]||0)+(id.pts&&id.pts[k]||0);return o;}
-function identStats(S,cls,c){const id=c.id;if(!id)return;const r=id.race;
-  if(r==='human')S.fence=+(S.fence+.05).toFixed(3);
-  else if(r==='dwarf'){S.armorPts+=5;S.armor=S.armorPts/(S.armorPts+60);}
-  else if(r==='halfling'){S.noise=Math.max(.35,S.noise*.9);S.stealth=Math.max(.4,S.stealth*.94);}
-  else if(r==='halforc')S.hp=Math.round(S.hp*1.08);
-  else if(r==='halfelf')S.trap+=.5;
-  S.race=r;S.eyeK=(RACES[r]||RACES.human).eye;}
-function packLook(cls){const c=PROF.chars[cls||G.cls];const id=c&&c.id;if(!id)return '';const l=id.lk;return [id.sex,Object.keys(RACES).indexOf(id.race),l.skin,l.hs,l.hc,l.fh,l.face,l.build,l.col].join('');}
-function unpackLook(s){if(!s||s.length<9)return null;const d=s.split('').map(Number);return {sex:d[0],race:Object.keys(RACES)[d[1]]||'human',lk:{skin:d[2],hs:d[3],hc:d[4],fh:d[5],face:d[6],build:d[7],col:d[8]}};}
-function charName(cls){const c=PROF.chars[cls];return c&&c.id&&c.id.made&&c.id.nm?c.id.nm:'';}
+const ALIASES=['Two-Fingers','Quiet','Lucky','Red','Old','Soft-Shoe','Nine-Lives','Gravel','Inkpot','Rat-Tail','Sixpence','Wicks'];
+function skinsFor(r){return r==='halforc'?ORCSKINS:r==='goblin'?GOBSKINS:SKINS;}
+function defLook(cls){const b={ht:1,age:1};return Object.assign(b,cls==='doctor'?{skin:1,hs:0,hc:0,fh:0,face:0,build:1,col:0}:cls==='wizard'?{skin:1,hs:2,hc:6,fh:3,face:0,build:1,col:0,age:2}:cls==='warrior'?{skin:2,hs:0,hc:1,fh:2,face:0,build:2,col:0}:{skin:1,hs:0,hc:0,fh:0,face:0,build:0,col:0});}
+function defId(cls){return {v:2,nm:'',al:'',sex:0,race:'human',hpick:PRIM[cls].slice(),bg:'gutter',pts:Object.assign({},SUG[cls]),lk:defLook(cls),made:0};}
+function migId(id,cls){if(id&&!id.v){id.v=2;id.pts=Object.assign({},SUG[cls]);if(!RACES[id.race])id.race='human';const map={urchin:'gutter',acolyte:'apprentice',runner:'smuggler',debtor:'pitfighter'};if(!BGS[id.bg])id.bg=map[id.bg]||'gutter';id.hpick=id.hpick||PRIM[cls].slice();id.al=id.al||'';Object.assign(id.lk,{ht:1,age:1},id.lk);}return id;}
+function idOf(cls){const c=PROF.chars[cls];if(!c.id)c.id=defId(cls);return migId(c.id,cls);}
+function idAttrs(cls,id){if(!id)return null;migId(id,cls);const R=RACES[id.race]||RACES.human,B=BGS[id.bg]||{a:{}},a={};
+  for(const k in ATTRN)a[k]=5+((id.pts||{})[k]||0)+(PRIM[cls].includes(k)?2:0)+(R.a[k]||0)+(B.a[k]||0)+(R.pick&&(id.hpick||[]).includes(k)?1:0);return a;}
+function idMods(){return {str:0,vit:0,agi:0,int:0,per:0};}
+function idOfC(c){return c&&c.id&&c.id.v===2?c.id:null;}
+function identStats(S,cls,c){const id=c.id;if(!id)return;migId(id,cls);const r=id.race,bg=id.bg;S.race=r;S.bg=bg;S.eyeK=(RACES[r]||RACES.human).eye;
+  if(r==='dwarf')S.walk*=.97;else if(r==='halfling')S.noise=Math.max(.35,S.noise*.9);else if(r==='halforc')S.hp=Math.round(S.hp*1.08);else if(r==='goblin')S.fence=+(S.fence-.05).toFixed(3);
+  if(bg==='deserter')S.blkCost*=.85;if(bg==='pitfighter')S.parry*=1.15;}
+function bagRows(cls){const c=PROF.chars[cls];return c&&c.id&&c.id.race==='halfling'?-1:0;}
+/* what race and background do on a job */
+function idVisMul(){const c=PROF.chars[G.cls],id=c&&c.id;let m=1;const b=G.w&&G.w.biome;if(G.m&&G.m.mods){if(G.m.mods.includes('fog'))m*=.85;if(G.m.mods.includes('payday'))m*=.85;}
+  if(!id||!id.made)return m;if(id.race==='human'&&b==='keep')m*=.9;if(id.race==='halforc')m*=1.1;if(id.race==='goblin'&&b==='lair')m*=.8;if(id.bg==='resurrection'&&b==='crypt')m*=.85;return m;}
+function idRunStart(){const c=PROF.chars[G.cls],id=c&&c.id;if(!id||!id.made||G.tavern)return;const w=G.w;
+  if(id.bg==='watchman')for(const cl of w.cells)if(cl.role==='captain')for(let y=cl.y0;y<=cl.y1;y++)for(let x=cl.x0;x<=cl.x1;x++)G.explored.add(y*w.W+x);
+  if(id.bg==='apprentice'){for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++)if(w.t[y][x]===WARD)G.explored.add(y*w.W+x);for(const l of w.loot||[])if(l&&l.cf&&l.cf.kind==='ward')G.explored.add(Math.floor(l.y)*w.W+Math.floor(l.x));}
+  if(id.race==='goblin'&&R3.plight){R3.plight.intensity*=1.7;R3.plight.distance*=1.5;}}
+function idUpdate(dt){const c=PROF.chars[G.cls],id=c&&c.id;if(!id||!id.made||G.tavern||id.race!=='dwarf')return;G.stoneT=(G.stoneT||0)-dt;if(G.stoneT>0)return;G.stoneT=.5;const P=G.P;
+  for(const l of G.w.loot||[])if(l&&!l.taken&&Math.hypot(l.x-P.x,l.y-P.y)<5){const k=Math.floor(l.y)*G.w.W+Math.floor(l.x);if(!G.explored.has(k)){G.explored.add(k);G.miniT=0;}}}
+function bgIs(k){const c=PROF.chars[G?G.cls:INV.cls],id=c&&c.id;return !!(id&&id.made&&id.bg===k);}
+function bgOf(cls,k){const c=PROF.chars[cls],id=c&&c.id;return !!(id&&id.made&&id.bg===k);}
+function packLook(cls){const c=PROF.chars[cls||G.cls];const id=c&&c.id;if(!id)return '';const l=id.lk;return [id.sex,Object.keys(RACES).indexOf(id.race),l.skin,l.hs,l.hc,l.fh,l.face,l.build,l.col,l.ht==null?1:l.ht,l.age==null?1:l.age].join('');}
+function unpackLook(s){if(!s||s.length<9)return null;const d=s.split('').map(Number);return {sex:d[0],race:Object.keys(RACES)[d[1]]||'human',lk:{skin:d[2],hs:d[3],hc:d[4],fh:d[5],face:d[6],build:d[7],col:d[8],ht:d[9]==null?1:d[9],age:d[10]==null?1:d[10]}};}
+function charName(cls){const c=PROF.chars[cls];if(!(c&&c.id&&c.id.made&&c.id.nm))return '';return c.id.al?`"${c.id.al}" ${c.id.nm}`:c.id.nm;}
 function randName(sex){const R=a=>a[Math.floor(Math.random()*a.length)];return R(sex?NAMES.f:NAMES.m)+' '+R(NAMES.last);}
 
 /* extra pieces on the class silhouette: hair, beards, faces, race features */
@@ -1852,63 +1937,72 @@ const CR={open:false,cls:'thief',mode:'new',d:null,retire:0,rend:null,scene:null
 function openCreator(cls){ensureChars();CR.cls=cls||CR.cls;const id=idOf(CR.cls);CR.mode=id.made?'edit':'new';CR.retire=0;CR.d=JSON.parse(JSON.stringify(id));if(!CR.d.nm)CR.d.nm=randName(CR.d.sex);
   CR.open=true;$('#creov').hidden=false;renderCreator();}
 function closeCreator(){CR.open=false;$('#creov').hidden=true;cancelAnimationFrame(CR.raf);if(CR.rend){try{CR.rend.dispose();CR.rend.forceContextLoss();}catch(e){}CR.rend=null;}renderStash();}
-function crPtsLeft(){const p=CR.d.pts||{};return 5-Object.values(p).reduce((a,b)=>a+b,0);}
-function crAttrs(){const a=Object.assign({},CBASE[CR.cls]),m=idMods(CR.d);for(const k in a)a[k]+=m[k];return a;}
+function crPtsLeft(){const p=CR.d.pts||{};return 10-Object.values(p).reduce((a,b)=>a+b,0);}
+function crAttrs(){return idAttrs(CR.cls,CR.d);}
 function crPreviewStats(){const c=PROF.chars[CR.cls],keep=c.id;c.id=CR.d;let S;try{S=calcStats(CR.cls);}finally{c.id=keep;}return S;}
 function swatches(key,list,cur){return `<div class="sw">${list.map((col,i)=>`<button class="swb ${i===cur?'on':''}" data-lk="${key}" data-v="${i}" style="background:${col||CLS[CR.cls].color}" aria-label="${key} ${i+1}"></button>`).join('')}</div>`;}
 function chips(key,list,cur,dis){return `<div class="chips">${list.map((n,i)=>`<button class="chip ${i===cur?'on':''}" data-lk="${key}" data-v="${i}" ${dis?'disabled':''}>${n}</button>`).join('')}</div>`;}
-function renderCreator(){const el=$('#crebox'),d=CR.d,cls=CR.cls,lock=CR.mode==='edit',R=RACES[d.race],B=BGS[d.bg],A=crAttrs(),S=crPreviewStats(),left=crPtsLeft(),c=PROF.chars[cls];
-  const skins=d.race==='halforc'?ORCSKINS:SKINS;
+function sgn(v){return v>0?'+'+v:''+v;}
+function modTxt(a){const e=Object.entries(a);return e.map(([k,v])=>sgn(v)+' '+ATTRN[k]).join(', ');}
+function renderCreator(){const el=$('#crebox'),d=CR.d,cls=CR.cls,c=PROF.chars[cls],lock=CR.mode==='edit',statLock=lock&&(c.lvl>1||c.xp>0),R=RACES[d.race],B=BGS[d.bg],A=crAttrs(),S=crPreviewStats(),left=crPtsLeft();
+  const skins=skinsFor(d.race);
   el.innerHTML=`<div class="crtop"><h2>${lock?'Your '+CLS[cls].name:'New character'}</h2><button class="btn" id="crClose">Close</button></div>
+  <p class="note">Quill sizes you up in the lantern light of the back room. Nothing is final until you walk downstairs.</p>
   <div class="crgrid">
    <div class="crleft"><canvas id="crcv" width="300" height="380"></canvas>
      <label class="label" for="crName">Name</label><div class="row"><input id="crName" maxlength="18" value="${esc(d.nm)}"><button class="btn sm" id="crDice" title="Random name">Roll</button></div>
-     <div class="crsum"><b>${esc(d.nm||'Nameless')}</b><span class="note">${SEXES[d.sex]} · ${R.n} · ${B.n} · ${CLS[cls].name}${lock?' · Level '+c.lvl:''}</span></div>
+     <label class="label" for="crAlias">Street alias</label><div class="row"><input id="crAlias" maxlength="14" placeholder="Two-Fingers" value="${esc(d.al||'')}"><button class="btn sm" id="crAliasDice" title="Random alias">Roll</button></div>
+     <div class="crsum"><b>${esc(d.al?'"'+d.al+'" ':'')}${esc(d.nm||'Nameless')}</b><span class="note">${SEXES[d.sex]} ${R.n.toLowerCase()} · ${B.n} · ${CLS[cls].name}${lock?' · Level '+c.lvl:''}</span></div>
+     <div class="crattr">${Object.keys(ATTRN).map(k=>`<span class="${PRIM[cls].includes(k)?'pri':''}"><b class="mono">${A[k]}</b>${ATTRN[k]}</span>`).join('')}</div>
      <div class="crstats note">${S.hp} health · ${S.armorPts} armor · ${S.dmg} damage · spell power ${S.sp} · walk ${S.walk.toFixed(2)}</div>
    </div>
    <div class="crright">
-    <section><h4>Class</h4><div class="chips">${ROLES.map(r=>{const m=PROF.chars[r].id&&PROF.chars[r].id.made;return `<button class="chip ${r===cls?'on':''}" data-cls="${r}" style="--cc:${CLS[r].color}">${CLS[r].name}${m?' <span class="note">· '+esc(PROF.chars[r].id.nm)+'</span>':''}</button>`;}).join('')}</div>
-      <p class="note">${({thief:'Locks, traps, shadows and knives in the back.',warrior:'Breaks doors, holds doorways and fights anything.',wizard:'Sees through walls, dispels wards and burns crowds.',doctor:'Keeps the crew standing, purges plague and burns the restless dead.'})[cls]||''}</p></section>
-    <section><h4>Sex</h4>${chips('sex',SEXES,d.sex,lock)}</section>
-    <section><h4>Race</h4><div class="opts">${Object.entries(RACES).map(([k,r])=>`<button class="opt ${k===d.race?'on':''}" data-race="${k}" ${lock?'disabled':''}><b>${r.n} <span class="note">${r.sub}</span></b><span class="note">${r.d}</span><span class="mods">${modTxt(r.a)} · ${r.perk}</span></button>`).join('')}</div></section>
-    <section><h4>Background</h4><div class="opts">${Object.entries(BGS).map(([k,b])=>`<button class="opt ${k===d.bg?'on':''}" data-bg="${k}" ${lock?'disabled':''}><b>${b.n}</b><span class="note">${b.d}</span><span class="mods">${Object.keys(b.a).length?modTxt(b.a)+' · ':''}starts with ${b.kit}</span></button>`).join('')}</div></section>
-    <section><h4>Starting stats <span class="note">${lock?'set when the character was made':left+' of 5 points left'}</span></h4>
-      <div class="pts">${Object.keys(ATTRN).map(k=>{const p=(d.pts||{})[k]||0;return `<div class="pt"><span>${ATTRN[k]}</span><span class="mono note">${CBASE[cls][k]} class${idMods({race:d.race,bg:d.bg,pts:{}})[k]?' '+sgn(idMods({race:d.race,bg:d.bg,pts:{}})[k]):''}</span>
-        <span class="row"><button class="btn sm" data-pt="${k}" data-d="-1" ${lock||p<=-2||A[k]<=1?'disabled':''}>−</button><b class="mono">${A[k]}</b><button class="btn sm" data-pt="${k}" data-d="1" ${lock||p>=3||left<=0?'disabled':''}>+</button></span></div>`;}).join('')}</div>
-      <p class="note">Spend 5 points. You can take up to 2 from an attribute to put somewhere else, and add up to 3 to any one.</p></section>
-    <section><h4>Appearance <span class="note">other players see this</span></h4>
+    <section><h4>1. Class</h4><div class="chips">${ROLES.map(r=>{const m=PROF.chars[r].id&&PROF.chars[r].id.made;return `<button class="chip ${r===cls?'on':''}" data-cls="${r}" style="--cc:${CLS[r].color}">${CLS[r].name}${m?' <span class="note">· '+esc(PROF.chars[r].id.nm)+'</span>':''}</button>`;}).join('')}</div>
+      <p class="note">${({thief:'Locks, traps, shadows and knives in the back.',warrior:'Breaks doors, holds doorways and fights anything.',wizard:'Sees through walls, dispels wards and burns crowds.',doctor:'Keeps the crew standing, purges plague and burns the restless dead.'})[cls]||''} Primary: ${PRIM[cls].map(k=>ATTRN[k]).join(' and ')} (+2 each).</p></section>
+    <section><h4>2. Sex and body <span class="note">cosmetic only</span></h4><div class="lk"><span class="label">Sex</span>${chips('sex',SEXES,d.sex,lock)}<span class="label">Build</span>${chips('build',BUILDS,d.lk.build)}<span class="label">Height</span>${chips('ht',HEIGHTS,d.lk.ht==null?1:d.lk.ht)}<span class="label">Age</span>${chips('age',AGES,d.lk.age==null?1:d.lk.age)}</div></section>
+    <section><h4>3. Race</h4><div class="opts">${Object.entries(RACES).map(([k,r])=>`<button class="opt ${k===d.race?'on':''}" data-race="${k}" ${lock?'disabled':''}><b>${r.n} <span class="note">${r.sub}</span></b><span class="note">${r.d}</span><span class="mods">${r.pick?'+1 to any two':modTxt(r.a)} · ${r.perk}</span><span class="drw">${r.draw}</span></button>`).join('')}</div>
+      ${R.pick?`<div class="lk" style="margin-top:8px"><span class="label">Your +1s</span><div class="chips">${Object.keys(ATTRN).map(k=>`<button class="chip ${(d.hpick||[]).includes(k)?'on':''}" data-hp="${k}" ${lock?'disabled':''}>${ATTRN[k]}</button>`).join('')}</div></div>`:''}</section>
+    <section><h4>4. Background</h4><div class="opts">${Object.entries(BGS).map(([k,b])=>`<button class="opt ${k===d.bg?'on':''}" data-bg="${k}" ${lock?'disabled':''}><b>${b.n}</b><span class="note">${b.d}</span><span class="mods">${modTxt(b.a)} · starts with ${b.item}</span><span class="note">${b.perk}</span></button>`).join('')}</div></section>
+    <section><h4>5. Starting stats <span class="note">${statLock?'locked after your first job':left+' of 10 points left'}</span></h4>
+      <div class="pts">${Object.keys(ATTRN).map(k=>{const p=(d.pts||{})[k]||0,bon=A[k]-5-p;return `<div class="pt ${PRIM[cls].includes(k)?'pri':''}"><span>${ATTRN[k]}</span><span class="mono note">5 + ${p}${bon?' '+sgn(bon):''}</span>
+        <span class="row"><button class="btn sm" data-pt="${k}" data-d="-1" ${statLock||p<=0?'disabled':''}>−</button><b class="mono">${A[k]}</b><button class="btn sm" data-pt="${k}" data-d="1" ${statLock||p>=4||left<=0?'disabled':''}>+</button></span></div>`;}).join('')}</div>
+      <div class="row" style="margin-top:6px;gap:8px;align-items:center"><button class="btn sm" id="crSug" ${statLock?'disabled':''}>Suggested</button><span class="note">Every attribute starts at 5. Spend 10 points, at most 4 in one (9 before bonuses). Class, race and background go on top.</span></div></section>
+    <section><h4>6. Face and colours <span class="note">other players see this</span></h4>
       <div class="lk"><span class="label">Skin</span>${swatches('skin',skins,d.lk.skin)}
        <span class="label">Hair</span>${chips('hs',HAIRS,d.lk.hs)}
        <span class="label">Hair colour</span>${swatches('hc',HAIRC,d.lk.hc)}
        <span class="label">Facial hair</span>${chips('fh',FHAIR,d.lk.fh)}
        <span class="label">Face</span>${chips('face',FACES,d.lk.face)}
-       <span class="label">Build</span>${chips('build',BUILDS,d.lk.build)}
        <span class="label">Colours</span>${swatches('col',OUTFIT,d.lk.col)}</div></section>
-    <div class="crgo">${lock?`<button class="btn primary" id="crSave">Save name and looks</button><button class="btn" id="crRetire">${CR.retire?'Click again: retire for good':'Retire and start a new '+CLS[cls].name}</button><span class="note">Retiring resets level, skills and kit. What fits goes to the shared stash.</span>`
-      :`<button class="btn primary" id="crMake">${c.lvl>1||c.xp>0?'Confirm':'Create'} ${esc(d.nm||'character')}</button>${c.lvl>1||c.xp>0?`<span class="note">Your level ${c.lvl} ${CLS[cls].name} keeps their level, skills and gear.</span>`:''}`}</div>
+    <div class="crgo">${lock?`<button class="btn primary" id="crSave">Save</button><button class="btn" id="crRetire">${CR.retire?'Click again: retire for good':'Retire and start a new '+CLS[cls].name}</button><span class="note">Retiring resets level, skills and kit. What fits goes to the shared stash.</span>`
+      :`<button class="btn primary" id="crMake">Walk downstairs</button>${c.lvl>1||c.xp>0?`<span class="note">Your level ${c.lvl} ${CLS[cls].name} keeps their level, skills and gear.</span>`:`<span class="note">You start with the ${CLS[cls].name}'s kit, plus ${B.item.toLowerCase()}.</span>`}`}</div>
    </div></div>`;
   const q=s=>el.querySelector(s);
   q('#crClose').onclick=closeCreator;
-  q('#crName').oninput=e=>{d.nm=e.target.value.slice(0,18);el.querySelector('.crsum b').textContent=d.nm||'Nameless';};
-  q('#crDice').onclick=()=>{d.nm=randName(d.sex);renderCreator();};
+  q('#crName').oninput=e=>{d.nm=e.target.value.slice(0,18);};q('#crAlias').oninput=e=>{d.al=e.target.value.slice(0,14);};
+  q('#crName').onchange=q('#crAlias').onchange=()=>renderCreator();
+  q('#crDice').onclick=()=>{d.nm=randName(d.sex);renderCreator();};q('#crAliasDice').onclick=()=>{d.al=ALIASES[Math.floor(Math.random()*ALIASES.length)];renderCreator();};
   el.querySelectorAll('[data-cls]').forEach(b=>b.onclick=()=>openCreator(b.dataset.cls));
-  el.querySelectorAll('[data-race]').forEach(b=>b.onclick=()=>{d.race=b.dataset.race;fixPts();renderCreator();});
-  el.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{d.bg=b.dataset.bg;fixPts();renderCreator();});
-  el.querySelectorAll('[data-pt]').forEach(b=>b.onclick=()=>{const k=b.dataset.pt;d.pts=d.pts||{};d.pts[k]=(d.pts[k]||0)+(+b.dataset.d);if(!d.pts[k])delete d.pts[k];renderCreator();});
+  el.querySelectorAll('[data-race]').forEach(b=>b.onclick=()=>{d.race=b.dataset.race;if(d.lk.skin>=skinsFor(d.race).length)d.lk.skin=0;renderCreator();});
+  el.querySelectorAll('[data-hp]').forEach(b=>b.onclick=()=>{const k=b.dataset.hp;d.hpick=(d.hpick||[]).filter(x=>x!==k);if(d.hpick.length===(b.classList.contains('on')?d.hpick.length:d.hpick.length)){}if(!b.classList.contains('on')){d.hpick.push(k);if(d.hpick.length>2)d.hpick.shift();}renderCreator();});
+  el.querySelectorAll('[data-bg]').forEach(b=>b.onclick=()=>{d.bg=b.dataset.bg;renderCreator();});
+  el.querySelectorAll('[data-pt]').forEach(b=>b.onclick=()=>{const k=b.dataset.pt;d.pts=d.pts||{};d.pts[k]=Math.max(0,Math.min(4,(d.pts[k]||0)+(+b.dataset.d)));renderCreator();});
+  if(q('#crSug'))q('#crSug').onclick=()=>{d.pts=Object.assign({},SUG[cls]);renderCreator();};
   el.querySelectorAll('[data-lk]').forEach(b=>b.onclick=()=>{const k=b.dataset.lk,v=+b.dataset.v;if(k==='sex'){if(lock)return;d.sex=v;}else d.lk[k]=v;renderCreator();});
   if(q('#crMake'))q('#crMake').onclick=()=>makeCharacter();
-  if(q('#crSave'))q('#crSave').onclick=()=>{const id=idOf(cls);id.nm=(d.nm||'').trim()||randName(id.sex);id.lk=d.lk;saveProf();closeCreator();};
-  if(q('#crRetire'))q('#crRetire').onclick=()=>{if(!CR.retire){CR.retire=1;renderCreator();return;}CR.mode='new';CR.retire=0;CR.d=defId(cls);CR.d.nm=randName(0);CR.retiring=1;renderCreator();};
+  if(q('#crSave'))q('#crSave').onclick=()=>{const id=idOf(cls);id.nm=(d.nm||'').trim()||randName(id.sex);id.al=(d.al||'').trim();id.lk=d.lk;if(!statLock)id.pts=Object.assign({},d.pts);saveProf();closeCreator();};
+  if(q('#crRetire'))q('#crRetire').onclick=()=>{if(!CR.retire){CR.retire=1;renderCreator();return;}CR.mode='new';CR.retire=0;CR.d=defId(cls);CR.d.nm=randName(0);renderCreator();};
   crPreview();}
-function sgn(v){return v>0?'+'+v:''+v;}
-function modTxt(a){const e=Object.entries(a);return e.length?e.map(([k,v])=>sgn(v)+' '+ATTRN[k]).join(', '):'No attribute change';}
-function fixPts(){const d=CR.d;const A=crAttrs();for(const k in A)if(A[k]<1){d.pts[k]=(d.pts[k]||0)+(1-A[k]);}while(crPtsLeft()<0){const k=Object.keys(d.pts).find(k=>d.pts[k]>0);if(!k)break;d.pts[k]--;if(!d.pts[k])delete d.pts[k];}}
+function bgKit(cls,bg){const add=it=>{if(!bagAdd(cls,it))stashAdd(it);},R=()=>Math.floor(Math.random()*1e9);
+  if(bg==='gutter')add(makeItem('bentwire',0,1));else if(bg==='dockhand')add(makeItem('prybar',0,1));else if(bg==='watchman')add(makeItem('signet',0,1));
+  else if(bg==='apprentice')add(makeItem(['copperring','goldring','bonering'][Math.floor(Math.random()*3)],1,R()));else if(bg==='resurrection')PROF.stash.stub=(PROF.stash.stub||0)+2;
+  else if(bg==='pitfighter'){const it=makeItem('knuckles',0,1);add(it);}else if(bg==='cardsharp'){add(makeItem('deck',0,1));PROF.gold+=50;}else if(bg==='deserter')add(makeItem('buckler',0,1));
+  else if(bg==='barber')PROF.stash.bandage=(PROF.stash.bandage||0)+2;}
 function makeCharacter(){const cls=CR.cls,d=CR.d;let c=PROF.chars[cls];const retire=c.id&&c.id.made;let lost=0;
   if(retire){for(const s in c.eq){if(c.eq[s]&&!stashAdd(c.eq[s]))lost++;}for(const e of c.bag){if(!stashAdd(e.it))lost++;}PROF.chars[cls]=c=newChar(cls);}
-  c.id={nm:(d.nm||'').trim()||randName(d.sex),sex:d.sex,race:d.race,bg:d.bg,pts:Object.assign({},d.pts),lk:Object.assign({},d.lk),made:1};
-  const B=BGS[d.bg];if(B.gold)PROF.gold+=B.gold;if(B.items)for(const k in B.items){PROF.stash[k]=(PROF.stash[k]||0)+B.items[k];}
-  if(B.ring){const it=makeItem(['copperring','goldring','bonering'][Math.floor(Math.random()*3)],1,Math.floor(Math.random()*1e9));if(!bagAdd(cls,it))stashAdd(it);}
-  CR.retiring=0;saveProf();closeCreator();if(lost)toast(lost+' items had no room in the stash and were sold off.');}
+  c.id={v:2,nm:(d.nm||'').trim()||randName(d.sex),al:(d.al||'').trim(),sex:d.sex,race:d.race,hpick:(d.hpick||[]).slice(0,2),bg:d.bg,pts:Object.assign({},d.pts),lk:Object.assign({},d.lk),made:1};
+  {const H=bagH(cls);c.bag=c.bag.filter(e=>{if(e.y+GB[e.it.b].h<=H)return true;if(!stashAdd(e.it))lost++;return false;});}
+  bgKit(cls,d.bg);saveProf();closeCreator();if(lost)toast(lost+' items had no room in the stash and were sold off.');}
 function crPreview(){const cv=$('#crcv');if(!cv||typeof THREE==='undefined')return;cancelAnimationFrame(CR.raf);
   try{if(!CR.rend){CR.rend=new THREE.WebGLRenderer({antialias:true,alpha:true});CR.scene=new THREE.Scene();CR.cam=new THREE.PerspectiveCamera(32,300/380,.1,50);CR.cam.position.set(0,1.3,6.2);CR.cam.lookAt(0,1.12,0);
       CR.scene.add(new THREE.AmbientLight(0x8a8478,.9));const dl=new THREE.DirectionalLight(0xffd9a0,.9);dl.position.set(2,3,-3);CR.scene.add(dl);const fl=new THREE.DirectionalLight(0x8090c0,.4);fl.position.set(-2,1,3);CR.scene.add(fl);}
@@ -1990,7 +2084,7 @@ function update(dt){
   if(P.tonic>0){P.tonic-=dt;P.st=Math.min(100,P.st+24*dt);}
   updMove(dt);
   if(P.dodge>0){P.dodge-=dt;const k=7.5/T*dt;const mx=P.dodgeDir[0]*k,my=P.dodgeDir[1]*k;if(!blockedAt(P.x+mx,P.y,.24))P.x+=mx;if(!blockedAt(P.x,P.y+my,.24))P.y+=my;}
-  let spd=S.walk*(P.crouch?.5*(SK('softstep')>1?1.15:1):P.sprint?1.75:1)*(P.blocking?.5:1)*(G.looted&&!SK('packmule')&&!SK('featherlight')?.85:1)*(P.bandage>0?.5:1);
+  let spd=S.walk*(P.crouch?.5*(SK('softstep')>1?1.15:1):P.sprint?1.75:1)*(P.blocking?.5:1)*(G.looted&&!SK('packmule')&&!SK('featherlight')&&!bgIs('dockhand')?.85:1)*(P.bandage>0?.5:1)*(G.onRats?.6:1);
   P.moving=len>.1;
   if(P.chan){if(P.moving||G.down>0){P.chan=null;toast('Interrupted.');}else{P.chan.t+=dt;if(P.chan.t>=P.chan.dur){const c=P.chan;P.chan=null;c.done();}}}
   if(P.moving){const fx=-Math.sin(P.yaw),fy=-Math.cos(P.yaw),rx=Math.cos(P.yaw),ry=-Math.sin(P.yaw);const k=Math.min(1,len)/len*spd/T*dt;
@@ -2007,7 +2101,7 @@ function update(dt){
     if(d<.36&&G.down<=0){tr.disarmed=true;tr.revealed=true;G.featDirty=true;hurt(25,'Click. Darts hiss out of the wall.');if(G.mode==='client')sendAct({t:'trap',id:tr.id});else noise(tr.x+.5,tr.y+.5,12,.6,.9);if(G.over)return;}}
   // light & visibility
   G.lightT-=dt;if(G.lightT<=0){G.lightT=.1;G.light=lightAt(P.x,P.y);}
-  let v=G.light;if(P.crouch)v*=G.cls==='thief'?.28:.6;if(P.moving)v*=P.sprint?1.6:1.15;if(SK('stillstone')&&!P.moving&&G.light<(SK('stillstone')>1?.6:.35))v*=.25;v*=docVisMul();if(P.invis>0)v=0;G.vis=Math.min(1,v*(S.stealth||1));
+  let v=G.light;if(P.crouch)v*=G.cls==='thief'?.28:.6;if(P.moving)v*=P.sprint?1.6:1.15;if(SK('stillstone')&&!P.moving&&G.light<(SK('stillstone')>1?.6:.35))v*=.25;v*=docVisMul()*idVisMul();if(P.invis>0)v=0;G.vis=Math.min(1,v*(S.stealth||1));
   // explored
   G.expT-=dt;if(G.expT<=0){G.expT=.25;const px=Math.floor(P.x),py=Math.floor(P.y);for(let y=py-7;y<=py+7;y++)for(let x=px-7;x<=px+7;x++){if(x<0||y<0||x>=G.w.W||y>=G.w.H)continue;const key=y*G.w.W+x;if(G.explored.has(key))continue;if(losT(P.x,P.y,x+.5,y+.5)||(opaqueT(G.w.t[y][x])&&DIRS.some(([dx,dy])=>G.explored.has((y+dy)*G.w.W+x+dx))))G.explored.add(key);}}
   if(G.mode==='client'){for(const e of G.w.enemies){if(e.tx==null)continue;const k=Math.min(1,dt*10);e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.ang+=angDiff(e.tang,e.ang)*k;}}
@@ -2016,7 +2110,7 @@ function update(dt){
     for(const e of G.w.enemies)if(!e.dead)updGuard(e,dt);updAlarm(dt);updEProj(dt);if(!G.tavern)updGates(dt);}
   if(G.over)return;
   if(G.mp){NET.sendT-=dt;if(NET.sendT<=0){NET.sendT=G.mode==='host'?.1:.066;pushPresence();}updRemoteAvatars(dt);G.crewT=(G.crewT||0)-dt;if(G.crewT<=0){G.crewT=.5;renderCrew();}}
-  updProj(dt);updHaz(dt);docUpdate(dt);
+  updProj(dt);updHaz(dt);docUpdate(dt);idUpdate(dt);obsUpdate(dt);
   checkObjectives();
   G.focus=findFocus();if(!G.tavern)slipCheck(dt);
 }
@@ -2080,7 +2174,7 @@ function goAlert(e,quiet,src){
   if(!(e.mute>0))for(const o of G.w.enemies){if(o===e||o.dead||o.state==='alert')continue;
     if((e.group&&o.group===e.group)||Math.hypot(o.x-e.x,o.y-e.y)<=r){o.state='alert';o.aw=1;o.last=e.last.slice();o.unseen=0;o.path=null;}}
 }
-function noise(x,y,radM,amt,cap,footstep){
+function noise(x,y,radM,amt,cap,footstep){if(footstep&&G.m&&G.m.mods&&G.m.mods.includes('rain'))radM*=.7;
   for(const e of G.w.enemies){if(e.dead||e.state==='alert')continue;const d=Math.hypot(e.x-x,e.y-y)*T;if(d>radM)continue;
     if(amt>=1){goAlert(e,true,[x,y]);continue;}
     e.aw=Math.min(Math.max(e.aw,cap),e.aw+amt*(1-d/radM*.5));
@@ -2195,7 +2289,7 @@ function applyHit(e,cls,kind,o){
   if(e.hp<=0){say(kind==='fire'?`Fire takes ${lc(nameOf(e))}.`:`${who==='You'?'You cut':who+' cuts'} down ${lc(nameOf(e))}.`);kill(e,actor);}
   else{goAlert(e,true,o.src);e.hitT=G.time;}
 }
-function burstAt(x,y,cls,actor,sp,rad,fs){let n=0;fs=fs||{};let r=rad||1.35;const src=actor&&actor.rr?[actor.rr.p.x,actor.rr.p.y]:undefined;
+function burstAt(x,y,cls,actor,sp,rad,fs){let n=0;fs=fs||{};let r=rad||1.35;ratFire(x,y,r);const src=actor&&actor.rr?[actor.rr.p.x,actor.rr.p.y]:undefined;
   if(fs.wild){const n0=G.w.enemies.filter(e=>!e.dead&&Math.hypot(e.x-x,e.y-y)<r&&losT(x,y,e.x,e.y)).length;r*=1+.3*Math.min(3,n0);}
   const hits=[];for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-x,e.y-y)<r&&losT(x,y,e.x,e.y)){applyHit(e,cls,'fire',{actor,sp,src});hits.push(e);n++;if(fs.spo&&!e.dead){stagger(e,1.2,true);if(fs.spo>1)e.mute=10;}}}
   if(fs.sp)for(const e of G.w.enemies.filter(o=>!o.dead&&!hits.includes(o)&&Math.hypot(o.x-x,o.y-y)<3.2&&losT(x,y,o.x,o.y)).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y)).slice(0,fs.sp>1?5:3)){G.bursts=G.bursts||[];G.bursts.push({x:e.x,y:e.y,t:.2,col:0xffe080});applyHit(e,cls,'fire',{actor,sp:(sp||1)*.5,src});n++;}
@@ -2270,13 +2364,70 @@ function updProj(dt){
   G.proj=G.proj.filter(p=>{if(p.dead&&p.mesh){R3.scene.remove(p.mesh);}return !p.dead;});
 }
 
+/*OBSTIN*/
+/* ---------- class-only obstacles ---------- */
+const OBST_DUR={},OBST_LAB={};
+function obsInit(){OBST_DUR[SLAB]=4;OBST_DUR[WINCH]=4;OBST_DUR[RUNE]=1.5;OBST_DUR[RATS]=1.5;
+  OBST_LAB[SLAB]='Heaving the slab';OBST_LAB[WINCH]='Cranking the winch';OBST_LAB[RUNE]='Unpicking the rune line';OBST_LAB[RATS]='Smoking out the rats';}
+function wizNear(r){for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.c!=='wizard'||p.dn||p.x==null)continue;if(Math.hypot(p.x-G.P.x,p.y-G.P.y)<r)return true;}return false;}
+function winchAt(x,y){return (G.w.winches||[]).find(o=>o.x===x&&o.y===y);}
+function winchDone(o){return !o||G.w.t[o.d[1]][o.d[0]]!==IRONDOOR;}
+function floodTiles(x,y,t){const w=G.w,out=[],seen=new Set([x+','+y]),q=[[x,y]];while(q.length){const [cx,cy]=q.shift();if(!w.t[cy]||w.t[cy][cx]!==t)continue;out.push([cx,cy]);
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const k=(cx+dx)+','+(cy+dy);if(!seen.has(k)){seen.add(k);q.push([cx+dx,cy+dy]);}}}return out;}
+function clearTiles(ts){const w=G.w;for(const [x,y] of ts){w.t[y][x]=FLOOR;w.cleared.push([x,y]);}G.featDirty=true;}
+function obsLabel(c){const w=G.w,C=G.cls;
+  switch(c.t){
+    case SLAB:return C==='warrior'?{act:true,text:'<b>E</b> Heave the fallen slab aside (4 s)'}:{act:false,text:'A fallen slab of masonry. Something glints underneath. Only a Warrior could shift it.'};
+    case WINCH:{const o=winchAt(c.x,c.y);if(winchDone(o))return {act:false,text:'The winch is wound tight. The iron door is up.'};
+      return C==='warrior'?{act:true,text:'<b>E</b> Crank the winch (loud, 4 s)'}:{act:false,text:'A great iron winch, rusted stiff. Only a Warrior has the arms to crank it.'};}
+    case IRONDOOR:return {act:false,text:C==='warrior'?'An iron door on a chain. Find the winch that raises it, somewhere in a room nearby.':'An iron door on a chain. A Warrior could crank the winch that raises it.'};
+    case RUNE:return C==='wizard'?{act:true,text:'<b>E</b> Unpick the rune line. Your crew can\'t see it.'}:{act:false,text:''};
+    case RATS:return C==='doctor'?{act:true,text:'<b>E</b> Smoke out the rat swarm'}:{act:false,text:'A seething swarm of plague rats. They bite anyone who wades through. A Plague Doctor\'s smoke drives them off, and so does fire.'};}
+  return null;}
+function obsInteract(c){if(c.kind!=='tile'||!OBST_DUR[c.t])return false;const P=G.P;
+  P.chan={t:0,dur:OBST_DUR[c.t]*(c.t===SLAB&&SK('packmule')?.75:1),label:OBST_LAB[c.t],done:()=>{const d={k:'tile',x:c.x,y:c.y};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}};
+  if(c.t===WINCH&&G.mode!=='client')noise(c.x+.5,c.y+.5,10,.5,.7);return true;}
+function obsUse(t,d,C,say,nm){const w=G.w,cx=d.x+.5,cy=d.y+.5;
+  switch(t){
+    case SLAB:if(C!=='warrior')return;clearTiles([[d.x,d.y]]);noise(cx,cy,6,.4,.6);say('You get your back under the slab and heave. It grinds aside. Something was hidden under it.',`${nm} heaved a fallen slab aside.`,'good');return;
+    case WINCH:{if(C!=='warrior')return;const o=winchAt(d.x,d.y);if(winchDone(o))return;clearTiles([o.d]);noise(cx,cy,14,1,1);say('You throw your weight on the crank. Chain rattles through the walls and the iron door grinds up.',`${nm} cranked a winch. An iron door is open.`,'good');return;}
+    case RUNE:{if(C!=='wizard')return;const ts=floodTiles(d.x,d.y,RUNE);clearTiles(ts);say(`You pinch the leyline shut. ${ts.length>1?ts.length+' runes gutter':'The rune gutters'} out.`,`${nm} unpicked a rune line.`,'good');return;}
+    case RATS:{if(C!=='doctor')return;const ts=floodTiles(d.x,d.y,RATS);clearTiles(ts);say('You swing the censer low. The rats pour away from the smoke into the cracks.',`${nm} smoked out a rat swarm.`,'good');return;}}}
+/* host: someone stepped on a rune line */
+function runeTrip(x,y,actor){const w=G.w;if(!w.t[y]||w.t[y][x]!==RUNE)return;const ts=floodTiles(x,y,RUNE);clearTiles(ts);
+  for(const o of w.enemies){if(o.dead||o.state==='alert'||o.stag>0)continue;if(Math.hypot(o.x-x-.5,o.y-y-.5)>14)continue;o.state='search';o.aw=Math.max(o.aw,.85);o.inv=[x+.5,y+.5];o.look=0;o.timer=.3;o.searchLeft=4;o.path=null;bark(o);}
+  const msg=(actor.key==='me'?'You':actor.name)+' crossed a hidden rune line. It flares white and shrieks. Guards are coming to look.';log(msg,'bad');if(G.mode==='host')netLog(msg,'bad');}
+/* host: fire burns rats out */
+function ratFire(x,y,r){if(G.mode==='client'||!G.w)return;const w=G.w,ts=[];for(let ty=Math.floor(y-r-1);ty<=y+r+1;ty++)for(let tx=Math.floor(x-r-1);tx<=x+r+1;tx++)if(w.t[ty]&&w.t[ty][tx]===RATS&&Math.hypot(tx+.5-x,ty+.5-y)<r+.7)ts.push([tx,ty]);
+  if(ts.length){clearTiles(ts);log('The rats shriek and scatter from the flames.','good');}}
+function obsUpdate(dt){if(G.tavern||!G.w)return;const P=G.P,w=G.w;
+  G.runeT=Math.max(0,(G.runeT||0)-dt);G.runeVis=G.cls==='wizard'||G.runeT>0||(G.mp&&wizNear(9));
+  const tx=Math.floor(P.x),ty=Math.floor(P.y),t=w.t[ty]&&w.t[ty][tx];
+  if(t===RUNE&&G.cls!=='wizard'&&G.down<=0&&G.runeSent!==tx+','+ty){G.runeSent=tx+','+ty;if(G.mode==='client')sendAct({t:'rune',x:tx,y:ty});else runeTrip(tx,ty,{key:'me',name:'You'});}
+  G.onRats=t===RATS&&G.cls!=='doctor';
+  if(G.onRats&&G.down<=0){G.ratT=(G.ratT||0)-dt;if(G.ratT<=0){G.ratT=.5;hurt(5,'Plague rats swarm up your legs. Get out, or bring a Plague Doctor.');if(G.mode!=='client')noise(P.x,P.y,6,.35,.6);}}else G.ratT=0;}
+function obsMesh(t,x,y,cx,cz,w){const Mt=R3.mat,wl=(a,b)=>w.t[b]&&w.t[b][a]===WALL,alongX=wl(x-1,y)&&wl(x+1,y)?true:wl(x,y-1)&&wl(x,y+1)?false:true;
+  if(t===SLAB){const s=addMesh(new THREE.BoxGeometry(1.7,.5,1.4),Mt.stone,cx,.25,cz);s.rotation.y=.25+x*.3;s.rotation.z=.08;const k=addMesh(new THREE.BoxGeometry(.5,.35,.4),Mt.stone,cx+.7,.18,cz-.5);k.rotation.y=1;return true;}
+  if(t===WINCH){const done=winchDone(winchAt(x,y));const iron=Mt.iron,dk=Mt.woodDark;for(const s of [-.55,.55])addMesh(new THREE.BoxGeometry(.18,1.1,.3),dk,cx+s,.55,cz);
+    const dr=addMesh(new THREE.CylinderGeometry(.28,.28,1,14),dk,cx,.85,cz);dr.rotation.z=Math.PI/2;for(const s of [-.3,0,.3]){const r=addMesh(new THREE.TorusGeometry(.29,.035,6,14),iron,cx+s,.85,cz);r.rotation.y=Math.PI/2;}
+    const h=addMesh(new THREE.BoxGeometry(.08,.5,.08),iron,cx+.68,done?1.1:.62,cz+.12);addMesh(new THREE.BoxGeometry(.3,.07,.07),iron,cx+.78,done?1.35:.4,cz+.12);return true;}
+  if(t===IRONDOOR){const m=addMesh(new THREE.BoxGeometry(alongX?T:.22,WALLH,alongX?.22:T),Mt.iron,cx,WALLH/2,cz);for(const hy of [.6,1.6,2.6])addMesh(new THREE.BoxGeometry(alongX?T*1.01:.26,.12,alongX?.26:T*1.01),R3.mat.woodDark,cx,hy,cz);return true;}
+  if(t===RUNE){R3.runeMat=R3.runeMat||new THREE.MeshBasicMaterial({color:0x7fb0ff,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending});R3.runeLine=R3.runeLine||new THREE.MeshBasicMaterial({color:0xa8c8ff});
+    const sh=addMesh(new THREE.PlaneGeometry(T,1.7),R3.runeMat,cx,.85,cz);if(!alongX)sh.rotation.y=Math.PI/2;sh.userData.rune=1;
+    for(const hy of [.25,.7,1.15,1.6]){const l=addMesh(new THREE.BoxGeometry(alongX?T:.02,.02,alongX?.02:T),R3.runeLine,cx,hy,cz);l.userData.rune=1;}
+    const g=addMesh(new THREE.RingGeometry(.3,.38,6),R3.runeLine,cx,.02,cz);g.rotation.x=-Math.PI/2;g.userData.rune=1;return true;}
+  if(t===RATS){const g=new THREE.Group();g.position.set(cx,0,cz);g.userData.spin=1;R3.ratMat=R3.ratMat||new THREE.MeshLambertMaterial({color:0x2e241c});
+    for(let i=0;i<9;i++){const a=i*2.39,r=.2+(i%3)*.25;const m=new THREE.Mesh(new THREE.BoxGeometry(.22,.1,.1),R3.ratMat);m.position.set(Math.cos(a)*r,.06,Math.sin(a)*r);m.rotation.y=-a;g.add(m);}R3.dyn.add(g);return true;}
+  return false;}
+obsInit();
+
 /* ---------- interaction ---------- */
 function findFocus(){
   const P=G.P,w=G.w,C=G.cls,[fx,fy]=fwd(),fa=Math.atan2(fy,fx),cands=[];
   const px=Math.floor(P.x),py=Math.floor(P.y);
-  for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if((G.tavern?[RACK,STREET,TABLE,VENDOR,GAMBLER]:[DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT,PIT,LEDGE,GATE,GATEUP,PATIENT,MIASMA]).includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
+  for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if((G.tavern?[RACK,STREET,TABLE,VENDOR,GAMBLER]:[DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT,PIT,LEDGE,GATE,GATEUP,PATIENT,MIASMA,SLAB,WINCH,IRONDOOR,RATS,...(C==='wizard'?[RUNE]:[])]).includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
   for(const tr of w.traps)if(C==='thief'&&tr.revealed&&!tr.disarmed)cands.push({kind:'trap',tr,cx:tr.x+.5,cy:tr.y+.5});
-  if(!G.tavern)for(const l of w.loot||[])if(l&&!l.taken&&Math.hypot(l.x-P.x,l.y-P.y)<1.6&&losT(P.x,P.y,l.x,l.y))cands.push({kind:l.cf?'coffer':'loot',l,cx:l.x,cy:l.y});
+  if(!G.tavern)for(const l of w.loot||[])if(l&&!l.taken&&w.t[Math.floor(l.y)][Math.floor(l.x)]!==SLAB&&Math.hypot(l.x-P.x,l.y-P.y)<1.6&&losT(P.x,P.y,l.x,l.y))cands.push({kind:l.cf?'coffer':'loot',l,cx:l.x,cy:l.y});
   if(!G.tavern&&C==='thief')for(const e of w.enemies)if(canPick(e))cands.push({kind:'pocket',e,cx:e.x,cy:e.y});
   if(w.bell&&!w.bellCut&&!G.tavern)cands.push({kind:'bell',cx:w.bell.px,cy:w.bell.py});
   if(C==='thief'&&!G.tavern)for(const to of G.torches)if(!to.out)cands.push({kind:'torch',to,cx:to.wx,cy:to.wy});
@@ -2296,6 +2447,7 @@ function focusLabel(c){
   if(c.kind==='loot'){const it=lootItem(c.l),b=GB[it.b];const nm=`<span style="color:${itemColor(it)}">${esc(itemName(it))}</span>`;ensureChars();const room=findSpot(PROF.chars[C].bag,b.w,b.h,BAGW,BAGH);
     return room?{act:true,text:`<b>E</b> Take the ${nm} <span class="dim">${b.val?b.v+'g':RAR[it.r].n}</span>`}:{act:false,text:`${nm}. No room in your bag. Press I to make some.`};}
   if(c.kind==='bell')return G.alarm>=2?{act:false,text:'The alarm bell. Too late, it already rang.'}:{act:true,text:'<b>E</b> Cut the alarm bell rope'};
+  {const ol=obsLabel(c);if(ol)return ol;}
   switch(c.t){
     case EXIT:return {act:true,text:G.looted?'<b>E</b> Leave with the strongbox':'<b>E</b> Leave and repost the job'};
     case DOOR:{const left=Object.keys(w.locks).filter(r=>!w.locks[r]);const mine=C in w.locks&&!w.locks[C];
@@ -2328,6 +2480,7 @@ function interact(){
   if(c.kind==='coffer'){cofferUse(c.l);return;}
   if(c.kind==='tile'&&c.t===PATIENT){const P=G.P;P.chan={t:0,dur:G.S.stab||4,label:'Stabilising the informant',hold:SK('steady')>1,done:()=>{const d={k:'tile',x:c.x,y:c.y};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}};return;}
   if(c.kind==='tile'&&c.t===MIASMA&&SK('purge')){const ts=[];for(let y=c.y-4;y<=c.y+4;y++)for(let x=c.x-4;x<=c.x+4;x++)if(G.w.t[y]&&G.w.t[y][x]===MIASMA&&Math.hypot(x-G.P.x+.5,y-G.P.y+.5)<4.5)ts.push([x,y]);for(const [x,y] of ts){const d={k:'tile',x,y,pg:SK('purge')};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}return;}
+  if(obsInteract(c))return;
   if(c.kind==='pocket'){pickPocket(c.e);return;}
   const d={k:c.kind,id:c.kind==='trap'?c.tr.id:c.kind==='torch'?c.to.id:c.kind==='loot'?c.l.id:undefined,x:c.x,y:c.y,rw:c.kind==='trap'?SK('rewire'):0,pz:SK('poisoner')>1?1:0,sd:G.cls==='doctor'?SK('sleepdraught'):0,pg:G.cls==='doctor'?SK('purge'):0};
   if(c.kind==='tile'&&c.t===WARD&&G.cls!=='wizard'){const i=G.belt.indexOf('wardspike');if(i<0)return;G.belt[i]=null;d.spike=1;G.sideDirty=true;}
@@ -2347,6 +2500,7 @@ function doUse(d,actor){
   if(d.k==='torch'){const to=G.torches[d.id];if(!to||to.out||C!=='thief')return;to.out=true;w.snuffed=G.torches.filter(t=>t.out).map(t=>t.id);G.featDirty=true;G.lightT=0;say('You pinch the torch out. Darkness settles in.',`${nm} snuffed a torch.`,'good');return;}
   const t=w.t[d.y]&&w.t[d.y][d.x];const cx=d.x+.5,cy=d.y+.5;
   switch(t){
+    case SLAB:case WINCH:case RUNE:case RATS:obsUse(t,d,C,say,nm);return;
     case DOOR:{if(!(C in w.locks)||w.locks[C])return;w.locks[C]=true;
       if(C==='thief')say('You ease the needles back and turn the tumblers. One lock down.',`${nm} picked the needle-trapped lock.`,'good');
       if(C==='warrior'){say('You wrench the crossbar out of its brackets. The clang echoes.',`${nm} wrenched out the iron crossbar.`,'good');noise(cx,cy,16,1,1);}
@@ -2386,7 +2540,7 @@ function leave(){
   m.history.push(entry);
   const crewH=[];
   if(G.mode==='host'){for(const rr of NET.remote.values()){if(!rr.p)continue;const h={by:peerName(rr),cls:rr.p.c,did:(G.credits[rr.peer]||[]).slice(),peer:rr.peer};crewH.push(h);m.history.push({by:h.by,cls:h.cls,did:h.did});}
-    NET.end={lt:G.looted?1:0,pay:m.payout,m:{seed:m.seed,biome:m.biome,roles:m.roles,cx:m.cx,title:m.title,payout:m.payout},s:G.looted?null:m.state,h:[{by:'The host',cls:G.cls,did:entry.did}].concat(crewH)};
+    NET.end={lt:G.looted?1:0,pay:m.payout,m:{seed:m.seed,biome:m.biome,roles:m.roles,cx:m.cx,sk:m.sk,type:m.type,mods:m.mods,crew:m.crew,title:m.title,payout:m.payout},s:G.looted?null:m.state,h:[{by:'The host',cls:G.cls,did:entry.did}].concat(crewH)};
     pushPresence(true);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G||G.over)leaveRoom();},90000);}
   saveBoard(board);
   const crewN=1+(G.mode==='host'?[...NET.remote.values()].filter(r=>r.p).length:0);const hl=settle(true,G.looted?Math.round(m.payout/crewN):0);const hlP=hl?`<p class="note">${esc(hl)}</p>`:'';
@@ -2445,7 +2599,7 @@ function drawMini(){if(!G.tavern&&G.w.bell){}
   const cv=$('#mini'),c=cv.getContext('2d'),w=G.w,s=Math.min(cv.width/w.W,cv.height/w.H),B=BIOMES[w.biome],P=G.P;
   c.clearRect(0,0,cv.width,cv.height);
   for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++){if(!G.explored.has(y*w.W+x))continue;const t=w.t[y][x];if(t===WALL)continue;
-    c.fillStyle=t===PIT?'#050505':t===ROPE||t===LADDER?'#8a6a3a':t===LEDGE?'#77736a':t===GATE||t===GATEUP?'#6a6e75':t===DOOR?'#c9952f':t===EXIT?'#e7e2d6':t===BARR?'#a07a48':t===WARD?'#9a95f5':t===CHEST?'#f1c860':t===POOL?'#3a5bd8':t===LARDER?'#7d5d3a':t===MIASMA?'#6f8a3a':t===PATIENT?'#c9a94a':B.floor;c.fillRect(x*s,y*s,s+.3,s+.3);}
+    c.fillStyle=t===PIT?'#050505':t===ROPE||t===LADDER?'#8a6a3a':t===LEDGE?'#77736a':t===GATE||t===GATEUP?'#6a6e75':t===DOOR?'#c9952f':t===EXIT?'#e7e2d6':t===BARR?'#a07a48':t===WARD?'#9a95f5':t===CHEST?'#f1c860':t===POOL?'#3a5bd8':t===LARDER?'#7d5d3a':t===MIASMA?'#6f8a3a':t===PATIENT?'#c9a94a':t===SLAB?'#8a8478':t===WINCH?'#b08a3a':t===IRONDOOR?'#4a5058':t===RATS?'#6a3a2a':t===RUNE&&G.runeVis?'#7fb0ff':B.floor;c.fillRect(x*s,y*s,s+.3,s+.3);}
   for(const l of w.loot||[]){if(!l||l.taken||!G.explored.has(Math.floor(l.y)*w.W+Math.floor(l.x)))continue;c.fillStyle=l.cf?'#b6b2ff':'#e7c27a';c.fillRect(l.x*s-1.5,l.y*s-1.5,3,3);}
   if(w.bell&&G.explored.has(w.bell.y*w.W+w.bell.x)){c.fillStyle=w.bellCut?'#6a5a3a':'#f1c860';c.beginPath();c.arc(w.bell.px*s,w.bell.py*s,Math.max(2,s*.4),0,7);c.fill();}
   for(const tr of w.traps)if(tr.revealed&&!tr.disarmed){c.fillStyle='#e0574a';c.fillRect(tr.x*s+s*.25,tr.y*s+s*.25,s*.5,s*.5);}
@@ -2575,7 +2729,7 @@ function updRemoteAvatars(dt){
 function buildAvatar(cls,look){
   const g=new THREE.Group(),mats=[];const L=c=>{const m=new THREE.MeshLambertMaterial({color:c});mats.push(m);return m;};
   const add=(geo,mat,x,y,z,o)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(o){if(o.rx)m.rotation.x=o.rx;if(o.rz)m.rotation.z=o.rz;if(o.s)m.scale.set(o.s[0],o.s[1],o.s[2]);}g.add(m);return m;};
-  const lv=look||{sex:0,race:'human',lk:defLook(cls)};const skinC=(lv.race==='halforc'?ORCSKINS:SKINS)[lv.lk.skin]||'#d9b896';lv.skinC=skinC;const skin=L(skinC),col=OUTFIT[lv.lk.col]||(CLS[cls]?CLS[cls].color:'#aaaaaa');const arm=new THREE.Group();g.add(arm);
+  const lv=look||{sex:0,race:'human',lk:defLook(cls)};const skinC=skinsFor(lv.race)[lv.lk.skin]||'#d9b896';lv.skinC=skinC;const skin=L(skinC),col=OUTFIT[lv.lk.col]||(CLS[cls]?CLS[cls].color:'#aaaaaa');const arm=new THREE.Group();g.add(arm);
   const cyl=(rt,rb,h,n)=>new THREE.CylinderGeometry(rt,rb,h,n||12),box=(x,y,z)=>new THREE.BoxGeometry(x,y,z),sph=(r)=>new THREE.SphereGeometry(r,14,10),cone=(r,h,n)=>new THREE.ConeGeometry(r,h,n||14);
   let sc=1;
   if(cls==='thief'){const cloak=L(new THREE.Color(col).multiplyScalar(.55)),dark=L(0x1c1c20),leather=L(0x4a3826);
@@ -2584,7 +2738,7 @@ function buildAvatar(cls,look){
     add(box(.34,.06,.02),L(0xe9e3d0),0,1.5,-.17);// glinting eyes under the hood
     add(cyl(.28,.36,.9),cloak,0,.85,.08,{s:[1,1,.6]});
     const a=new THREE.Mesh(box(.08,.08,.5),cloak);a.position.set(0,0,-.2);arm.add(a);const bl=new THREE.Mesh(box(.02,.02,.32),L(0xc9ccd2));bl.position.set(0,0,-.58);arm.add(bl);arm.position.set(.24,1.05,-.05);sc=.96;}
-  else if(cls==='warrior'){const mail=L(0x777b84),tab=L(col),hide=L(0x5a3e28),hair=L(HAIRC[lv.lk.hc]||'#4a2a14');
+  else if(cls==='warrior'){const mail=L(0x777b84),tab=L(col),hide=L(0x5a3e28),hair=L(lv.lk.age===2?new THREE.Color(HAIRC[lv.lk.hc]||'#4a2a14').lerp(new THREE.Color('#a0a0a0'),.55):(HAIRC[lv.lk.hc]||'#4a2a14'));
     add(box(.72,.75,.46),mail,0,1.08,0);add(box(.76,.5,.5),tab,0,.98,0);add(box(.62,.12,.5),hide,0,.72,0);
     add(cyl(.13,.12,.72),hide,-.17,.35,0);add(cyl(.13,.12,.72),hide,.17,.35,0);
     add(sph(.2),mail,-.45,1.4,0,{s:[1.1,.8,1.1]});add(sph(.2),mail,.45,1.4,0,{s:[1.1,.8,1.1]});
@@ -2600,7 +2754,7 @@ function buildAvatar(cls,look){
     add(new THREE.OctahedronGeometry(.06),star,.1,1.95,-.22);
     const a=new THREE.Mesh(cyl(.07,.1,.5),robe);a.rotation.x=Math.PI/2;a.position.z=-.2;arm.add(a);const st=new THREE.Mesh(cyl(.025,.03,1.7,8),L(0x5a4130));st.position.set(0,.1,-.42);arm.add(st);
     const orb=new THREE.Mesh(sph(.08),new THREE.MeshBasicMaterial({color:0xb6b2ff}));mats.push(orb.material);orb.position.set(0,.95,-.42);arm.add(orb);arm.position.set(.36,.95,-.05);sc=1;}
-  avatarExtras(add,L,cls,lv,{cyl,box,sph,cone});{const RR=RACES[lv.race]||RACES.human;sc*=RR.sc;var xz=RR.xz*([.9,1,1.12][lv.lk.build]||1)*(lv.sex?.92:1);}
+  avatarExtras(add,L,cls,lv,{cyl,box,sph,cone});{const RR=RACES[lv.race]||RACES.human;sc*=RR.sc*([.94,1,1.06][lv.lk.ht==null?1:lv.lk.ht]||1);var xz=RR.xz*([.9,1,1.12][lv.lk.build]||1)*(lv.sex?.92:1);}
   g.userData={arm,cls,mats,sc,xz};return g;
 }
 function rebuildWalls(){
@@ -2632,9 +2786,10 @@ function syncFeatures(){
       if(t===LADDER){const o=crewAt(x,y);const sx=o?-o.top[0]:0,sz=o?-o.top[1]:1;for(const off of [-.25,.25])addMesh(new THREE.BoxGeometry(.04,1.8,.04),new THREE.MeshLambertMaterial({color:0xc8b48a}),cx+sx*(T*.5+.03)+(sz?off:0),.9,cz+sz*(T*.5+.03)+(sx?off:0));}}
     else if(t===GATE||t===GATEUP){const up=t===GATEUP?2.4:0;const o=crewAt(x,y);const alongX=o&&o.top[1]!==0;for(let i=-4;i<=4;i++){const b=addMesh(new THREE.BoxGeometry(.06,WALLH,.06),Mt.iron,cx+(alongX?i*T*.11:0),WALLH/2+up,cz+(alongX?0:i*T*.11));}
       for(const hy of [.5,1.6,2.7]){const b=addMesh(new THREE.BoxGeometry(alongX?T:.06,.06,alongX?.06:T),Mt.iron,cx,hy+up,cz);}}
+    else if(obsMesh(t,x,y,cx,cz,w)){}
     else if(t===TABLE){addMesh(Gm.table,Mt.table,cx,.88,cz);addMesh(Gm.leg,Mt.table,cx,.41,cz);addMesh(Gm.die,Mt.bone,cx-.2,.99,cz);addMesh(Gm.die,Mt.bone,cx+.25,.99,cz+.2);}
   }
-  for(const l of w.loot||[]){if(!l||l.taken)continue;const k=l.it.b,B=GB[k],cx=l.x*T,cz=l.y*T;
+  for(const l of w.loot||[]){if(!l||l.taken||w.t[Math.floor(l.y)][Math.floor(l.x)]===SLAB)continue;const k=l.it.b,B=GB[k],cx=l.x*T,cz=l.y*T;
     if(l.cf){const m=addMesh(new THREE.BoxGeometry(.5,.34,.34),new THREE.MeshLambertMaterial({color:l.cf.kind==='ward'?0x3a2f5a:0x4a3a28}),cx,.17,cz);m.rotation.y=l.id*.7;addMesh(new THREE.BoxGeometry(.52,.05,.36),Mt.iron,cx,.31,cz).rotation.y=l.id*.7;for(let i=0;i<l.cf.tier;i++)addMesh(new THREE.BoxGeometry(.05,.05,.05),Mt.gold,cx-.1+i*.1,.36,cz);if(l.cf.kind==='ward'){const g=addMesh(new THREE.OctahedronGeometry(.06),new THREE.MeshBasicMaterial({color:0xb6b2ff}),cx,.55,cz);g.userData.spin=1;}continue;}
     if(!B.val){const col=new THREE.Color(RAR[l.it.r].c);const m=addMesh(new THREE.BoxGeometry(.34,.1,.22),new THREE.MeshLambertMaterial({color:0x4a3a28}),cx,.05,cz);m.rotation.y=l.id;
       const gl=addMesh(new THREE.OctahedronGeometry(.08),new THREE.MeshBasicMaterial({color:col}),cx,.32+.03*Math.sin(l.id),cz);gl.userData.spin=1;}
@@ -2652,7 +2807,7 @@ function syncFeatures(){
   G.featDirty=false;
 }
 function frame(){
-  requestAnimationFrame(frame);if(R3.dyn&&G&&!G.tavern&&R3.last){const tt=now();for(const m of R3.dyn.children)if(m.userData&&m.userData.spin)m.rotation.y=tt*2;}
+  requestAnimationFrame(frame);if(R3.dyn&&G&&!G.tavern&&R3.last){const tt=now();for(const m of R3.dyn.children)if(m.userData&&m.userData.spin)m.rotation.y=tt*2;else if(m.userData&&m.userData.rune)m.visible=!!G.runeVis;}
   const t=now(),dt=Math.min(.05,t-(R3.last||t));R3.last=t;
   if(!G||!R3.ok||!R3.dyn||$('#game').hidden)return;
   if((!G.paused||G.mp)&&!(INV.open&&!G.mp)&&!G.over&&$('#modal').hidden)update(dt);
@@ -2702,6 +2857,6 @@ function frame(){
 }
 
 renderBoard();renderStash();
-window.__NET=NET;window.__TL={docAbility,docPower,docCenser,docEvac,docUpdate,applyHit,doUse,CR,openCreator,closeCreator,makeCharacter,RACES,BGS,buildAvatar,packLook,unpackLook,SKILLS,SKBYID,skLearn,skCan,skPoints,skSpent,usePower,applyThrow,cofferUse,cofferNeeds,pickPocket,canPick,updHaz,meleeDmg,get ITEMS(){return ITEMS;},INV,openInv,closeInv,calcStats,makeItem,bagAdd,moveItem,gamble,invAction,GB,LEGS,RAR,lootItem,dropGear,awardXP,get CELL(){return CELL;},moveAbility,cycleArrow,crewAt,get PROF(){return PROF;},useBelt,settle,renderStash,buildAvatar,startTavern,launchJob,setClass,tavernUse,openJobPicker,get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
+window.__NET=NET;window.__TL={placeLoot,jobRunStart,makeMission,runeTrip,obsUse,obsUpdate,winchAt,floodTiles,ratFire,findFocus,docAbility,docPower,docCenser,docEvac,docUpdate,applyHit,doUse,CR,openCreator,closeCreator,makeCharacter,RACES,BGS,buildAvatar,packLook,unpackLook,SKILLS,SKBYID,skLearn,skCan,skPoints,skSpent,usePower,applyThrow,cofferUse,cofferNeeds,pickPocket,canPick,updHaz,meleeDmg,get ITEMS(){return ITEMS;},INV,openInv,closeInv,calcStats,makeItem,bagAdd,moveItem,gamble,invAction,GB,LEGS,RAR,lootItem,dropGear,awardXP,get CELL(){return CELL;},moveAbility,cycleArrow,crewAt,get PROF(){return PROF;},useBelt,settle,renderStash,buildAvatar,startTavern,launchJob,setClass,tavernUse,openJobPicker,get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
 </script>
 </body></html>

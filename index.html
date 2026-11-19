@@ -478,12 +478,12 @@ const STATS={
   wizard:{hp:60,atk:8,reach:1.15,swing:.7,walk:3.0,armor:0},
 };
 const KIT={
-  thief:{abil:[{id:'pebble',key:'1',name:'Pebble',cd:3}],
-    lines:['<b>Crouch</b> <kbd>C</kbd>: near silent and very hard to see in shadow.','<b>Backstab</b>: strike any guard who is not hunting you. Instant, silent kill.','<b>Pebble</b> <kbd>1</kbd>: throw where you aim. Guards nearby go to look.','<b>Snuff torches</b> <kbd>E</kbd>: the room stays dark for whoever comes next.','<b>Traps</b>: you spot pressure plates up close, and can disarm them.']},
+  thief:{abil:[{id:'pebble',key:'1',name:'Pebble',cd:3},{id:'venom',key:'2',name:'Venom blade',cd:18}],
+    lines:['<b>Crouch</b> <kbd>C</kbd>: near silent and very hard to see in shadow.','<b>Backstab</b>: strike a guard who is not hunting you. Instant, silent kill. Captains survive it unless your blade is envenomed.','<b>Duelist</b>: strike a guard mid-swing to interrupt it for double damage.','<b>Venom blade</b> <kbd>2</kbd>: your next strike is poisoned (+20). Prep this before a captain.','<b>Pebble</b> <kbd>1</kbd>: throw where you aim. Guards nearby go to look.','<b>Snuff torches</b> <kbd>E</kbd>: the room stays dark for whoever comes next.','<b>Traps</b>: you spot pressure plates up close, and can disarm them.']},
   warrior:{abil:[{id:'cleave',key:'1',name:'Cleave',cd:4},{id:'second',key:'2',name:'Second wind',cd:0,once:true}],
-    lines:['<b>Heavy blows</b>: 30 damage, and armor shrugs off 40% of hits.','<b>Cleave</b> <kbd>1</kbd>: a wide sweep that hits everyone in front of you.','<b>Second wind</b> <kbd>2</kbd>: recover 60 health, once per run.','<b>Smash</b> <kbd>E</kbd>: break barricades and the vault crossbar. Loud.','Your armor clanks. Guards hear you from further away.']},
-  wizard:{abil:[{id:'firebolt',key:'1',name:'Firebolt',cd:1.4},{id:'invis',key:'2',name:'Invisibility',cd:20},{id:'divine',key:'3',name:'Divine',cd:12}],
-    lines:['<b>Firebolt</b> <kbd>1</kbd> or right click: 30 damage where you aim.','<b>Invisibility</b> <kbd>2</kbd>: unseen for 8 seconds. Striking or casting ends it.','<b>Divine</b> <kbd>3</kbd>: see guards and traps through walls for 8 seconds.','<b>Dispel</b> <kbd>E</kbd>: unravel wards and the vault rune seal.','<b>Scry</b> <kbd>E</kbd> at the pool: maps the job for everyone after you.']},
+    lines:['<b>Heavy blows</b>: 30 damage, 45 against captains. Armor shrugs off 40% of hits.','<b>Cleave</b> <kbd>1</kbd>: a wide sweep that hits everyone in front of you, captains included.','<b>Second wind</b> <kbd>2</kbd>: recover 60 health, once per run.','<b>Smash</b> <kbd>E</kbd>: break barricades and the vault crossbar. Loud.','Your armor clanks. Guards hear you from further away.']},
+  wizard:{abil:[{id:'firebolt',key:'1',name:'Fireburst',cd:1.4},{id:'invis',key:'2',name:'Invisibility',cd:20},{id:'divine',key:'3',name:'Divine',cd:12}],
+    lines:['<b>Fireburst</b> <kbd>1</kbd> or right click: bursts where it lands, 24 damage to every guard nearby. Captains shrug off most of it.','<b>Invisibility</b> <kbd>2</kbd>: unseen for 8 seconds. Striking or casting ends it.','<b>Divine</b> <kbd>3</kbd>: see guards and traps through walls for 8 seconds.','<b>Dispel</b> <kbd>E</kbd>: unravel wards and the vault rune seal.','<b>Scry</b> <kbd>E</kbd> at the pool: maps the job for everyone after you.']},
 };
 let G=null;const R3={ok:undefined};
 /* ---------- live co-op over the claude.ai room channel ---------- */
@@ -566,9 +566,9 @@ function onRemote(){
   else if(G.mode==='host'){for(const rr of NET.remote.values()){for(const a of (rr.pres&&rr.pres.a)||[]){if(a.n>(rr.lastAct||0)){rr.lastAct=a.n;hostAct(rr,a);}}}}
 }
 function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peerName(rr)};if(!actor.cls)return;
-  if(a.t==='hit'){const e=w.enemies[a.id];if(!e||e.dead)return;G.lastActor=actor.key;
-    if(a.bs&&actor.cls==='thief'&&e.state!=='alert'){netLog(`${actor.name} silently takes down ${lc(nameOf(e))}.`,'good');kill(e,actor);return;}
-    e.hp-=Math.min(40,a.d||0);noise(e.x,e.y,10,1,1);if(e.hp<=0){netLog(`${actor.name} cuts down ${lc(nameOf(e))}.`);kill(e,actor);}else{goAlert(e,true,[rr.p.x,rr.p.y]);e.hitT=G.time;}}
+  if(a.t==='hit'){const e=w.enemies[a.id];if(!e||e.dead)return;G.lastActor=actor.key;actor.rr=rr;
+    applyHit(e,actor.cls,a.k==='cleave'&&actor.cls==='warrior'?'cleave':'melee',{actor,bs:!!a.bs,venom:!!a.venom&&actor.cls==='thief',src:[rr.p.x,rr.p.y]});}
+  else if(a.t==='burst'&&actor.cls==='wizard'){G.lastActor=actor.key;actor.rr=rr;burstAt(a.x,a.y,'wizard',actor);}
   else if(a.t==='noise')noise(a.x,a.y,Math.min(10,a.r),Math.min(.5,a.a),Math.min(.6,a.c));
   else if(a.t==='trap'){const tr=w.traps[a.id];if(tr&&!tr.disarmed){tr.disarmed=true;tr.revealed=true;G.featDirty=true;noise(tr.x+.5,tr.y+.5,12,.6,.9);netLog(`${actor.name} set off a dart trap.`,'bad');}}
   else if(a.t==='rev'){const tr=w.traps[a.id];if(tr&&!tr.revealed){tr.revealed=true;G.featDirty=true;}}
@@ -867,6 +867,24 @@ function updGuard(e,dt){
 
 /* ---------- player actions ---------- */
 function fwd(){return [-Math.sin(G.P.yaw),-Math.cos(G.P.yaw)];}
+/* Combat roles: Wizard clears crowds but barely scratches captains; Thief wins duels and, with venom prepped, can assassinate a captain; Warrior is good at both. */
+function applyHit(e,cls,kind,o){
+  o=o||{};const actor=o.actor||null,me=!actor||actor.key==='me',who=me?'You':actor.name;if(e.dead)return;
+  const say=(t,c)=>{if(me)log(t,c);if(G.mode==='host')netLog(me?t.replace(/^You /,'The host '):t,c);};
+  if(kind==='melee'&&cls==='thief'&&o.bs&&e.state!=='alert'){
+    if(!e.captain||o.venom){say(`${who==='You'?'You slip':who+' slips'} a blade into ${lc(nameOf(e))}. Not a sound.`,'good');kill(e,actor);return;}
+    e.hp-=60;say(`${who==='You'?'Your':who+"'s"} backstab staggers ${lc(nameOf(e))}, but a captain takes more than one blade.`,'bad');goAlert(e,true,o.src);e.hitT=G.time;return;}
+  let d=0;
+  if(kind==='melee'){d={thief:18,warrior:30,wizard:8}[cls]||8;
+    if(cls==='thief'&&e.atk>0){d*=2;e.atk=0;e.cool=1.4;say(`${who==='You'?'You catch':who+' catches'} ${lc(nameOf(e))} mid-swing.`,'good');}
+    if(cls==='thief'&&o.venom)d+=20;if(cls==='warrior'&&e.captain)d=Math.round(d*1.5);}
+  else if(kind==='cleave'){d=35;}
+  else if(kind==='fire'){d=24;if(e.captain)d=Math.round(d*.35);}
+  e.hp-=d;noise(e.x,e.y,10,1,1);
+  if(e.hp<=0){say(kind==='fire'?`Fire takes ${lc(nameOf(e))}.`:`${who==='You'?'You cut':who+' cuts'} down ${lc(nameOf(e))}.`);kill(e,actor);}
+  else{goAlert(e,true,o.src);e.hitT=G.time;}
+}
+function burstAt(x,y,cls,actor){let n=0;for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-x,e.y-y)<1.35&&losT(x,y,e.x,e.y)){applyHit(e,cls,'fire',{actor,src:actor&&actor.rr?[actor.rr.p.x,actor.rr.p.y]:undefined});n++;}}noise(x,y,10,1,1);return n;}
 function inArc(e,reach,arc){const P=G.P,[fx,fy]=fwd();const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>reach)return false;const a=Math.abs(angDiff(Math.atan2(dy,dx),Math.atan2(fy,fx)));return (a<arc||d<.35)&&losT(P.x,P.y,e.x,e.y);}
 function breakInvis(why){if(G.P.invis>0){G.P.invis=0;log(why);}}
 function attack(){
@@ -874,11 +892,10 @@ function attack(){
   breakInvis('Striking breaks your invisibility.');
   const tg=G.w.enemies.filter(e=>!e.dead&&inArc(e,S.reach,.6)).sort((a,b)=>Math.hypot(a.x-P.x,a.y-P.y)-Math.hypot(b.x-P.x,b.y-P.y))[0];
   if(!tg)return;
-  if(G.mode==='client'){const bs=G.cls==='thief'&&tg.state!=='alert';sendAct({t:'hit',id:tg.id,d:S.atk,bs});if(bs)log(`You slip a blade into ${lc(nameOf(tg))}.`,'good');return;}
-  G.lastActor='me';
-  if(G.cls==='thief'&&tg.state!=='alert'){log(`You slip a blade into ${lc(nameOf(tg))}. Not a sound.`,'good');kill(tg);return;}
-  tg.hp-=S.atk;noise(P.x,P.y,10,1,1);
-  if(tg.hp<=0){log(`You cut down ${lc(nameOf(tg))}.`);kill(tg);}else{goAlert(tg,true);tg.hitT=G.time;}
+  const venom=G.cls==='thief'&&P.venom;if(venom){P.venom=false;}
+  const bs=G.cls==='thief'&&tg.state!=='alert';
+  if(G.mode==='client'){sendAct({t:'hit',k:'melee',id:tg.id,bs,venom});if(bs)log(`You strike ${lc(nameOf(tg))} from the shadows.`,'good');return;}
+  G.lastActor='me';applyHit(tg,G.cls,'melee',{bs,venom});
 }
 function kill(e,actor){
   e.dead=true;G.kills++;G.featDirty=true;G.lastActor=actor?actor.key:'me';
@@ -894,9 +911,10 @@ function useAbility(id){
     case 'firebolt':breakInvis('Casting breaks your invisibility.');G.proj.push({kind:'fire',pos:cam.position.clone().add(dir.clone().multiplyScalar(.5)).add(new THREE.Vector3(0,-.15,0)),vel:dir.clone().multiplyScalar(16),t:0});if(G.mode!=='client')noise(P.x,P.y,4,.2,.5);break;
     case 'cleave':{const hit=G.w.enemies.filter(e=>!e.dead&&inArc(e,1.45,1.05));P.swing=.6;G.swingStart=G.time;
       G.swingN=(G.swingN||0)+1;
-      if(G.mode==='client'){for(const e of hit)sendAct({t:'hit',id:e.id,d:35});}
-      else{G.lastActor='me';for(const e of hit){e.hp-=35;if(e.hp<=0)kill(e);else goAlert(e,true);}noise(P.x,P.y,13,1,1);}
+      if(G.mode==='client'){for(const e of hit)sendAct({t:'hit',k:'cleave',id:e.id});}
+      else{G.lastActor='me';for(const e of hit)applyHit(e,'warrior','cleave');noise(P.x,P.y,13,1,1);}
       log(hit.length?`You sweep through ${hit.length} foe${hit.length>1?'s':''}.`:'Your sweep cuts only air.');break;}
+    case 'venom':P.venom=true;log('You coat your blade. Your next strike is poisoned.','good');break;
     case 'second':P.hp=Math.min(P.max,P.hp+60);P.used[id]=true;log('You grit your teeth and catch your breath. +60 health.','good');break;
     case 'invis':P.invis=8;log('You fold the light around yourself.');for(const e of G.w.enemies)if(!e.dead&&e.state==='alert')e.unseen=Math.max(e.unseen,2);break;
     case 'divine':{G.glimpse=8;G.divineAt=[P.x,P.y];let n=0;for(const tr of G.w.traps)if(!tr.disarmed&&!tr.revealed&&Math.hypot(tr.x-P.x,tr.y-P.y)<9){tr.revealed=true;n++;}
@@ -905,15 +923,19 @@ function useAbility(id){
   }
   P.cd[id]=A.cd;G.sideDirty=true;
 }
+function fireBurst(x,y){G.bursts=G.bursts||[];G.bursts.push({x,y,t:0});
+  if(G.mode==='client'){sendAct({t:'burst',x:+x.toFixed(2),y:+y.toFixed(2)});return;}
+  G.lastActor='me';const n=burstAt(x,y,'wizard');if(!n)log('Your fireburst splashes across the stone.');}
 function updProj(dt){
   for(const p of G.proj){p.t+=dt;
     if(p.kind==='pebble')p.vel.y-=9.8*dt;
     const np=p.pos.clone().addScaledVector(p.vel,dt);const tx=np.x/T,ty=np.z/T;
     if(opaqueT(tileAt(tx,ty))||[LARDER,POOL,CHEST,TABLE,WARD].includes(tileAt(tx,ty))&&np.y<1){
-      if(p.kind==='fire'){p.dead=true;}else{p.vel.x*=-.2;p.vel.z*=-.2;}continue;}
+      if(p.kind==='fire'){p.dead=true;fireBurst(p.pos.x/T,p.pos.z/T);}else{p.vel.x*=-.2;p.vel.z*=-.2;}continue;}
     if(np.y>WALLH-.05){p.vel.y=-Math.abs(p.vel.y)*.3;np.y=WALLH-.05;}
     p.pos.copy(np);
-    if(p.kind==='fire'){for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-tx,e.y-ty)<.32&&np.y<2.1){if(G.mode==='client'){sendAct({t:'hit',id:e.id,d:30});p.dead=true;break;}G.lastActor='me';e.hp-=30;p.dead=true;noise(e.x,e.y,10,1,1);if(e.hp<=0){log(`Fire takes ${lc(nameOf(e))}.`);kill(e);}else{log(`Your firebolt scorches ${lc(nameOf(e))}.`);goAlert(e,true);e.hitT=G.time;}break;}}
+    if(p.kind==='fire'){for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-tx,e.y-ty)<.32&&np.y<2.1){p.dead=true;fireBurst(tx,ty);break;}}
+      if(!p.dead&&np.y<=.05){p.dead=true;fireBurst(tx,ty);}
       if(p.t>3)p.dead=true;}
     else if(np.y<=.05){p.dead=true;if(G.mode==='client')sendAct({t:'noise',x:+tx.toFixed(2),y:+ty.toFixed(2),r:9,a:.45,c:.6});else noise(tx,ty,9,.45,.6);log('A pebble clatters across the stone.');}
   }
@@ -1036,7 +1058,7 @@ function renderHUD(){
   const v=G.vis;const g=Math.round(30+v*200);$('#gem').style.background=`radial-gradient(circle at 40% 35%, rgb(${g+25},${g},${Math.round(g*.6)}), rgb(${Math.round(g*.35)},${Math.round(g*.3)},${Math.round(g*.2)}))`;
   const hunting=G.w.enemies.filter(e=>!e.dead&&e.state==='alert').length,sus=G.w.enemies.filter(e=>!e.dead&&(e.state==='suspicious'||e.state==='search')).length;
   $('#visTxt').textContent=(P.invis>0?'Invisible':v<.12?'Hidden':v<.4?'In shadow':v<.7?'Visible':'Exposed')+(P.crouch?' · crouched':'')+(hunting?` · ${hunting} on alert`:sus?` · ${sus} suspicious`:'');
-  $('#hudAb').innerHTML=KIT[G.cls].abil.map(A=>{const cd=P.cd[A.id]||0,spent=A.once&&P.used[A.id];return `<div class="ab ${cd>0||spent?'off':''}"><kbd>${A.key}</kbd>${A.name}${cd>0?` ${cd.toFixed(1)}`:''}${spent?' (spent)':''}<span class="cdf" style="width:${cd>0?100-cd/A.cd*100:100}%"></span></div>`;}).join('');
+  $('#hudAb').innerHTML=KIT[G.cls].abil.map(A=>{const cd=P.cd[A.id]||0,spent=A.once&&P.used[A.id];return `<div class="ab ${cd>0||spent?'off':''}"><kbd>${A.key}</kbd>${A.name}${A.id==='venom'&&P.venom?' (coated)':''}${cd>0?` ${cd.toFixed(1)}`:''}${spent?' (spent)':''}<span class="cdf" style="width:${cd>0?100-cd/A.cd*100:100}%"></span></div>`;}).join('');
   const pr=$('#prompt');if(G.focus&&G.focus.label.text){pr.hidden=false;pr.innerHTML=G.focus.label.text;}else pr.hidden=true;
   $('#xhair').classList.toggle('hot',!!(G.focus&&G.focus.label.act));
   $('#invisov').classList.toggle('on',P.invis>0);
@@ -1199,6 +1221,9 @@ function frame(){
     const s=e.state;U.sp.visible=s==='alert'||s==='suspicious'||s==='search';U.sp.material=s==='alert'?R3.sX:R3.sQ;
     const gl=G.glimpse>0&&(!G.divineAt||Math.hypot(e.x-G.divineAt[0],e.y-G.divineAt[1])<10);U.gh.visible=gl;
     U.bodyMat.color.set(e.sick?'#8fbf6a':BIOMES[G.w.biome].foeCol);if(e.hp<e.max)U.bodyMat.color.multiplyScalar(.7+.3*e.hp/e.max);});
+  // bursts
+  for(const b of (G.bursts||[])){b.t+=dt;if(!b.mesh){b.mesh=new THREE.Mesh(R3.geo.fire,new THREE.MeshBasicMaterial({color:0xff8a3c,transparent:true,opacity:.7,depthWrite:false}));b.mesh.position.set(b.x*T,1,b.y*T);R3.scene.add(b.mesh);}const s=1+b.t*22;b.mesh.scale.setScalar(s);b.mesh.material.opacity=Math.max(0,.7-b.t*1.6);if(b.t>.45){R3.scene.remove(b.mesh);b.done=true;}}
+  if(G.bursts)G.bursts=G.bursts.filter(b=>!b.done);
   // projectiles
   for(const p of G.proj){if(!p.mesh){p.mesh=new THREE.Mesh(p.kind==='fire'?R3.geo.fire:R3.geo.pebble,p.kind==='fire'?R3.mat.fire:R3.mat.pebble);R3.scene.add(p.mesh);}p.mesh.position.copy(p.pos);}
   R3.renderer.render(R3.scene,c);

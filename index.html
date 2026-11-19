@@ -1566,7 +1566,7 @@ function updMove(dt){const P=G.P;
     const ax=Math.floor(P.x+P.chargeDir[0]*.5),ay=Math.floor(P.y+P.chargeDir[1]*.5);if(G.w.t[ay]&&G.w.t[ay][ax]===GATE&&SK('ram')){const d={k:'ram',x:ax,y:ay};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:'warrior',name:'You'});P.charge=0;}
     if(G.w.t[ay]&&G.w.t[ay][ax]===BARR){const d={k:'tile',x:ax,y:ay};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:'warrior',name:'You'});P.charge=0;}
     let moved=false;if(!blockedAt(P.x+mx,P.y,.24)){P.x+=mx;moved=true;}if(!blockedAt(P.x,P.y+my,.24)){P.y+=my;moved=true;}if(!moved)P.charge=0;
-    for(const en of G.w.enemies){if(en.dead||P.chargeHit.has(en.id)||Math.hypot(en.x-P.x,en.y-P.y)>.75)continue;P.chargeHit.add(en.id);
+    for(const en of (G.w.enemies||[])){if(en.dead||P.chargeHit.has(en.id)||Math.hypot(en.x-P.x,en.y-P.y)>.75)continue;P.chargeHit.add(en.id);
       const co={ram:SK('ram')?1:0,kd:SK('shouldercharge')>1||SK('ram')>1?1:0,boot:SK('boot')};if(G.mode==='client')sendAct(Object.assign({t:'hit',k:'charge',id:en.id},co));else{G.lastActor='me';applyHit(en,'warrior','charge',co);}}}
   if(P.climb){P.climb.t-=dt;if(P.climb.t<=0){P.x=P.climb.dest[0];P.y=P.climb.dest[1];log(P.climb.msg,'good');P.climb=null;}}}
 
@@ -1691,7 +1691,7 @@ function update(dt){
   if(P.stDelay>0)P.stDelay-=dt;else if(!P.blocking)P.st=Math.min(100,P.st+(G.cls==='warrior'?20:24)*(S.staMul||1)*auraSta()*dt);
   if(P.heal>0){const h=Math.min(P.heal,15*dt);P.heal-=h;P.hp=Math.min(P.max,P.hp+h);}
   if(P.tonic>0){P.tonic-=dt;P.st=Math.min(100,P.st+24*dt);}
-  if(!G.tavern)updMove(dt);
+  updMove(dt);
   if(P.dodge>0){P.dodge-=dt;const k=7.5/T*dt;const mx=P.dodgeDir[0]*k,my=P.dodgeDir[1]*k;if(!blockedAt(P.x+mx,P.y,.24))P.x+=mx;if(!blockedAt(P.x,P.y+my,.24))P.y+=my;}
   let spd=S.walk*(P.crouch?.5*(SK('softstep')>1?1.15:1):P.sprint?1.75:1)*(P.blocking?.5:1)*(G.looted&&!SK('packmule')&&!SK('featherlight')?.85:1)*(P.bandage>0?.5:1);
   P.moving=len>.1;

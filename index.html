@@ -89,6 +89,7 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
 .bar{height:9px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);border-radius:5px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;transition:width .15s}
 #hpFill{background:var(--danger)}
+.alarm{position:absolute;top:10px;left:50%;transform:translateX(-50%);padding:4px 12px;border-radius:6px;font-weight:600;font-size:.9rem;background:rgba(0,0,0,.6);border:1px solid #e9a94b;color:#e9a94b;pointer-events:none}.alarm[data-lv="2"],.alarm[data-lv="3"]{border-color:#ff5a4a;color:#ff7a66;animation:alp 1s infinite}@keyframes alp{50%{background:rgba(120,20,10,.6)}}
 .bar.stb{height:6px;margin-top:4px}#stFill{background:#d8c27a;transition:width .08s}#stFill.low{background:#8a6a3a}
 .parryov{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 0 rgba(255,255,255,0);transition:box-shadow .08s}.parryov.on{box-shadow:inset 0 0 60px 6px rgba(200,200,220,.35)}.parryov.parry{box-shadow:inset 0 0 90px 14px rgba(255,230,160,.6)}
 .vis{display:flex;align-items:center;gap:8px;font-size:.8rem;text-shadow:0 1px 2px #000}
@@ -191,6 +192,7 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
         <canvas id="view" aria-label="First-person view"></canvas>
         <div class="xhair" id="xhair"></div>
         <div class="prompt" id="prompt" hidden></div>
+        <div class="alarm" id="alarm" hidden></div>
         <canvas id="mini" width="170" height="116" aria-hidden="true"></canvas>
         <div class="toasts" id="toasts"></div>
         <div class="hudbl">
@@ -544,8 +546,11 @@ function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.
 const SCODE={patrol:0,idle:1,sentry:2,suspicious:3,search:4,return:5,alert:6};const SNAME=Object.keys(SCODE);
 function packWorld(){const w=G.w;const bits=(a,f)=>a.map(x=>f(x)?1:0).join('');
   return {g:w.enemies.map(e=>[Math.round(e.x*100),Math.round(e.y*100),Math.round(e.ang*100),SCODE[e.state]??0,Math.max(0,Math.round(e.hp)),(e.dead?1:0)|(e.sick?2:0)|(e.atk>0?4:0)|(G.time-(e.hitT||-9)<.25?8:0)|(e.walking?16:0)|(e.stag>0?32:0),e.atk>0?Math.round((1-e.atk/(e.atkMax||.85))*9):0]),
-    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0};}
+    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id)};}
 function applyWorld(W){const w=G.w;if(!W||!W.g)return;
+  if(W.al!=null&&W.al!==G.alarm){G.alarm=W.al;G.sideDirty=true;}if(W.bc&&!w.bellCut){w.bellCut=true;G.featDirty=true;}
+  (W.rf||[]).forEach((r,i)=>{const id=G.baseN+i;if(w.enemies[id])return;w.enemies.push({id,x:r[0]/100,y:r[1]/100,hp:40,max:40,dmg:20,face:[0,1],base:'patrol',state:'alert',reinf:true,ang:0,aw:1,atk:0,cool:0,walkPh:0,seat:[0,0],homeAng:0});G.foesDirty=true;});
+  for(const o of w.enemies)o.runner=(W.rn||[]).includes(o.id);
   W.g.forEach((g,i)=>{const e=w.enemies[i];if(!e)return;e.tx=g[0]/100;e.ty=g[1]/100;e.tang=g[2]/100;e.state=SNAME[g[3]];e.hp=g[4];const wasDead=e.dead;e.dead=!!(g[5]&1);e.sick=!!(g[5]&2);e.atkMax=1;e.atk=g[5]&4?1-(g[6]||0)/9:0;e.stag=g[5]&32?1:0;if(g[5]&8)e.hitT=G.time;e.walking=!!(g[5]&16);
     if(e.dead&&!wasDead){e.x=e.tx;e.y=e.ty;}if(e.x==null||Math.hypot(e.tx-e.x,e.ty-e.y)>3){e.x=e.tx;e.y=e.ty;e.ang=e.tang;}});
   const sig=JSON.stringify([W.l,W.td,W.tr,W.to,W.cl,W.ps,W.sc,W.lt]);if(sig===G.wsig)return;G.wsig=sig;
@@ -740,6 +745,40 @@ function syncTavern(){const w=G.w,Gm=R3.geo,Mt=R3.mat;const L=c=>new THREE.MeshL
   for(const [ox,oz] of [[-1.9,-.9],[1.9,.9]]){addMesh(new THREE.CylinderGeometry(.05,.05,.22,8),L(0xeee4c8),cx+ox,1.07,cz+oz);addMesh(Gm.flame,Mt.flame,cx+ox,1.25,cz+oz).scale.setScalar(.5);}
   labelSprite(job?job.title:(G.mode==='host'?'Planning table: pick a job':'Planning table'),'#e7c27a',job?2.6:2.8).position.set(cx,2.05,cz);
   G.torches.forEach((t,i)=>{R3.torchMeshes[i].userData.fl.visible=!t.out;});}
+/* ---------- tiered alarm: shouts pull nearby rooms, the bell wakes the barracks, then the watch arrives ---------- */
+const ALARM=['Quiet','Shouts','Bell rung','Reinforcements'];
+function placeBell(w,seed){const R=mulberry(seed^0xbe11);const c=w.cells.find(c=>c.role==='barracks')||w.cells.filter(c=>c.role==='hall').sort((a,b)=>(b.x1-b.x0)*(b.y1-b.y0)-(a.x1-a.x0)*(a.y1-a.y0))[0]||w.cells.find(c=>c.role!=='vault'&&c.role!=='entrance');if(!c)return null;
+  const opts=[];for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++){if(w.t[y][x]!==FLOOR)continue;for(const [dx,dy] of DIRS)if(w.t[y+dy][x+dx]===WALL&&!(x+dx>=c.x0&&x+dx<=c.x1&&y+dy>=c.y0&&y+dy<=c.y1))opts.push({x,y,dx,dy});}
+  if(!opts.length)return null;const o=opts[Math.floor(R()*opts.length)];return {x:o.x,y:o.y,dx:o.dx,dy:o.dy,px:o.x+.5+o.dx*.3,py:o.y+.5+o.dy*.3,cell:c.i};}
+function raiseAlarm(lv,why){if(G.mode==='client'||lv<=G.alarm)return;G.alarm=lv;G.alarmT=0;const w=G.w;
+  const say=t=>{log(t,'bad');if(G.mode==='host')netLog(t,'bad');};
+  const pl=players();const near=(x,y)=>pl.sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y))[0];
+  if(lv===1){say(why||'Shouts echo through the halls. Guards from nearby rooms come running.');
+    const src=w.enemies.filter(o=>!o.dead&&o.state==='alert');
+    for(const o of w.enemies){if(o.dead||o.state==='alert'||o.stag>0)continue;const s=src.find(a=>Math.hypot(a.x-o.x,a.y-o.y)<16);if(!s)continue;
+      o.state='search';o.aw=Math.max(o.aw,.8);o.inv=(s.last||[s.x,s.y]).slice();o.look=0;o.timer=.3;o.searchLeft=4;o.path=null;bark(o);}}
+  if(lv===2){say(why||'The alarm bell rings out. The barracks empties and every guard is hunting.');
+    for(const o of w.enemies){if(o.dead)continue;const p=near(o.x,o.y);if(!p)continue;if(o.group==='barracks'||Math.hypot(p.x-o.x,p.y-o.y)<10){o.stag=0;o.state='alert';o.aw=1;o.last=[p.x,p.y];o.unseen=0;o.path=null;}
+      else if(o.state!=='alert'){o.state='search';o.aw=.9;o.inv=[p.x+(Math.random()-.5)*4,p.y+(Math.random()-.5)*4];o.look=0;o.timer=0;o.searchLeft=6;o.path=null;}}}
+  if(lv===3){say(why||'Boots on the stairs. The watch has arrived.');G.waves=0;G.waveT=0;}}
+function spawnWave(){const w=G.w,[sx,sy]=w.start,B=BIOMES[w.biome];const pl=players();G.waves++;const n=Math.min(3,1+G.waves);
+  for(let i=0;i<n;i++){let x=sx+.5,y=sy+.5;for(let k=0;k<20;k++){const a=Math.random()*6.28,r=.6+Math.random()*1.2,tx=sx+.5+Math.cos(a)*r,ty=sy+.5+Math.sin(a)*r;if(walkT(tileAt(tx,ty))){x=tx;y=ty;break;}}
+    const p=pl[Math.floor(Math.random()*pl.length)]||{x,y};
+    w.enemies.push({id:w.enemies.length,x,y,hp:40,max:40,dmg:20,face:[0,1],base:'patrol',state:'alert',home:w.cells.findIndex(c=>c.role==='entrance'),group:null,reinf:true,seat:[x,y],homeAng:0,
+      ang:0,aw:1,atk:0,cool:.5,path:null,repath:0,timer:0,unseen:0,look:0,walkPh:Math.random()*6,last:[p.x,p.y],tgt:p.key});}
+  G.foesDirty=true;const t=G.waves===1?`${n} of the watch storm in by the stairs.`:`More of the watch pour in by the stairs (${G.waves} of 3).`;log(t,'bad');if(G.mode==='host')netLog(t,'bad');}
+function updAlarm(dt){if(G.mode==='client'||G.tavern)return;const w=G.w;G.alarmT+=dt;
+  const alerted=w.enemies.filter(o=>!o.dead&&o.state==='alert');
+  if(alerted.length){G.alertT+=dt;G.calmT=0;}else G.calmT+=dt;
+  if(G.alarm===0&&G.alertT>3)raiseAlarm(1);
+  if(G.alarm===1&&G.calmT>40){G.alarm=0;G.alertT=0;log('The shouting dies down.');if(G.mode==='host')netLog('The shouting dies down.');}
+  if(G.alarm>=1&&G.alarm<2&&G.alertT>45)raiseAlarm(2,'The fighting has gone on too long. Someone raised the barracks.');
+  if(G.alarm===2&&G.alarmT>25)raiseAlarm(3);
+  if(G.alarm===3&&G.waves<3){G.waveT-=dt;if(G.waveT<=0){spawnWave();G.waveT=35;}}
+  // someone runs for the bell
+  const bell=w.bell;if(bell&&!w.bellCut&&G.alarm>=1&&G.alarm<2&&!w.enemies.some(o=>o.runner&&!o.dead)){
+    const cand=alerted.filter(o=>!o.captain&&!o.reinf&&!(o.stag>0)).filter(o=>Math.hypot(o.x-bell.px,o.y-bell.py)<14).sort((a,b)=>Math.hypot(a.x-bell.px,a.y-bell.py)-Math.hypot(b.x-bell.px,b.y-bell.py))[0];
+    if(cand){cand.runner=true;cand.ring=0;const t=`${nameOf(cand)} breaks off and runs for the alarm bell!`;log(t,'bad');if(G.mode==='host')netLog(t,'bad');}}}
 function startRun(m,cls,opts){
   opts=opts||{};
   const w=generate(m);
@@ -756,6 +795,7 @@ function startRun(m,cls,opts){
     P:{x:w.start[0]+.5,y:w.start[1]+.5,yaw:Math.atan2(-best[0],-best[1]),pitch:0,hp:S.hp,max:S.hp,st:100,stDelay:0,blocking:false,blockAt:-9,dodge:0,dodgeCd:0,iframe:0,crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
   for(const id of (w.snuffed||[]))if(G.torches[id])G.torches[id].out=true;
   G.objs=objList(m,BIOMES[m.biome].boss);
+  w.bell=placeBell(w,m.seed);w.bellCut=!!(m.state&&m.state.bc);G.alarm=(m.state&&m.state.al)||0;G.alarmT=0;G.alertT=0;G.calmT=0;G.waves=0;G.waveT=0;G.baseN=w.enemies.length;
   for(const r in G.objs)for(const o of G.objs[r])G.prev[o.id]=objDone(w,o.id);
   if(w.scried)for(let i=0;i<w.W*w.H;i++)G.explored.add(i);
   $('#board').hidden=true;$('#game').hidden=false;
@@ -765,6 +805,8 @@ function startRun(m,cls,opts){
   const prior=m.history.length?` Earlier on this job: ${m.history.map(h=>(h.by==='You'?'you':h.by)+' as '+CLS[h.cls].name).join(', ')}.`:'';
   log(`You slip into the ${BIOMES[m.biome].name.toLowerCase()} as the ${CLS[cls].name}.${prior}`);
   if(w.scried)log('A Wizard scried this place. Your map is already drawn.','good');
+  if(G.alarm>0)log('The guards are still jumpy from the last crew. The alarm is already up.','bad');
+  if(w.bellCut)log('Someone already cut the alarm bell rope.','good');
   if(w.poisoned&&m.roles.includes('warrior'))log('The barracks guards look green. Someone poisoned their supper.','good');
   const snuffed=G.torches.filter(t=>t.out).length;if(snuffed)log(`${snuffed} torch${snuffed>1?'es were':' was'} snuffed by an earlier crew.`,'good');
   setPause(true,'Ready',`You are the ${CLS[cls].name}. Find your objectives on the right, then get back to the stairs you start on.`);
@@ -870,7 +912,7 @@ function update(dt){
   if(G.mode==='client'){for(const e of G.w.enemies){if(e.tx==null)continue;const k=Math.min(1,dt*10);e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.ang+=angDiff(e.tang,e.ang)*k;}}
   else{
     if(G.mode==='host'){onRemote();for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.dn||!p.mv)continue;rr.stepT-=dt*(p.sp?1.6:1);if(rr.stepT<=0){rr.stepT=.5;const th=p.c==='thief',wa=p.c==='warrior';const rad=p.cr?(th?0:2):p.sp?(wa?13:10):(th?3:wa?7:5);if(rad)noise(p.x,p.y,rad,p.sp?.45:.3,.7,true);}}}
-    for(const e of G.w.enemies)if(!e.dead)updGuard(e,dt);}
+    for(const e of G.w.enemies)if(!e.dead)updGuard(e,dt);updAlarm(dt);}
   if(G.over)return;
   if(G.mp){NET.sendT-=dt;if(NET.sendT<=0){NET.sendT=G.mode==='host'?.1:.066;pushPresence();}updRemoteAvatars(dt);G.crewT=(G.crewT||0)-dt;if(G.crewT<=0){G.crewT=.5;renderCrew();}}
   updProj(dt);
@@ -918,8 +960,8 @@ function moveTo(e,tx,ty,ms,dt){
   const want=Math.atan2(dy,dx);turnTo(e,want,dt*7);
   const step=Math.min(d,ms/T*dt);const nx=e.x+dx/d*step,ny=e.y+dy/d*step;
   for(const pl of players())if(Math.hypot(pl.x-nx,pl.y-ny)<.42&&!pl.invis)return false;
-  for(const o of G.w.enemies){if(o===e||o.dead)continue;if(Math.hypot(o.x-nx,o.y-ny)<.3&&Math.hypot(o.x-e.x,o.y-e.y)>=Math.hypot(o.x-nx,o.y-ny))return false;}
-  e.x=nx;e.y=ny;e.walking=true;return false;
+  if((e.stuck||0)<.7)for(const o of G.w.enemies){if(o===e||o.dead)continue;if(Math.hypot(o.x-nx,o.y-ny)<.3&&Math.hypot(o.x-e.x,o.y-e.y)>=Math.hypot(o.x-nx,o.y-ny)){e.stuck=(e.stuck||0)+dt;return false;}}
+  e.stuck=Math.max(0,(e.stuck||0)-dt*.5);e.x=nx;e.y=ny;e.walking=true;return false;
 }
 function turnTo(e,a,rate){const d=angDiff(a,e.ang);e.ang+=Math.max(-rate,Math.min(rate,d));}
 function goAlert(e,quiet,src){
@@ -981,6 +1023,7 @@ function updGuard(e,dt){
       else{e.look-=dt;e.ang+=dt*1.6*Math.sin(G.time*1.3+e.id);
         if(e.look<=0){if(e.state==='search'&&e.searchLeft>0){e.searchLeft--;const a=Math.random()*6.28;const tx=e.inv[0]+Math.cos(a)*2.5,ty=e.inv[1]+Math.sin(a)*2.5;if(walkT(tileAt(tx,ty)))e.inv=[tx,ty];e.look=0;}
           else e.look=.01;}}
+      if(e.reinf&&e.look<=.01&&e.state!=='alert'){const p=players()[0];if(p){e.inv=[p.x+(Math.random()-.5)*5,p.y+(Math.random()-.5)*5];if(!walkT(tileAt(e.inv[0],e.inv[1])))e.inv=[p.x,p.y];e.look=0;e.searchLeft=3;}break;}
       if(e.aw<.12&&e.look<=.01){e.state='return';e.path=null;e.inv=null;}
       break;}
     case 'return':{
@@ -989,6 +1032,9 @@ function updGuard(e,dt){
       if(moveTo(e,tgt[0],tgt[1],1.2,dt)||Math.hypot(tgt[0]-e.x,tgt[1]-e.y)<.15){e.state=e.base;e.target=null;}
       break;}
     case 'alert':{
+      if(e.runner){const b=G.w.bell;if(!b||G.w.bellCut||G.alarm>=2){e.runner=false;break;}
+        if(Math.hypot(b.px-e.x,b.py-e.y)<.45){e.ring=(e.ring||0)+dt;turnTo(e,Math.atan2(b.dy,b.dx),dt*6);if(e.ring>2.2){e.runner=false;raiseAlarm(2);}}
+        else{e.ring=0;moveTo(e,b.px,b.py,4.4*sickMul,dt);}break;}
       const tp=(amt>0&&SP)||players().find(p=>p.key===e.tgt)||null;const d=tp?Math.hypot(tp.x-e.x,tp.y-e.y):99;
       if(amt>0&&tp)turnTo(e,Math.atan2(tp.y-e.y,tp.x-e.x),dt*8);
       if(e.atk>0){e.atk-=dt;if(tp&&e.atk>e.atkMax*.4)turnTo(e,Math.atan2(tp.y-e.y,tp.x-e.x),dt*3);
@@ -1089,6 +1135,7 @@ function findFocus(){
   const px=Math.floor(P.x),py=Math.floor(P.y);
   for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if((G.tavern?[RACK,STREET,TABLE]:[DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT]).includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
   for(const tr of w.traps)if(C==='thief'&&tr.revealed&&!tr.disarmed)cands.push({kind:'trap',tr,cx:tr.x+.5,cy:tr.y+.5});
+  if(w.bell&&!w.bellCut&&!G.tavern)cands.push({kind:'bell',cx:w.bell.px,cy:w.bell.py});
   if(C==='thief'&&!G.tavern)for(const to of G.torches)if(!to.out)cands.push({kind:'torch',to,cx:to.wx,cy:to.wy});
   let best=null,bs=9;
   for(const c of cands){const dx=c.cx-P.x,dy=c.cy-P.y,d=Math.hypot(dx,dy);
@@ -1101,6 +1148,7 @@ function focusLabel(c){
   const w=G.w,C=G.cls;
   if(c.kind==='trap')return {act:true,text:'<b>E</b> Disarm the pressure plate'};
   if(c.kind==='torch')return {act:true,text:'<b>E</b> Snuff the torch'};
+  if(c.kind==='bell')return G.alarm>=2?{act:false,text:'The alarm bell. Too late, it already rang.'}:{act:true,text:'<b>E</b> Cut the alarm bell rope'};
   switch(c.t){
     case EXIT:return {act:true,text:G.looted?'<b>E</b> Leave with the strongbox':'<b>E</b> Leave and repost the job'};
     case DOOR:{const left=Object.keys(w.locks).filter(r=>!w.locks[r]);const mine=C in w.locks&&!w.locks[C];
@@ -1125,6 +1173,7 @@ function doUse(d,actor){
   const w=G.w,C=actor.cls,me=actor.key==='me',nm=actor.name;G.lastActor=actor.key;
   const say=(mine,theirs,cls)=>{if(me)log(mine,cls);else log(theirs,cls);if(G.mode==='host')netLog(theirs,cls);};
   if(d.k==='trap'){const tr=w.traps[d.id];if(!tr||tr.disarmed||C!=='thief')return;tr.disarmed=true;G.featDirty=true;say('You wedge the plate and snip the wire. Trap disarmed.',`${nm} disarmed a trap.`,'good');return;}
+  if(d.k==='bell'){if(!w.bell||w.bellCut||G.alarm>=2)return;w.bellCut=true;G.featDirty=true;for(const o of w.enemies)o.runner=false;say('You cut the bell rope and lower the clapper. Nobody is ringing that tonight.',`${nm} cut the alarm bell rope.`,'good');return;}
   if(d.k==='torch'){const to=G.torches[d.id];if(!to||to.out||C!=='thief')return;to.out=true;w.snuffed=G.torches.filter(t=>t.out).map(t=>t.id);G.featDirty=true;G.lightT=0;say('You pinch the torch out. Darkness settles in.',`${nm} snuffed a torch.`,'good');return;}
   const t=w.t[d.y]&&w.t[d.y][d.x];const cx=d.x+.5,cy=d.y+.5;
   switch(t){
@@ -1154,7 +1203,7 @@ function leave(){
   if(G.mode==='client'){G.over=true;if(document.pointerLockElement)document.exitPointerLock();leaveRoom();showModal('You slipped out',`<p>You left the job. Everything you did stays in the host's world, and they will repost it when they lead the crew out.</p>`);return;}
   G.over=true;if(document.pointerLockElement)document.exitPointerLock();
   const m=board.missions.find(x=>x.id===G.m.id)||G.m;
-  m.state=snapshot(G.w);
+  m.state=snapshot(G.w);m.state.al=Math.max(0,(G.alarm||0)-1);if(G.w.bellCut)m.state.bc=1;
   const entry={by:'You',cls:G.cls,did:G.did.slice(),secs:Math.round(G.time)};
   if(G.looted){entry.did.push('Carried out the strongbox');entry.outcome='complete';m.status='complete';}
   m.history.push(entry);
@@ -1200,6 +1249,7 @@ function renderSide(){
 }
 function renderHUD(){
   const P=G.P;
+  {const a=$('#alarm');const lv=G.tavern?0:G.alarm||0;a.hidden=!lv;if(lv){a.textContent='Alarm: '+ALARM[lv]+(lv===3&&G.mode!=='client'&&G.waves<3?` · next wave ${Math.max(0,Math.ceil(G.waveT))}s`:'');a.dataset.lv=lv;}}
   $('#hpFill').style.width=Math.max(0,P.hp/P.max*100)+'%';$('#stFill').style.width=Math.max(0,P.st)+'%';$('#stFill').classList.toggle('low',P.st<25||P.guardBroken>0);
   const v=G.vis;const g=Math.round(30+v*200);$('#gem').style.background=`radial-gradient(circle at 40% 35%, rgb(${g+25},${g},${Math.round(g*.6)}), rgb(${Math.round(g*.35)},${Math.round(g*.3)},${Math.round(g*.2)}))`;
   const hunting=G.w.enemies.filter(e=>!e.dead&&e.state==='alert').length,sus=G.w.enemies.filter(e=>!e.dead&&(e.state==='suspicious'||e.state==='search')).length;
@@ -1210,11 +1260,12 @@ function renderHUD(){
   $('#invisov').classList.toggle('on',P.invis>0);
   if(G.flash){const f=$('#flashov');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),60);G.flash=false;}
 }
-function drawMini(){
+function drawMini(){if(!G.tavern&&G.w.bell){}
   const cv=$('#mini'),c=cv.getContext('2d'),w=G.w,s=Math.min(cv.width/w.W,cv.height/w.H),B=BIOMES[w.biome],P=G.P;
   c.clearRect(0,0,cv.width,cv.height);
   for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++){if(!G.explored.has(y*w.W+x))continue;const t=w.t[y][x];if(t===WALL)continue;
     c.fillStyle=t===DOOR?'#c9952f':t===EXIT?'#e7e2d6':t===BARR?'#a07a48':t===WARD?'#9a95f5':t===CHEST?'#f1c860':t===POOL?'#3a5bd8':t===LARDER?'#7d5d3a':B.floor;c.fillRect(x*s,y*s,s+.3,s+.3);}
+  if(w.bell&&G.explored.has(w.bell.y*w.W+w.bell.x)){c.fillStyle=w.bellCut?'#6a5a3a':'#f1c860';c.beginPath();c.arc(w.bell.px*s,w.bell.py*s,Math.max(2,s*.4),0,7);c.fill();}
   for(const tr of w.traps)if(tr.revealed&&!tr.disarmed){c.fillStyle='#e0574a';c.fillRect(tr.x*s+s*.25,tr.y*s+s*.25,s*.5,s*.5);}
   for(const e of w.enemies){if(e.dead)continue;const seen=(losT(P.x,P.y,e.x,e.y)&&Math.hypot(e.x-P.x,e.y-P.y)<12&&(lightAt(e.x,e.y)>.1||Math.hypot(e.x-P.x,e.y-P.y)<3));
     const gl=G.glimpse>0&&(!G.divineAt||Math.hypot(e.x-G.divineAt[0],e.y-G.divineAt[1])<10);if(!seen&&!gl)continue;
@@ -1279,7 +1330,8 @@ function build3D(){
   // torches
   R3.torchMeshes=G.torches.map(t=>{const g=new THREE.Group();const br=new THREE.Mesh(R3.geo.bracket,R3.mat.woodDark);br.position.y=1.75;const fl=new THREE.Mesh(R3.geo.flame,R3.mat.flame);fl.position.y=2.1;g.add(br,fl);g.position.set(t.wx*T,0,t.wy*T);g.userData.fl=fl;sc.add(g);return g;});
   // guards
-  R3.foes=w.enemies.map(e=>{const g=new THREE.Group();g.rotation.order='YXZ';const bodyMat=new THREE.MeshLambertMaterial({color:B.foeCol});
+  R3.foes=w.enemies.map(e=>foeMesh(e));G.foesDirty=false;
+  function _unused(e){const g=new THREE.Group();g.rotation.order='YXZ';const bodyMat=new THREE.MeshLambertMaterial({color:B.foeCol});
     const inner=new THREE.Group();g.add(inner);
     const body=new THREE.Mesh(R3.geo.body,bodyMat);body.position.y=.65;const head=new THREE.Mesh(R3.geo.head,bodyMat);head.position.y=1.5;
     const nose=new THREE.Mesh(R3.geo.nose,R3.mat.dark);nose.position.set(0,1.5,-.22);
@@ -1287,7 +1339,7 @@ function build3D(){
     if(e.captain){const cr=new THREE.Mesh(R3.geo.crown,R3.mat.crown);cr.position.y=1.8;inner.add(cr);g.scale.setScalar(1.12);}
     const sp=new THREE.Sprite(R3.sQ);sp.scale.set(.45,.45,.45);sp.position.y=2.15;sp.renderOrder=999;g.add(sp);
     const gh=new THREE.Mesh(R3.geo.ghost,R3.mat.ghost);gh.position.y=1;gh.renderOrder=998;g.add(gh);
-    g.userData={bodyMat,inner,arm,sp,gh};sc.add(g);return g;});
+    g.userData={bodyMat,inner,arm,sp,gh};sc.add(g);return g;}
   // weapon
   sc.add(R3.camera);while(R3.camera.children.length)R3.camera.remove(R3.camera.children[0]);
   const wpn=new THREE.Group();const L=c=>new THREE.MeshLambertMaterial({color:c});
@@ -1300,6 +1352,16 @@ function build3D(){
   G.featDirty=true;R3.lightT=0;
   for(const rr of NET.remote.values())rr.mesh=null;
 }
+function foeMesh(e){const B=BIOMES[G.w.biome];const g=new THREE.Group();g.rotation.order='YXZ';const bodyMat=new THREE.MeshLambertMaterial({color:B.foeCol});
+    const inner=new THREE.Group();g.add(inner);
+    const body=new THREE.Mesh(R3.geo.body,bodyMat);body.position.y=.65;const head=new THREE.Mesh(R3.geo.head,bodyMat);head.position.y=1.5;
+    const nose=new THREE.Mesh(R3.geo.nose,R3.mat.dark);nose.position.set(0,1.5,-.22);
+    const arm=new THREE.Mesh(R3.geo.arm,R3.mat.iron);arm.position.set(.32,1.0,-.3);inner.add(body,head,nose,arm);
+    if(e.captain){const cr=new THREE.Mesh(R3.geo.crown,R3.mat.crown);cr.position.y=1.8;inner.add(cr);g.scale.setScalar(1.12);}
+    if(e.reinf){const hel=new THREE.Mesh(new THREE.SphereGeometry(.24,12,8,0,6.29,0,1.6),R3.mat.iron);hel.position.y=1.55;inner.add(hel);}
+    const sp=new THREE.Sprite(R3.sQ);sp.scale.set(.45,.45,.45);sp.position.y=2.15;sp.renderOrder=999;g.add(sp);
+    const gh=new THREE.Mesh(R3.geo.ghost,R3.mat.ghost);gh.position.y=1;gh.renderOrder=998;g.add(gh);
+    g.userData={bodyMat,inner,arm,sp,gh};R3.scene.add(g);return g;}
 function updRemoteAvatars(dt){
   if(!R3.ok)return;
   for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.x==null){if(rr.mesh)rr.mesh.visible=false;continue;}
@@ -1365,6 +1427,9 @@ function syncFeatures(){
     else if(t===CHEST){addMesh(Gm.chest,Mt.gold,cx,.31,cz);addMesh(Gm.lid,Mt.woodDark,cx,.68,cz);}
     else if(t===TABLE){addMesh(Gm.table,Mt.table,cx,.88,cz);addMesh(Gm.leg,Mt.table,cx,.41,cz);addMesh(Gm.die,Mt.bone,cx-.2,.99,cz);addMesh(Gm.die,Mt.bone,cx+.25,.99,cz+.2);}
   }
+  if(w.bell){const b=w.bell,bx=(b.x+.5+b.dx*.42)*T,bz=(b.y+.5+b.dy*.42)*T;const arm=addMesh(new THREE.BoxGeometry(.1,.1,.7),Mt.woodDark,bx-b.dx*.3,2.5,bz-b.dy*.3);if(b.dx)arm.rotation.y=Math.PI/2;
+    const bel=addMesh(new THREE.CylinderGeometry(.12,.3,.42,14,1,true),Mt.gold,bx-b.dx*.6,w.bellCut?.22:2.2,bz-b.dy*.6);bel.material=new THREE.MeshLambertMaterial({color:0xb08a3a,side:THREE.DoubleSide});
+    if(!w.bellCut)addMesh(new THREE.BoxGeometry(.03,1.5,.03),new THREE.MeshLambertMaterial({color:0xc8b48a}),bx-b.dx*.6,1.3,bz-b.dy*.6);}
   for(const tr of w.traps){if(!(tr.revealed||tr.disarmed))continue;const m=addMesh(Gm.trap,tr.disarmed?Mt.trapOff:Mt.trap,(tr.x+.5)*T,.015,(tr.y+.5)*T);m.rotation.x=-Math.PI/2;if(tr.disarmed)m.scale.setScalar(.5);}
   G.torches.forEach((t,i)=>{R3.torchMeshes[i].userData.fl.visible=!t.out;});
   G.featDirty=false;
@@ -1392,7 +1457,8 @@ function frame(){
   R3.torchMeshes.forEach((m,i)=>{m.userData.fl.scale.y=1+.15*Math.sin(t*13+i*2);});
   R3.plight.position.copy(c.position);R3.plight.color.set(P.invis>0?0x9a95f5:0xc8d0ff);
   // guards
-  G.w.enemies.forEach((e,i)=>{const g=R3.foes[i],U=g.userData;
+  if(G.foesDirty){while(R3.foes.length<G.w.enemies.length)R3.foes.push(foeMesh(G.w.enemies[R3.foes.length]));G.foesDirty=false;}
+  G.w.enemies.forEach((e,i)=>{const g=R3.foes[i];if(!g)return;const U=g.userData;
     g.position.set(e.x*T,0,e.y*T);
     if(e.dead){g.rotation.set(-Math.PI/2,Math.atan2(-Math.cos(e.ang),-Math.sin(e.ang)),0);g.position.y=.3;U.sp.visible=false;U.gh.visible=false;U.arm.visible=false;return;}
     g.rotation.set(0,Math.atan2(-Math.cos(e.ang),-Math.sin(e.ang)),0);
@@ -1400,7 +1466,7 @@ function frame(){
     const wp=e.atk>0?1-e.atk/(e.atkMax||1):0;
     if(e.stag>0){U.inner.rotation.x=.3;U.inner.rotation.z=Math.sin(t*9)*.18;U.arm.rotation.x=-.6;}
     else{U.inner.rotation.z=0;U.inner.rotation.x=e.atk>0?-.25*wp:(G.time-(e.hitT||-9)<.2?.25:0);U.arm.rotation.x=e.atk>0?(wp<.85?2.3*wp/.85:2.3-(wp-.85)/.15*3.4):0;}
-    const s=e.state;U.sp.visible=(s==='alert'||s==='suspicious'||s==='search')&&!(e.atk>0);U.sp.material=s==='alert'?R3.sX:R3.sQ;
+    const s=e.state;U.sp.visible=(s==='alert'||s==='suspicious'||s==='search')&&!(e.atk>0);U.sp.material=s==='alert'||e.runner?R3.sX:R3.sQ;if(e.runner)U.sp.scale.setScalar(.7+.15*Math.sin(t*12));else U.sp.scale.setScalar(.45);
     const gl=G.glimpse>0&&(!G.divineAt||Math.hypot(e.x-G.divineAt[0],e.y-G.divineAt[1])<10);U.gh.visible=gl;
     U.bodyMat.color.set(e.sick?'#8fbf6a':BIOMES[G.w.biome].foeCol);if(e.hp<e.max)U.bodyMat.color.multiplyScalar(.7+.3*e.hp/e.max);if(e.atk>0)U.bodyMat.color.lerp(new THREE.Color(0xff3020),.55*wp);U.bodyMat.emissive&&U.bodyMat.emissive.setRGB(e.atk>0?.35*wp:0,0,0);});
   // bursts

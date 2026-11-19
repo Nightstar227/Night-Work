@@ -140,6 +140,44 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
 #modal h2{font-size:2rem;color:var(--lantern)}
 #modal p{margin:0}
 #modal ul{margin:0;padding-left:1.2em;color:var(--muted)}
+
+/* inventory: paper doll, bag and stash grids, shops */
+.crewcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:10px 0}
+.ccard{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-left:3px solid var(--cc);border-radius:8px;background:var(--slate2)}
+.ccard:hover,.ccard:focus-visible{border-color:var(--cc)}.cchead{display:flex;justify-content:space-between;gap:8px}.cchead b{color:var(--cc)}
+.xpbar{display:inline-block;height:5px;background:#0b0c10;border-radius:3px;overflow:hidden;min-width:80px;vertical-align:middle}.xpbar i{display:block;height:100%;background:var(--lantern)}
+.gearrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:4px 0 10px}.beltH{margin:12px 0 0;font-family:var(--display);font-weight:400;font-size:1.1rem;color:var(--lantern)}
+#invov{position:fixed;inset:0;z-index:60;background:rgba(6,7,10,.86);overflow:auto;padding:16px max(12px,env(safe-area-inset-left,0px))}
+.invbox{max-width:1180px;margin:0 auto;background:var(--slate);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.invtop{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}.invtop .tabs{display:flex;gap:6px;flex-wrap:wrap}
+.invtop .tab{background:var(--slate2);color:var(--text);border:1px solid var(--line);border-radius:7px;padding:6px 10px;font:inherit;cursor:pointer}.invtop .tab.on{border-color:var(--cc);color:var(--cc)}.invtop .tab:disabled{opacity:.35;cursor:default}
+.invtop .gold{color:var(--lantern);margin-left:auto}.invmsg{min-height:1.4em;margin:6px 0;font-size:.95rem}.invmsg .ok{color:var(--good)}.invmsg .bad,#invtip .bad,.selbar .bad{color:var(--danger)}
+.invcols{display:grid;grid-template-columns:minmax(300px,330px) auto minmax(260px,1fr);gap:18px;align-items:start}
+@media (max-width:980px){.invcols{grid-template-columns:1fr}}
+.invcols h3{margin:0 0 6px;font-family:var(--display);font-weight:400;color:var(--lantern);font-size:1.15rem}
+.doll{display:grid;grid-template-columns:repeat(3,96px);grid-template-areas:"neck head pocket" "main chest off" "ring1 hands ring2" ". feet .";gap:8px;justify-content:center;margin-bottom:12px;position:relative}
+.slot{position:relative;height:96px;border:1px dashed rgba(255,255,255,.16);border-radius:8px;background:rgba(0,0,0,.25)}
+.slot .sl{position:absolute;top:3px;left:6px;font-size:.68rem;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;pointer-events:none}
+.s-main,.s-chest,.s-off{height:132px}.s-neck,.s-ring1,.s-ring2,.s-pocket{height:72px;align-self:center}.s-pocket{border-color:rgba(233,169,75,.35)}
+.s-head{grid-area:head}.s-neck{grid-area:neck}.s-main{grid-area:main}.s-chest{grid-area:chest}.s-off{grid-area:off}.s-hands{grid-area:hands}.s-ring1{grid-area:ring1}.s-ring2{grid-area:ring2}.s-feet{grid-area:feet}.s-pocket{grid-area:pocket}
+.slot .itm{position:absolute;inset:18px 5px 5px 5px}
+.igrid{position:relative;background-color:rgba(0,0,0,.3);background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:var(--cell) var(--cell);border:1px solid var(--line);border-radius:4px;touch-action:none}
+.gridwrap{overflow-x:auto;max-width:100%}
+.itm{position:absolute;box-sizing:border-box;display:flex;align-items:center;justify-content:center;border:1px solid var(--rc);border-radius:4px;background:color-mix(in srgb,var(--rc) 13%,#15171e);cursor:grab;touch-action:none;user-select:none}
+.itm.r0{border-color:rgba(232,228,216,.45)}.itm.r4{box-shadow:0 0 10px color-mix(in srgb,var(--rc) 55%,transparent)}.itm.sel{outline:2px solid var(--lantern);outline-offset:1px}
+.itm:hover{filter:brightness(1.25)}.itm svg{pointer-events:none;max-width:90%;max-height:90%}
+.istats .lvl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}.istats .attrs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:8px}
+.istats .attrs span{display:flex;flex-direction:column;align-items:center;font-size:.7rem;color:var(--muted);background:var(--slate2);border-radius:6px;padding:4px 0}.istats .attrs b{font-size:1.05rem;color:var(--text);font-family:var(--mono)}
+.istats dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:0;font-size:.9rem}.istats dt{color:var(--muted)}.istats dd{margin:0}
+.selbar{margin-top:10px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--slate2)}.selbar .tip{font-size:.92rem;line-height:1.45}.selbar .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#invtip{position:fixed;z-index:70;max-width:250px;background:#0d0f14;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.88rem;line-height:1.45;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.6)}
+.tipsub{color:var(--muted);font-size:.82rem}.afx{color:#8fb4ff}.leg{color:#ffb46a}
+#invghost{position:fixed;z-index:80;pointer-events:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--rc);border-radius:4px;background:color-mix(in srgb,var(--rc) 20%,#15171e);opacity:.85}
+.shop{display:flex;flex-direction:column;gap:6px;max-height:430px;overflow:auto;padding:6px;border:1px dashed rgba(255,255,255,.14);border-radius:8px;min-height:120px}
+.shoprow{display:flex;gap:10px;align-items:center}.shoprow .itm{position:relative;width:52px;height:52px;flex:none}.shoprow span{font-size:.9rem}
+.consbuy{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 6px}
+.gamble{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}.gamble .btn{display:flex;justify-content:space-between;gap:8px}
+.gambled{display:flex;align-items:center;gap:10px;margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--slate2)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head><body>
@@ -211,7 +249,7 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
           <div class="stick" id="stick"><i id="knob"></i></div>
           <div class="tbtns">
             <button data-t="crouch">Crouch</button><button data-t="use">Use</button><button data-t="attack">Strike</button><button data-t="block">Block</button><button data-t="dodge">Dodge</button>
-            <button data-t="1">1</button><button data-t="2">2</button><button data-t="3">3</button><button data-t="4">4</button><button data-t="belt">Belt</button>
+            <button data-t="1">1</button><button data-t="2">2</button><button data-t="3">3</button><button data-t="4">4</button><button data-t="belt">Belt</button><button data-t="inv">Bag</button>
           </div>
         </div>
         <div class="pauseov" id="pauseov">
@@ -224,15 +262,16 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
       <div class="sheet">
         <div class="panel" id="crewPanel" hidden><span class="label" id="crewLabel">Crew</span><ul class="crew" id="crew"></ul></div>
         <div class="panel"><span class="label">Contract</span><ul class="objs" id="objs"></ul></div>
-        <div class="panel"><span class="label">Belt and pack</span><ul class="packl" id="packP"></ul></div>
+        <div class="panel"><span class="label">Bag</span><ul class="packl" id="packP"></ul></div>
         <div class="panel"><span class="label">Your kit</span><ul class="abl" id="abl"></ul></div>
-        <div class="panel"><span class="label">Controls</span><p class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move, mouse looks. <kbd>Shift</kbd> run (loud), <kbd>C</kbd> or <kbd>Ctrl</kbd> crouch. Left click strikes. Hold right click or <kbd>Q</kbd> to block; raise it just before a hit to parry. <kbd>Space</kbd> is your class move (Thief rolls, Warrior charges, Wizard blinks). <kbd>R</kbd> switches arrows. Swings, blocks, dodges and running cost stamina. <kbd>E</kbd> uses what you aim at. <kbd>1</kbd>-<kbd>4</kbd> abilities, <kbd>5</kbd>-<kbd>8</kbd> belt items. <kbd>Esc</kbd> pauses. Arrow keys also turn.</p></div>
+        <div class="panel"><span class="label">Controls</span><p class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move, mouse looks. <kbd>Shift</kbd> run (loud), <kbd>C</kbd> or <kbd>Ctrl</kbd> crouch. Left click strikes. Hold right click or <kbd>Q</kbd> to block; raise it just before a hit to parry. <kbd>Space</kbd> is your class move (Thief rolls, Warrior charges, Wizard blinks). <kbd>R</kbd> switches arrows. Swings, blocks, dodges and running cost stamina. <kbd>E</kbd> uses what you aim at. <kbd>1</kbd>-<kbd>4</kbd> abilities, <kbd>5</kbd>-<kbd>8</kbd> belt items. <kbd>I</kbd> or <kbd>Tab</kbd> opens your gear and bag. <kbd>Esc</kbd> pauses. Arrow keys also turn.</p></div>
         <div class="panel"><span class="label">Log</span><ul class="log" id="log"></ul></div>
       </div>
     </div>
   </section>
 
   <div id="modal" hidden><div class="box" id="modalBox"></div></div>
+  <div id="invov" hidden><div class="invbox" id="invbox"></div></div><div id="invtip" hidden></div><div id="invghost" hidden></div>
 </div>
 <script src="three.min.js"></script>
 <script src="peerjs.min.js"></script>
@@ -499,7 +538,7 @@ const KIT={
     lines:['<b>Blink</b> <kbd>Space</kbd>: step through the air a few paces, straight over pits.','<b>Lift</b> <kbd>E</kbd> at a portcullis: hold it up for 5 seconds by force of will.','<b>Repel</b> <kbd>4</kbd>: a crude hex that shoves everyone in front of you back and knocks them off their feet. Captains barely stumble.','<b>Weak guard</b>: your staff only blocks 25%. Keep your distance.','<b>Fireburst</b> <kbd>1</kbd>: bursts where it lands, 24 damage to every guard nearby. Captains shrug off most of it.','<b>Invisibility</b> <kbd>2</kbd>: unseen for 8 seconds. Striking or casting ends it.','<b>Divine</b> <kbd>3</kbd>: see guards and traps through walls for 8 seconds.','<b>Dispel</b> <kbd>E</kbd>: unravel wards and the vault rune seal.','<b>Scry</b> <kbd>E</kbd> at the pool: maps the job for everyone after you.']},
 };
 let G=null;const R3={ok:undefined};
-const RACK=11,STREET=12,PROP=13,PIT=14,ROPE=15,LEDGE=16,LADDER=17,GATE=18,GATEUP=19;
+const RACK=11,STREET=12,PROP=13,PIT=14,ROPE=15,LEDGE=16,LADDER=17,GATE=18,GATEUP=19,VENDOR=20,GAMBLER=21;
 /* ---------- live co-op over the claude.ai room channel ---------- */
 const NET={lobby:null,user:null,room:null,code:null,remote:new Map(),actSeq:0,acts:[],hitSeq:0,hitsOut:[],lastHit:0,logSeq:0,logsOut:[],lastLog:0,sendT:0,names:{},hostPeer:null,end:null,lastEnd:0};
 /* PeerJS adapter with the same shape as the room API this game uses: join(name) -> {presence, peers, onPeers, leave}.
@@ -553,16 +592,17 @@ function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.
 const SCODE={patrol:0,idle:1,sentry:2,suspicious:3,search:4,return:5,alert:6};const SNAME=Object.keys(SCODE);
 function packWorld(){const w=G.w;const bits=(a,f)=>a.map(x=>f(x)?1:0).join('');
   return {g:w.enemies.map(e=>[Math.round(e.x*100),Math.round(e.y*100),Math.round(e.ang*100),SCODE[e.state]??0,Math.max(0,Math.round(e.hp)),(e.dead?1:0)|(e.sick?2:0)|(e.atk>0?4:0)|(G.time-(e.hitT||-9)<.25?8:0)|(e.walking?16:0)|(e.stag>0?32:0),e.atk>0?Math.round((1-e.atk/(e.atkMax||.85))*9):0]),
-    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,cr:(w.crew||[]).map(o=>w.t[o.y][o.x]),ep:(G.eproj||[]).map(p=>[Math.round(p.x*100),Math.round(p.y*100)]),lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id)};}
+    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,cr:(w.crew||[]).map(o=>w.t[o.y][o.x]),ep:(G.eproj||[]).map(p=>[Math.round(p.x*100),Math.round(p.y*100)]),lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id),dr:(w.loot||[]).filter(l=>l.drop).map(l=>[l.id,Math.round(l.x*100),Math.round(l.y*100),l.it.b,l.it.r,l.it.s])};}
 function applyWorld(W){const w=G.w;if(!W||!W.g)return;
-  if(W.lo&&w.loot){let ch=false;w.loot.forEach((l,i)=>{const t=W.lo[i]==='1';if(t&&!l.taken){l.taken=true;ch=true;}});if(ch)G.featDirty=true;}
+  if(W.dr&&w.loot)for(const [id,x,y,b,r,sd] of W.dr){if(w.loot[id]||!GB[b])continue;w.loot[id]={id,x:x/100,y:y/100,it:{b,r,s:sd},taken:false,drop:true};G.featDirty=true;}
+  if(W.lo&&w.loot){let ch=false;w.loot.forEach((l,i)=>{const t=W.lo[i]==='1';if(l&&t&&!l.taken){l.taken=true;ch=true;}});if(ch)G.featDirty=true;}
   if(W.cr&&w.crew)w.crew.forEach((o,i)=>{const t=W.cr[i];if(t!=null&&w.t[o.y][o.x]!==t){w.t[o.y][o.x]=t;G.featDirty=true;}});
   G.eprojV=(W.ep||[]).map(q=>({x:q[0]/100,y:q[1]/100}));
   if(W.al!=null&&W.al!==G.alarm){G.alarm=W.al;G.sideDirty=true;}if(W.bc&&!w.bellCut){w.bellCut=true;G.featDirty=true;}
   (W.rf||[]).forEach((r,i)=>{const id=G.baseN+i;if(w.enemies[id])return;w.enemies.push({id,x:r[0]/100,y:r[1]/100,hp:40,max:40,dmg:20,face:[0,1],base:'patrol',state:'alert',reinf:true,ang:0,aw:1,atk:0,cool:0,walkPh:0,seat:[0,0],homeAng:0});G.foesDirty=true;});
   for(const o of w.enemies)o.runner=(W.rn||[]).includes(o.id);
   W.g.forEach((g,i)=>{const e=w.enemies[i];if(!e)return;e.tx=g[0]/100;e.ty=g[1]/100;e.tang=g[2]/100;e.state=SNAME[g[3]];e.hp=g[4];const wasDead=e.dead;e.dead=!!(g[5]&1);e.sick=!!(g[5]&2);e.atkMax=1;e.atk=g[5]&4?1-(g[6]||0)/9:0;e.stag=g[5]&32?1:0;if(g[5]&8)e.hitT=G.time;e.walking=!!(g[5]&16);
-    if(e.dead&&!wasDead){e.x=e.tx;e.y=e.ty;}if(e.x==null||Math.hypot(e.tx-e.x,e.ty-e.y)>3){e.x=e.tx;e.y=e.ty;e.ang=e.tang;}});
+    if(e.dead&&!wasDead){e.x=e.tx;e.y=e.ty;if(G.time>1)gainXP(foeXP(e));}if(e.x==null||Math.hypot(e.tx-e.x,e.ty-e.y)>3){e.x=e.tx;e.y=e.ty;e.ang=e.tang;}});
   const sig=JSON.stringify([W.l,W.td,W.tr,W.to,W.cl,W.ps,W.sc,W.lt]);if(sig===G.wsig)return;G.wsig=sig;
   Object.assign(w.locks,W.l);w.traps.forEach((t,i)=>{t.disarmed=W.td[i]==='1';t.revealed=W.tr[i]==='1';});G.torches.forEach((t,i)=>t.out=W.to[i]==='1');
   let walls=false;for(const [x,y] of W.cl){if(w.t[y][x]!==FLOOR){if(w.t[y][x]===BARR)walls=true;w.t[y][x]=FLOOR;}}w.cleared=W.cl.slice();
@@ -581,7 +621,7 @@ function onRemote(){
   if(!G)return;if(G.tavern){tavernRemote();return;}
   if(G.mode==='client'){const host=NET.remote.get(NET.hostPeer);if(!host||!host.pres)return;const hp=host.pres;
     if(hp.w)applyWorld(hp.w);
-    for(const h of hp.hits||[]){if(h.n>NET.lastHit&&h.to===NET.myPeer){NET.lastHit=h.n;const ee=G.w.enemies[h.id];if(G.down<=0&&hurt(h.d,`${h.m} hits you.`,ee?{x:ee.x,y:ee.y,heavy:!!h.hv}:null)==='parry')sendAct({t:'parry',id:h.id});}}
+    for(const h of hp.hits||[]){if(h.n>NET.lastHit&&h.to===NET.myPeer){NET.lastHit=h.n;const ee=G.w.enemies[h.id];if(G.down<=0&&hurt(h.d,`${h.m} hits you.`,ee?{x:ee.x,y:ee.y,heavy:!!h.hv}:null)==='parry')sendAct({t:'parry',id:h.id,fg:G.S.fx&&G.S.fx.fang?1:0});}}
     if(hp.hits&&hp.hits.length&&NET.lastHit===0)NET.lastHit=Math.max(0,...hp.hits.filter(h=>h.to!==NET.myPeer).map(h=>0));
     for(const l of hp.lg||[]){if(l[0]>NET.lastLog){if(NET.lastLog>0||G.time>1)log(l[1],l[2]||undefined);NET.lastLog=l[0];}}
     if(hp.end&&!G.over)hostEnded(hp.end);}
@@ -589,14 +629,16 @@ function onRemote(){
 }
 function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peerName(rr)};if(!actor.cls)return;
   if(a.t==='hit'){const e=w.enemies[a.id];if(!e||e.dead)return;G.lastActor=actor.key;actor.rr=rr;
-    applyHit(e,actor.cls,(a.k==='cleave'||a.k==='charge')&&actor.cls==='warrior'?a.k:a.k==='arrow'&&actor.cls==='thief'?'arrow':'melee',{ua:!!a.ua,actor,bs:!!a.bs,venom:!!a.venom&&actor.cls==='thief',src:[rr.p.x,rr.p.y]});}
+    const fx={};if(Array.isArray(a.fx))for(const k of a.fx)if(LEGS[k])fx[k]=1;
+    applyHit(e,actor.cls,(a.k==='cleave'||a.k==='charge')&&actor.cls==='warrior'?a.k:a.k==='arrow'&&actor.cls==='thief'?'arrow':'melee',{ua:!!a.ua,actor,bs:!!a.bs,venom:!!a.venom&&actor.cls==='thief',src:[rr.p.x,rr.p.y],dm:Math.min(150,Math.max(0,+a.dm||0)),stg:Math.min(1.5,Math.max(0,+a.stg||0)),pw:Math.min(2.5,Math.max(.5,+a.pw||1)),bsx:!!a.bsx,fx});}
   else if(a.t==='pot'){G.lastActor=actor.key;actor.rr=rr;burstAt(a.x,a.y,'pot',actor);}
-  else if(a.t==='burst'&&actor.cls==='wizard'){G.lastActor=actor.key;actor.rr=rr;burstAt(a.x,a.y,'wizard',actor);}
+  else if(a.t==='burst'&&actor.cls==='wizard'){G.lastActor=actor.key;actor.rr=rr;burstAt(a.x,a.y,'wizard',actor,Math.min(3,Math.max(1,+a.sp||1)),a.em?2:1.35);}
   else if(a.t==='noise')noise(a.x,a.y,Math.min(10,a.r),Math.min(.5,a.a),Math.min(.6,a.c));
   else if(a.t==='trap'){const tr=w.traps[a.id];if(tr&&!tr.disarmed){tr.disarmed=true;tr.revealed=true;G.featDirty=true;noise(tr.x+.5,tr.y+.5,12,.6,.9);netLog(`${actor.name} set off a dart trap.`,'bad');}}
   else if(a.t==='rev'){const tr=w.traps[a.id];if(tr&&!tr.revealed){tr.revealed=true;G.featDirty=true;}}
   else if(a.t==='use')doUse(a,actor);
-  else if(a.t==='parry'){const e=w.enemies[a.id];if(e&&!e.dead&&Math.hypot(e.x-rr.p.x,e.y-rr.p.y)<2.5)stagger(e,e.captain?1.1:1.7,true);}
+  else if(a.t==='parry'){const e=w.enemies[a.id];if(e&&!e.dead&&Math.hypot(e.x-rr.p.x,e.y-rr.p.y)<2.5){stagger(e,e.captain?1.1:1.7,true);if(a.fg){G.lastActor=actor.key;actor.rr=rr;applyHit(e,actor.cls,'counter',{actor});}}}
+  else if(a.t==='smoke'){G.lastActor=actor.key;ccCone(rr.p.x,rr.p.y,0,'smoke',actor);}
   else if((a.t==='repel'&&actor.cls==='wizard')||(a.t==='flash'&&actor.cls==='thief')){G.lastActor=actor.key;ccCone(rr.p.x,rr.p.y,a.ang,a.t,actor);}
 }
 function hostGone(){if(!G||G.over)return;settle(true);G.over=true;if(document.pointerLockElement)document.exitPointerLock();leaveRoom();
@@ -664,46 +706,49 @@ function lightAt(x,y){let L=.03;for(const t of G.torches){if(t.out)continue;cons
 
 /* ---------- the back room: where the crew meets before a co-op job ---------- */
 Object.defineProperty(BIOMES,'tavern',{enumerable:false,value:{name:'Back room',places:[],foe:'Regular',boss:'the barkeep',floor:'#4b3727',floor2:'#45321f',wall:'#1d1510',wallTop:'#6a5040',foeCol:'#c9a37a'}});
-const TAVERN_MAP=['#######S#######','#k...........k#','#.............#','#.....TTT.....#','#.....TTT.....#','#.............#','#.............#','#.............#','#k...........k#','####1##2##3####','###############'];
+const TAVERN_MAP=['#######S#######','#k...........k#','#.............#','#V....TTT....g#','#V....TTT....g#','#.............#','#.............#','#.............#','#k...........k#','####1##2##3####','###############'];
 function tavernWorld(){const H=TAVERN_MAP.length,W=TAVERN_MAP[0].length,racks={};
-  const t=TAVERN_MAP.map((row,y)=>[...row].map((ch,x)=>{if(ch==='.')return FLOOR;if(ch==='T')return TABLE;if(ch==='k')return PROP;if(ch==='S')return STREET;
+  const t=TAVERN_MAP.map((row,y)=>[...row].map((ch,x)=>{if(ch==='.')return FLOOR;if(ch==='T')return TABLE;if(ch==='k')return PROP;if(ch==='S')return STREET;if(ch==='V')return VENDOR;if(ch==='g')return GAMBLER;
     if('123'.includes(ch)){racks[x+','+y]=ROLES[+ch-1];return RACK;}return WALL;}));
   return {W,H,t,cells:[{x0:1,y0:1,x1:W-2,y1:H-3,role:'tavern'}],biome:'tavern',enemies:[],traps:[],locks:{},poisoned:false,scried:true,cleared:[],snuffed:[],start:[7,6],racks,street:[7,0],door:null};}
-function tavernTorches(){return [[3,1,0,-1],[11,1,0,-1],[1,4,-1,0],[13,4,1,0],[1,7,-1,0],[13,7,1,0]].map(([x,y,dx,dy],id)=>({id,wx:x+.5+dx*.47,wy:y+.5+dy*.47,lx:x+.5+dx*.25,ly:y+.5+dy*.25,dx,dy,out:false}));}
+function tavernTorches(){return [[3,1,0,-1],[11,1,0,-1],[1,2,-1,0],[13,2,1,0],[1,7,-1,0],[13,7,1,0]].map(([x,y,dx,dy],id)=>({id,wx:x+.5+dx*.47,wy:y+.5+dy*.47,lx:x+.5+dx*.25,ly:y+.5+dy*.25,dx,dy,out:false}));}
 function jobSummary(m){if(!m)return null;const st=roleStatus(m);return {title:m.title,biome:m.biome,need:m.roles.filter(r=>!st[r]),roles:m.roles,payout:m.payout,cx:m.cx};}
 function prefCls(){try{const c=localStorage.getItem('threelocks.cls');if(ROLES.includes(c))return c;}catch(e){}return 'thief';}
 function startTavern(mode,cls){
   if(NET.leaveTimer){clearTimeout(NET.leaveTimer);NET.leaveTimer=null;}
-  cls=cls||prefCls();const w=tavernWorld(),S=STATS[cls];NET.acts=[];NET.end=null;
+  cls=cls||prefCls();const w=tavernWorld(),S=runStats(cls);NET.acts=[];NET.end=null;
   G={m:{title:'The back room',biome:'tavern',roles:[],history:[]},w,cls,S,torches:tavernTorches(),time:0,log:[],did:[],kills:0,over:false,looted:false,explored:new Set(),proj:[],prev:{},
-    mode,mp:true,tavern:true,job:null,hostJob:null,down:0,swingN:0,lastActor:'me',credits:{},wsig:'',objs:{},
+    mode,mp:mode!=='solo',tavern:true,job:null,hostJob:null,down:0,swingN:0,lastActor:'me',credits:{},wsig:'',objs:{},
     paused:true,glimpse:0,divineAt:null,keys:{},light:0,vis:0,sideDirty:true,featDirty:true,hudT:0,expT:0,miniT:0,lightT:0,focus:null,stick:[0,0],
     P:{x:w.start[0]+.5+(Math.random()-.5),y:w.start[1]+.5+Math.random()*.8,yaw:0,pitch:0,hp:S.hp,max:S.hp,st:100,stDelay:0,blocking:false,blockAt:-9,dodge:0,dodgeCd:0,iframe:0,arrows:{broad:8,water:3,rope:2},arrowSel:'broad',crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
   for(let i=0;i<w.W*w.H;i++)G.explored.add(i);
   $('#board').hidden=true;$('#game').hidden=false;$('#gTitle').textContent='The back room';$('#abandon').textContent='Leave the tavern';
   tavernBadge();$('#toasts').innerHTML='';
   const host=NET.remote.get(NET.hostPeer);
-  if(mode==='host'){log('You take the back room. Pick a job at the table, gear up at the racks, then lead the crew out the door.');
+  if(mode==='solo'){log('You take a seat in the back room. The vendor and the gambler are at their counters. Pick a job at the table and walk out the door.');
+    setPause(true,'The back room','The vendor on the left sells honest kit. The gambler on the right sells covered items. Press I for your gear and bag. Pick a job at the table, then walk out the door at the top.');}
+  else if(mode==='host'){log('You take the back room. Pick a job at the table, gear up at the racks, then lead the crew out the door.');
     setPause(true,'The back room',`Room code ${NET.code}. Send friends this page's address and the code; they choose Join a friend. Pick the job at the planning table, gear up at the racks along the back wall, and walk out the door when the crew is ready.`);}
   else{G.hostJob=host&&host.pres&&host.pres.job||null;log(`You slip down into ${peerName(host)}'s back room. Gear up at the racks while the host picks the job.`);
     setPause(true,'The back room',`You're in ${peerName(host)}'s crew. Pick your class at the racks along the back wall. The job starts when the host leads everyone out the door.`);}
   build3D();resize3D();renderSide();renderCrew();pushPresence(true);window.scrollTo(0,0);
 }
 function tavernBadge(){const b=$('#gClass');b.textContent=CLS[G.cls].name;b.style.color=CLS[G.cls].color;$('#abl').innerHTML=KIT[G.cls].lines.map(l=>`<li>${l}</li>`).join('');}
-function setClass(cls){if(!G||cls===G.cls)return;G.cls=cls;G.S=STATS[cls];Object.assign(G.P,{hp:G.S.hp,max:G.S.hp,cd:{},used:{},venom:false,invis:0,swing:0});
+function setClass(cls){if(!G||cls===G.cls)return;G.cls=cls;G.S=runStats(cls);Object.assign(G.P,{hp:G.S.hp,max:G.S.hp,cd:{},used:{},venom:false,invis:0,swing:0});
   try{localStorage.setItem('threelocks.cls',cls);}catch(e){}tavernBadge();build3D();G.sideDirty=true;log(`You gear up as the ${CLS[cls].name}.`,'good');pushPresence(true);}
 function crewAtDoor(){const [sx,sy]=G.w.street;let n=Math.hypot(G.P.x-sx-.5,G.P.y-sy-.5)<3?1:0,tot=1;for(const rr of NET.remote.values()){if(!rr.p||rr.p.x==null)continue;tot++;if(Math.hypot(rr.p.x-sx-.5,rr.p.y-sy-.5)<3)n++;}return [n,tot];}
 function tavernLabel(c){const w=G.w;
+  if(c.t===VENDOR)return {act:true,text:'<b>E</b> Trade with the vendor'};if(c.t===GAMBLER)return {act:true,text:'<b>E</b> Try your luck with the gambler'};
   if(c.t===RACK){const r=w.racks[c.x+','+c.y];return r===G.cls?{act:false,text:`The ${CLS[r].name}'s rack. You're already kitted out.`}:{act:true,text:`<b>E</b> Gear up as the ${CLS[r].name}`};}
-  if(c.t===TABLE){if(G.mode==='host')return {act:true,text:G.job?`<b>E</b> Change the job (now: ${esc(G.job.title)})`:'<b>E</b> Pick a job from your board'};
+  if(c.t===TABLE){if(G.mode!=='client')return {act:true,text:G.job?`<b>E</b> Change the job (now: ${esc(G.job.title)})`:'<b>E</b> Pick a job from your board'};
     return {act:false,text:G.hostJob?`The plan: ${esc(G.hostJob.title)}`:'The host spreads the job out here.'};}
   if(c.t===STREET){if(G.mode!=='host')return {act:false,text:'The host leads the crew out through here.'};
     if(!G.job)return {act:false,text:'Pick a job at the planning table first.'};const [n,tot]=crewAtDoor();
     return {act:true,text:`<b>E</b> Lead the crew out to ${esc(G.job.title)} (${n} of ${tot} at the door)`};}
   return {act:false,text:''};}
-function tavernUse(c){if(c.t===RACK){setClass(G.w.racks[c.x+','+c.y]);return;}
-  if(c.t===TABLE&&G.mode==='host'){openJobPicker();return;}
-  if(c.t===STREET&&G.mode==='host'&&G.job)launchJob();}
+function tavernUse(c){if(c.t===VENDOR){openInv('tavern','vendor');return;}if(c.t===GAMBLER){openInv('tavern','gambler');return;}if(c.t===RACK){setClass(G.w.racks[c.x+','+c.y]);return;}
+  if(c.t===TABLE&&G.mode!=='client'){openJobPicker();return;}
+  if(c.t===STREET&&G.mode!=='client'&&G.job)launchJob();}
 function openJobPicker(){if(document.pointerLockElement)document.exitPointerLock();
   const list=board.missions.filter(m=>m.status!=='complete');
   $('#modalBox').innerHTML=`<h2>Pick the job</h2><p>Contracts from your board. The crew sees your pick on the table.</p>
@@ -715,20 +760,20 @@ function openJobPicker(){if(document.pointerLockElement)document.exitPointerLock
     setPause(true,'Job picked',`${G.job.title}. When the crew is geared up, walk to the door at the top of the room and lead them out.`);});
   $('#jpCancel').onclick=()=>{$('#modal').hidden=true;setPause(true,'The back room','Pick a job at the planning table, then lead the crew out the door.');};}
 function launchJob(){const m=G.job,cls=G.cls,locked=!!document.pointerLockElement;NET.lid=Date.now();NET.end=null;
-  startRun(m,cls,{mode:'host'});log('You lead the crew up the stairs and out into the night.');if(locked)setPause(false);}
+  startRun(m,cls,G.mode==='solo'?{fromTav:true}:{mode:'host'});log('You lead the crew up the stairs and out into the night.');if(locked)setPause(false);}
 function tavernRemote(){
   if(G.mode==='host'){for(const rr of NET.remote.values()){for(const a of (rr.pres&&rr.pres.a)||[])rr.lastAct=Math.max(rr.lastAct||0,a.n);}return;}
   const host=NET.remote.get(NET.hostPeer);if(!host||!host.pres)return;const hp=host.pres;
   const js=JSON.stringify(hp.job||null);if(js!==G.jobSig){G.jobSig=js;const had=G.hostJob;G.hostJob=hp.job||null;G.sideDirty=true;G.featDirty=true;if(G.hostJob&&(!had||had.title!==G.hostJob.title)&&G.time>.5)log(`${peerName(host)} picked the job: ${G.hostJob.title}.`,'good');}
   if(hp.h&&hp.m&&hp.w&&!hp.end&&hp.lid!==NET.doneLid){const locked=!!document.pointerLockElement;const m=Object.assign({},hp.m,{state:null,history:[],status:'open'});
     startRun(m,G.cls,{mode:'client'});log(`${peerName(host)} leads the crew out into the night.`);if(locked)setPause(false);}}
-function renderTavernSide(){const j=G.mode==='host'?jobSummary(G.job):G.hostJob;let h='';
+function renderTavernSide(){const j=G.mode!=='client'?jobSummary(G.job):G.hostJob;let h='';
   if(j){h+=`<li class="grp" style="color:var(--lantern)"><span>${esc(j.title)}</span><span class="label">${BIOMES[j.biome]?BIOMES[j.biome].name:''}</span></li>`;
     for(const r of ROLES){if(!j.roles.includes(r))continue;const need=j.need.includes(r);h+=`<li class="o ${need?'':'done'}"><span style="color:${CLS[r].color}">${need?'○':'✓'}</span><span>${CLS[r].name}: ${need?'needed':'already done by an earlier crew'}</span></li>`;}
     h+=`<li class="o"><span>·</span><span class="mono">${(j.payout||0).toLocaleString()} gold</span></li>`;
     if(!j.roles.includes(G.cls))h+=`<li class="o other"><span>!</span><span>This job has no ${CLS[G.cls].name} part. You can still come along.</span></li>`;}
-  else h+=`<li class="o other"><span>○</span><span>${G.mode==='host'?'No job yet. Pick one at the planning table.':'Waiting for the host to pick a job.'}</span></li>`;
-  h+=`<li class="grp" style="color:var(--lantern)"><span>Before you go</span></li><li class="o"><span>·</span><span>Gear up at the racks on the back wall.</span></li><li class="o"><span>·</span><span>${G.mode==='host'?'Walk out the door at the top of the room to launch.':'The host walks out the door to launch.'}</span></li>`;
+  else h+=`<li class="o other"><span>○</span><span>${G.mode!=='client'?'No job yet. Pick one at the planning table.':'Waiting for the host to pick a job.'}</span></li>`;
+  h+=`<li class="grp" style="color:var(--lantern)"><span>Before you go</span></li><li class="o"><span>·</span><span>Swap class at the racks on the back wall. Press I for your gear.</span></li><li class="o"><span>·</span><span>The vendor (left) and the gambler (right) sell gear.</span></li><li class="o"><span>·</span><span>${G.mode!=='client'?'Walk out the door at the top of the room to launch.':'The host walks out the door to launch.'}</span></li>`;
   $('#objs').innerHTML=h;$('#log').innerHTML=G.log.slice(0,14).map(l=>`<li class="${l.cls||''}">${esc(l.msg)}</li>`).join('');G.sideDirty=false;}
 function labelSprite(text,color,w){const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');x.font='600 44px Alegreya Sans, Georgia, sans-serif';x.textAlign='center';x.lineWidth=7;x.strokeStyle='#000';x.strokeText(text,256,62);x.fillStyle=color;x.fillText(text,256,62);
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));sp.scale.set(w||2.4,(w||2.4)*96/512,1);R3.dyn.add(sp);return sp;}
@@ -742,9 +787,18 @@ function syncTavern(){const w=G.w,Gm=R3.geo,Mt=R3.mat;const L=c=>new THREE.MeshL
       if(r==='warrior'){const s=addMesh(new THREE.CylinderGeometry(.42,.42,.08,20),L(0x7a5a2a),cx,1.45,fz-.05);s.rotation.x=Math.PI/2;addMesh(new THREE.BoxGeometry(.06,1.1,.03),L(0xb9bcc4),cx+.55,1.5,fz);}
       if(r==='wizard'){addMesh(new THREE.ConeGeometry(.22,.6,12),L(new THREE.Color(col).multiplyScalar(.75)),cx-.3,2.24,fz);addMesh(new THREE.SphereGeometry(.12,14,10),new THREE.MeshBasicMaterial({color:0xb6b2ff}),cx+.3,1.16,fz);for(let i=0;i<4;i++)addMesh(new THREE.BoxGeometry(.12,.3,.22),L([0x6b2f2f,0x2f4a6b,0x4a6b2f,0x6b5a2f][i]),cx-.5+i*.15,1.19,fz);}
       labelSprite(CLS[r].name+(r===G.cls?' (you)':''),col,1.6).position.set(cx,2.85,fz-.1);}
+    else if(t===VENDOR||t===GAMBLER){if(w.t[y-1][x]===t)continue;const vend=t===VENDOR,sx=vend?-1:1,ccx=cx+sx*.05;
+      addMesh(new THREE.BoxGeometry(.7,1.0,T*2-.2),Mt.table,ccx-sx*.1,.5,cz+T/2);addMesh(new THREE.BoxGeometry(.8,.06,T*2-.1),Mt.wood,ccx-sx*.1,1.03,cz+T/2);
+      const npc=new THREE.Group();const body=new THREE.Mesh(new THREE.CylinderGeometry(.2,.28,1.05,10),L(vend?0x6a5a3a:0x5a2f4a));body.position.y=1.15;
+      const head=new THREE.Mesh(new THREE.SphereGeometry(.15,12,10),L(0xd9b896));head.position.y=1.82;npc.add(body,head);
+      if(vend){const ap=new THREE.Mesh(new THREE.BoxGeometry(.3,.5,.05),L(0xcbbf9a));ap.position.set(.18,1.1,0);ap.rotation.y=Math.PI/2;npc.add(ap);}
+      else{const hat=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.03,14),L(0x1d1510));hat.position.y=1.95;const top=new THREE.Mesh(new THREE.CylinderGeometry(.12,.13,.18,12),L(0x1d1510));top.position.y=2.04;npc.add(hat,top);}
+      npc.position.set(cx+sx*.42,0,cz+T/2);R3.dyn.add(npc);
+      for(let i=0;i<3;i++){const it=vend?addMesh(new THREE.BoxGeometry(.06,.02,.4),L(0xb9bcc4),ccx-sx*.12,1.08,cz+T/2-.5+i*.5):addMesh(new THREE.BoxGeometry(.22,.16,.22),L([0x6b2f2f,0x2f4a6b,0x4a6b2f][i]),ccx-sx*.12,1.14,cz+T/2-.5+i*.5);if(vend)it.rotation.y=.3*i;}
+      labelSprite(vend?'Vendor':'Gambler',vend?'#e7c27a':'#c69cff',1.4).position.set(cx,2.5,cz+T/2);}
     else if(t===STREET){addMesh(Gm.door,Mt.wood,cx,WALLH/2,cz-.2);const fz=cz+T/2;addMesh(new THREE.BoxGeometry(.14,.14,.14),Mt.gold,cx+.45,1.05,fz+.02);
       for(const sx of [-.95,.95])addMesh(new THREE.BoxGeometry(.18,2.6,.2),Mt.woodDark,cx+sx,1.3,fz);addMesh(new THREE.BoxGeometry(2.1,.2,.2),Mt.woodDark,cx,2.6,fz);
-      const job=G.mode==='host'?G.job:G.hostJob;labelSprite(job?'Out to the job':'Out to the street','#e7c27a',2).position.set(cx,2.95,fz+.2);}}
+      const job=G.mode!=='client'?G.job:G.hostJob;labelSprite(job?'Out to the job':'Out to the street','#e7c27a',2).position.set(cx,2.95,fz+.2);}}
   // the planning table spans the T tiles
   const tx=6,ty=3,tw=3,th=2,cx=(tx+tw/2)*T,cz=(ty+th/2)*T;addMesh(new THREE.BoxGeometry(tw*T-.3,.12,th*T-.3),Mt.table,cx,.9,cz);
   for(const [dx,dz] of [[-1,-1],[1,-1],[-1,1],[1,1]])addMesh(Gm.leg,Mt.table,cx+dx*(tw*T/2-.4),.42,cz+dz*(th*T/2-.4));
@@ -794,54 +848,389 @@ function updAlarm(dt){if(G.mode==='client'||G.tavern)return;const w=G.w;G.alarmT
   const bell=w.bell;if(bell&&!w.bellCut&&G.alarm>=1&&G.alarm<2&&!w.enemies.some(o=>o.runner&&!o.dead)){
     const cand=alerted.filter(o=>!o.captain&&!o.reinf&&!(o.stag>0)).filter(o=>Math.hypot(o.x-bell.px,o.y-bell.py)<14).sort((a,b)=>Math.hypot(a.x-bell.px,a.y-bell.py)-Math.hypot(b.x-bell.px,b.y-bell.py))[0];
     if(cand){cand.runner=true;cand.ring=0;const t=`${nameOf(cand)} breaks off and runs for the alarm bell!`;log(t,'bad');if(G.mode==='host')netLog(t,'bad');}}}
-/* ---------- inventory: stash and fence at home, a belt of consumables and a weight-limited pack on the job ---------- */
+/* ---------- inventory: gear on a paper doll, a bag grid you carry, a stash at home, and a belt of consumables ---------- */
 const ITEMS={
   draught:{name:'Healing draught',w:1,v:30,price:60,belt:true,desc:'Drink: +45 health over 3 seconds.'},
   tonic:{name:'Bitter tonic',w:1,v:20,price:40,belt:true,desc:'Drink: full stamina and double recovery for 10 seconds.'},
   firepot:{name:'Firepot',w:2,v:40,price:80,belt:true,desc:'Throw: bursts into flame and burns everyone nearby. Any class can use it.'},
-  purse:{name:'Coin purse',w:1,v:40},ring:{name:'Signet ring',w:0,v:70},silver:{name:'Silver plate',w:3,v:90},ledger:{name:'Ledger of debts',w:1,v:120},idol:{name:'Brass idol',w:6,v:180}};
-const BELT=4,PACKCAP={thief:20,warrior:28,wizard:16},PROFKEY='threelocks.profile.v1';
+  smoke:{name:'Smoke bomb',w:1,v:35,price:70,belt:true,desc:'Drop: a choking cloud blinds everyone around you and hunters lose your trail. Any class.'}};
+const BELT=4,PROFKEY='threelocks.profile.v1';
 let PROF=null;
 function loadProf(){try{PROF=JSON.parse(localStorage.getItem(PROFKEY));}catch(e){PROF=null;}
-  if(!PROF||typeof PROF!=='object')PROF={gold:200,stash:{draught:2,tonic:1,firepot:0},belt:{draught:2,tonic:1,firepot:0},haul:null};
-  for(const k of ['draught','tonic','firepot']){PROF.stash[k]=PROF.stash[k]||0;PROF.belt[k]=Math.min(PROF.belt[k]||0,PROF.stash[k]);}return PROF;}
+  if(!PROF||typeof PROF!=='object')PROF={gold:200,stash:{draught:2,tonic:1,firepot:0,smoke:0},belt:{draught:2,tonic:1,firepot:0,smoke:0},haul:null};
+  PROF.stash=PROF.stash||{};PROF.belt=PROF.belt||{};
+  for(const k of Object.keys(ITEMS)){PROF.stash[k]=PROF.stash[k]||0;PROF.belt[k]=Math.min(PROF.belt[k]||0,PROF.stash[k]);}return PROF;}
 function saveProf(){try{localStorage.setItem(PROFKEY,JSON.stringify(PROF));}catch(e){}}
-loadProf();
 function beltTotal(){return Object.values(PROF.belt).reduce((a,b)=>a+b,0);}
-function renderStash(){const el=$('#stash');if(!el)return;const P=PROF;
-  el.innerHTML=`<div class="stashhead"><h3>Your stash</h3><span class="mono gold">${P.gold.toLocaleString()} gold</span></div>
+/* ================= gear, character stats and levels ================= */
+const RAR=[{n:'Common',c:'#e8e4d8'},{n:'Fine',c:'#5ecb62'},{n:'Rare',c:'#5b9cff'},{n:'Masterwork',c:'#b07cff'},{n:'Legendary',c:'#ff9a3c'}];
+const WT_OK={thief:['light','medium'],warrior:['light','medium','heavy'],wizard:['light']};
+const WTNOISE={light:0,medium:.05,heavy:.12};
+/* base items. dmg = melee damage, spd = swing time, sp = spell power bonus, arm = armor, wt = armor weight */
+const GB={
+  // ----- Thief weapons
+  dagger:{n:'Dagger',slot:'main',cls:['thief'],w:1,h:2,dmg:18,spd:.5,reach:1.15,v:30,ic:'dagger',d:'Quick and quiet.'},
+  stiletto:{n:'Stiletto',slot:'main',cls:['thief'],w:1,h:2,dmg:14,spd:.42,reach:1.1,v:45,ic:'dagger',bsx:1,d:'Thin enough to find a gap in mail. Backstabs on captains hit harder.'},
+  shortsword:{n:'Shortsword',slot:'main',cls:['thief','warrior'],w:1,h:3,dmg:24,spd:.62,reach:1.25,v:45,ic:'sword'},
+  cudgel:{n:'Cudgel',slot:'main',cls:['thief'],w:1,h:2,dmg:14,spd:.55,reach:1.1,stag:.6,v:25,ic:'club',d:'Every hit knocks them off balance.'},
+  rapier:{n:'Rapier',slot:'main',cls:['thief'],w:1,h:3,dmg:20,spd:.55,reach:1.4,parry:.06,v:70,ic:'sword',d:'Long reach and an easier parry.'},
+  hookknife:{n:'Hook knife',slot:'main',cls:['thief','wizard'],w:1,h:2,dmg:16,spd:.48,reach:1.1,v:30,ic:'dagger'},
+  // ----- Warrior weapons
+  longsword:{n:'Longsword',slot:'main',cls:['warrior'],w:1,h:3,dmg:30,spd:.85,reach:1.3,v:60,ic:'sword'},
+  armingsword:{n:'Arming sword',slot:'main',cls:['warrior'],w:1,h:3,dmg:26,spd:.72,reach:1.25,v:50,ic:'sword'},
+  axe:{n:'Bearded axe',slot:'main',cls:['warrior'],w:2,h:3,dmg:34,spd:.95,reach:1.25,cleave:1.3,v:55,ic:'axe',d:'Cleave hits 30% harder.'},
+  flail:{n:'Flail',slot:'main',cls:['warrior'],w:2,h:3,dmg:32,spd:.9,reach:1.3,stag:.4,v:55,ic:'club',d:'Wraps around guards. Hits stagger.'},
+  warhammer:{n:'Warhammer',slot:'main',cls:['warrior'],w:2,h:4,dmg:44,spd:1.2,reach:1.35,two:true,stag:.9,v:80,ic:'hammer',d:'Two hands. Every blow staggers.'},
+  maul:{n:'Maul',slot:'main',cls:['warrior'],w:2,h:4,dmg:52,spd:1.4,reach:1.35,two:true,stag:1.1,v:90,ic:'hammer',d:'Two hands. Slow and crushing.'},
+  greatsword:{n:'Greatsword',slot:'main',cls:['warrior'],w:2,h:4,dmg:40,spd:1.1,reach:1.5,two:true,cleave:1.4,v:95,ic:'sword',d:'Two hands. Long reach, Cleave hits 40% harder.'},
+  spear:{n:'Boar spear',slot:'main',cls:['warrior'],w:1,h:4,dmg:30,spd:.9,reach:1.7,two:true,v:50,ic:'spear',d:'Two hands. Hit them before they reach you.'},
+  // ----- Wizard weapons
+  staff:{n:'Oak staff',slot:'main',cls:['wizard'],w:1,h:4,dmg:8,spd:.75,reach:1.2,sp:.1,two:true,v:30,ic:'staff'},
+  ironstaff:{n:'Iron-shod staff',slot:'main',cls:['wizard'],w:1,h:4,dmg:14,spd:.8,reach:1.3,sp:.05,two:true,stag:.3,v:45,ic:'staff',d:'A staff for cracking heads too.'},
+  wand:{n:'Hexwood wand',slot:'main',cls:['wizard'],w:1,h:2,dmg:5,spd:.6,reach:1,sp:.25,v:50,ic:'wand'},
+  fetish:{n:'Bone fetish',slot:'main',cls:['wizard'],w:1,h:2,dmg:5,spd:.6,reach:1,sp:.18,cdr:.15,v:55,ic:'wand',d:'Spells come back 15% faster.'},
+  ritual:{n:'Ritual knife',slot:'main',cls:['wizard','thief'],w:1,h:2,dmg:12,spd:.55,reach:1.1,sp:.05,v:35,ic:'dagger'},
+  // ----- off hands
+  shield:{n:'Round shield',slot:'off',cls:['warrior'],w:2,h:2,arm:8,block:.85,v:40,ic:'shield'},
+  kite:{n:'Kite shield',slot:'off',cls:['warrior'],w:2,h:3,arm:12,block:.9,v:65,ic:'shield',slow:.05,d:'Blocks 90%, but you move a little slower.'},
+  buckler:{n:'Buckler',slot:'off',cls:['thief','warrior'],w:2,h:2,arm:3,block:.55,parry:.08,v:35,ic:'shield',d:'Small. Easier parries.'},
+  parrydagger:{n:'Parrying dagger',slot:'off',cls:['thief'],w:1,h:2,block:.45,parry:.12,v:40,ic:'dagger',d:'Much easier parries.'},
+  grimoire:{n:'Grimoire',slot:'off',cls:['wizard'],w:2,h:2,sp:.15,v:45,ic:'book'},
+  hexbag:{n:'Hex-bag',slot:'off',cls:['wizard'],w:1,h:1,sp:.08,cdr:.1,v:40,ic:'bag',d:'Spells come back 10% faster.'},
+  lantern:{n:'Shuttered lantern',slot:'off',cls:['thief','wizard'],w:1,h:2,per:2,v:30,ic:'lantern',d:'You spot traps from further away.'},
+  // ----- heads
+  hood:{n:'Cloth hood',slot:'head',wt:'light',arm:1,w:2,h:2,v:10,ic:'hood'},
+  mask:{n:"Cutpurse's mask",slot:'head',wt:'light',arm:1,stealth:.06,w:2,h:1,v:30,ic:'mask',d:'Harder to spot.'},
+  wizhat:{n:'Pointed hat',slot:'head',wt:'light',arm:1,sp:.06,w:2,h:2,v:30,ic:'hat',cls:['wizard'],d:'Ridiculous. Works anyway.'},
+  cap:{n:'Leather cap',slot:'head',wt:'medium',arm:3,w:2,h:2,v:20,ic:'cap'},
+  coif:{n:'Mail coif',slot:'head',wt:'medium',arm:4,w:2,h:2,v:30,ic:'cap'},
+  helm:{n:'Iron helm',slot:'head',wt:'heavy',arm:6,w:2,h:2,v:40,ic:'helm'},
+  greathelm:{n:'Great helm',slot:'head',wt:'heavy',arm:9,stealth:-.05,w:2,h:2,v:60,ic:'helm',d:'Hard to see out of. Hard to miss.'},
+  // ----- bodies
+  robe:{n:'Robe',slot:'chest',wt:'light',arm:2,w:2,h:3,v:15,ic:'robe'},
+  gambeson:{n:'Padded gambeson',slot:'chest',wt:'light',arm:4,w:2,h:3,v:25,ic:'tunic'},
+  shadowcloak:{n:'Shadow cloak',slot:'chest',wt:'light',arm:2,stealth:.08,w:2,h:3,v:55,ic:'cloak',d:'Dyed black and never washed.'},
+  jerkin:{n:'Leather jerkin',slot:'chest',wt:'medium',arm:7,w:2,h:3,v:35,ic:'tunic'},
+  brigandine:{n:'Studded brigandine',slot:'chest',wt:'medium',arm:10,w:2,h:3,v:55,ic:'tunic'},
+  mail:{n:'Chain hauberk',slot:'chest',wt:'heavy',arm:14,w:2,h:3,v:80,ic:'mail'},
+  plate:{n:'Plate cuirass',slot:'chest',wt:'heavy',arm:20,w:2,h:3,v:130,ic:'plate',slow:.04,d:'The best protection money buys. Slow and loud.'},
+  // ----- hands
+  wraps:{n:'Hand wraps',slot:'hands',wt:'light',arm:0,w:2,h:2,v:5,ic:'glove'},
+  gloves:{n:'Gloves',slot:'hands',wt:'light',arm:1,w:2,h:2,v:10,ic:'glove'},
+  pickgloves:{n:"Lockpicker's gloves",slot:'hands',wt:'light',arm:1,per:2,w:2,h:2,v:35,ic:'glove',d:'Thin leather, sharp eyes.'},
+  bracers:{n:'Leather bracers',slot:'hands',wt:'medium',arm:3,w:2,h:2,v:20,ic:'glove'},
+  gauntlets:{n:'Gauntlets',slot:'hands',wt:'heavy',arm:5,w:2,h:2,v:30,ic:'gauntlet'},
+  // ----- feet
+  sandals:{n:'Sandals',slot:'feet',wt:'light',arm:0,quiet:.05,w:2,h:2,v:5,ic:'boot'},
+  softboots:{n:'Soft boots',slot:'feet',wt:'light',arm:1,quiet:.15,w:2,h:2,v:15,ic:'boot',d:'Quieter footsteps.'},
+  ridingboots:{n:'Riding boots',slot:'feet',wt:'medium',arm:3,w:2,h:2,v:20,ic:'boot'},
+  boots:{n:'Hobnail boots',slot:'feet',wt:'heavy',arm:4,w:2,h:2,v:25,ic:'boot'},
+  sabatons:{n:'Sabatons',slot:'feet',wt:'heavy',arm:6,w:2,h:2,v:40,ic:'boot'},
+  // ----- jewelry
+  copperring:{n:'Copper ring',slot:'ring',w:1,h:1,v:25,ic:'ring',aff:1},
+  ironband:{n:'Iron band',slot:'ring',w:1,h:1,arm:2,v:25,ic:'ring',aff:0},
+  bonering:{n:'Bone ring',slot:'ring',w:1,h:1,sp:.05,v:35,ic:'ring',aff:0},
+  goldring:{n:'Gold ring',slot:'ring',w:1,h:1,v:60,ic:'ring',aff:1},
+  tincharm:{n:'Tin charm',slot:'neck',w:1,h:1,v:20,ic:'amulet',aff:1},
+  medal:{n:"Saint's medal",slot:'neck',w:1,h:1,hp:10,v:40,ic:'amulet',aff:0},
+  ratskull:{n:'Rat skull charm',slot:'neck',w:1,h:1,stealth:.04,v:35,ic:'amulet',aff:0},
+  witcheye:{n:'Witch-eye',slot:'neck',w:1,h:1,sp:.08,v:50,ic:'amulet',aff:0},
+  // ----- valuables (the fence buys these)
+  purse:{n:'Coin purse',val:true,w:1,h:1,v:40,ic:'bag'},
+  signet:{n:'Signet ring',val:true,w:1,h:1,v:70,ic:'ring'},
+  gems:{n:'Pouch of gems',val:true,w:1,h:1,v:150,ic:'gem'},
+  silver:{n:'Silver plate',val:true,w:2,h:1,v:90,ic:'plate2'},
+  candlestick:{n:'Silver candlestick',val:true,w:1,h:2,v:80,ic:'candle'},
+  goblet:{n:'Jeweled goblet',val:true,w:1,h:1,v:110,ic:'goblet'},
+  ledger:{n:'Ledger of debts',val:true,w:1,h:2,v:120,ic:'book'},
+  idol:{n:'Brass idol',val:true,w:2,h:2,v:180,ic:'idol'},
+  painting:{n:'Rolled painting',val:true,w:1,h:3,v:240,ic:'scroll'},
+  reliquary:{n:'Reliquary',val:true,w:2,h:2,v:220,ic:'idol'},
+  trinkets:{n:'Goblin trinkets',val:true,w:1,h:1,v:25,ic:'bag'},
+  ratcrown:{n:'Crown of the rat king',val:true,w:1,h:1,v:260,ic:'crown'},
+  deeds:{n:'Stolen deeds',val:true,w:1,h:2,v:160,ic:'scroll'},
+  grave:{n:'Grave goods',val:true,w:2,h:1,v:100,ic:'bag'},
+};
+/* named legendaries: a fixed base, a fixed name and one special effect */
+const LEGS={
+  widow:{b:'stiletto',n:'Widowmaker',d:'Backstabs kill anything with a pulse, captains and brutes included.'},
+  grave:{b:'maul',n:"Gravekeeper's Maul",d:'Double damage against the dead.'},
+  ember:{b:'wand',n:'Emberwick',d:'Fireburst bursts half again as wide.'},
+  ghost:{b:'shadowcloak',n:'Ghostweave',d:'Invisibility lasts 4 seconds longer. Much harder to spot.'},
+  bulwark:{b:'kite',n:'The Last Door',d:'Your guard never breaks.'},
+  quick:{b:'softboots',n:'Rooftop Runners',d:'Rolls, charges and blinks cost half the stamina.'},
+  saint:{b:'medal',n:'Medal of the Hanged Saint',d:'Healing draughts heal twice as much.'},
+  fang:{b:'parrydagger',n:'Last Word',d:'A parry also lands a counter-cut for 30.'},
+};
+/* random bonuses: value range per point of rarity */
+const AFX={
+  str:{n:v=>`+${v} Strength`,lo:1,hi:2},vit:{n:v=>`+${v} Vitality`,lo:1,hi:2},agi:{n:v=>`+${v} Agility`,lo:1,hi:2},int:{n:v=>`+${v} Intellect`,lo:1,hi:2},per:{n:v=>`+${v} Perception`,lo:1,hi:2},
+  arm:{n:v=>`+${v} Armor`,lo:1,hi:3},hp:{n:v=>`+${v} Health`,lo:4,hi:8},dmg:{n:v=>`+${v}% Damage`,lo:3,hi:6},sp:{n:v=>`+${v}% Spell power`,lo:3,hi:6},
+  sta:{n:v=>`+${v}% Stamina recovery`,lo:4,hi:8},quiet:{n:v=>`${v}% quieter footsteps`,lo:3,hi:6},stealth:{n:v=>`${v}% harder to spot`,lo:2,hi:4},
+  parry:{n:v=>`+${v}ms parry window`,lo:10,hi:20},gold:{n:v=>`+${v}% from the fence`,lo:3,hi:6},cdr:{n:v=>`${v}% faster ability cooldowns`,lo:2,hi:4},
+};
+const ADJ_AFX={str:'Brutal',vit:'Stout',agi:'Nimble',int:'Learned',per:'Watchful',arm:'Sturdy',hp:'Hale',dmg:'Keen',sp:'Hexed',sta:'Tireless',quiet:'Hushed',stealth:'Shadowed',parry:'Deft',gold:'Lucky',cdr:'Quickened'};
+const SUF_AFX={str:'of the Ox',vit:'of the Bear',agi:'of the Cat',int:'of the Owl',per:'of the Hawk',arm:'of Iron',hp:'of Mending',dmg:'of Ruin',sp:'of Embers',sta:'of the Long Night',quiet:'of Whispers',stealth:'of Shadows',parry:'of the Duelist',gold:'of the Fence',cdr:'of Haste'};
+function afxPool(b){const s=b.slot;const p=['str','vit','agi','int','per','hp'];if(s==='main')p.push('dmg','dmg','sp','parry','cdr');if(s==='off')p.push('arm','parry','sp','cdr');
+  if(['head','chest','hands','feet'].includes(s))p.push('arm','arm','quiet','stealth','sta');if(s==='ring'||s==='neck')p.push('dmg','sp','gold','gold','cdr','sta','stealth');return p;}
+const SLOTS=['head','neck','main','chest','off','hands','ring1','ring2','feet','pocket'];
+const SLOTNAME={head:'Head',neck:'Neck',main:'Weapon',chest:'Body',off:'Off hand',hands:'Hands',ring1:'Ring',ring2:'Ring',feet:'Feet',pocket:'Sewn-in pocket'};
+const BAGW=8,BAGH=5,STW=10,STH=7;
+function uid(){return Math.random().toString(36).slice(2,9);}
+function rollRarity(R,luck){const w=luck?[28,36,22,10,4]:[62,25,9,3,1];let r=R()*w.reduce((a,b)=>a+b,0);for(let i=0;i<5;i++){if((r-=w[i])<0)return i;}return 0;}
+function makeItem(bk,rar,seed,legKey){const b=GB[bk];const R=mulberry((seed>>>0)||1);const it={u:uid(),b:bk,r:b.val?0:rar,a:[],s:seed};
+  if(b.val)return it;
+  if(rar===4){const lk=legKey||Object.keys(LEGS).find(k=>LEGS[k].b===bk);if(lk&&LEGS[lk].b===bk)it.lg=lk;}
+  const n=Math.min(4,rar+(b.aff||0));const pool=afxPool(b).slice();
+  for(let i=0;i<n&&pool.length;i++){const k=pool.splice(Math.floor(R()*pool.length),1)[0];for(let j=pool.length-1;j>=0;j--)if(pool[j]===k)pool.splice(j,1);const A=AFX[k];
+    const v=Math.max(1,Math.round((A.lo+R()*(A.hi-A.lo))*(1+rar*.45)));it.a.push([k,v]);}
+  return it;}
+function itemName(it){const b=GB[it.b];if(it.lg)return LEGS[it.lg].n;if(b.val||!it.a.length)return b.n;const k0=it.a[0][0];
+  if(it.r>=2&&it.a[1])return `${ADJ_AFX[k0]} ${b.n} ${SUF_AFX[it.a[1][0]]}`;return `${ADJ_AFX[k0]} ${b.n}`;}
+function itemValue(it){const b=GB[it.b];if(b.val)return b.v;return Math.round(b.v*(1+it.r*.9+(it.lg?3:0))+it.a.length*12);}
+function itemColor(it){return GB[it.b].val?'#e7c27a':RAR[it.r].c;}
+function slotFits(b,slot){if(slot==='pocket')return true;if(slot==='ring1'||slot==='ring2')return b.slot==='ring';return b.slot===slot;}
+function canUse(b,cls){if(b.val)return false;if(b.cls&&!b.cls.includes(cls))return false;if(b.wt&&!WT_OK[cls].includes(b.wt))return false;return true;}
+function basesFor(filter){return Object.keys(GB).filter(k=>filter(GB[k],k));}
+function randomGear(R,cls,luck,slot){const ks=basesFor(b=>!b.val&&(!cls||canUse(b,cls))&&(!slot||b.slot===slot));const bk=ks[Math.floor(R()*ks.length)];return makeItem(bk,rollRarity(R,luck),Math.floor(R()*1e9));}
+/* ---------- characters ---------- */
+const CBASE={thief:{str:5,vit:5,agi:9,int:4,per:7},warrior:{str:9,vit:8,agi:5,int:3,per:5},wizard:{str:3,vit:5,agi:5,int:10,per:7}};
+const LVGAIN={thief:{agi:2,per:1,vit:1},warrior:{str:2,vit:2},wizard:{int:2,per:1,vit:1}};
+const STARTKIT={thief:{main:'dagger',head:'hood',chest:'jerkin',hands:'gloves',feet:'softboots',bag:['cudgel','buckler']},
+  warrior:{main:'longsword',off:'shield',head:'helm',chest:'mail',feet:'boots',bag:['axe']},
+  wizard:{main:'staff',head:'wizhat',chest:'robe',feet:'sandals',bag:['wand','grimoire']}};
+function newChar(cls){const k=STARTKIT[cls];const c={lvl:1,xp:0,eq:{},bag:[]};for(const s of SLOTS)if(k[s])c.eq[s]=makeItem(k[s],0,1);
+  for(const bk of k.bag||[]){const it=makeItem(bk,0,1);const p=findSpot(c.bag,GB[bk].w,GB[bk].h,BAGW,BAGH);if(p)c.bag.push({it,x:p[0],y:p[1]});}return c;}
+function ensureChars(){PROF.chars=PROF.chars||{};for(const c of ROLES)if(!PROF.chars[c])PROF.chars[c]=newChar(c);PROF.stashG=PROF.stashG||[];
+  for(const k of ['draught','tonic','firepot','smoke']){PROF.stash[k]=PROF.stash[k]||0;PROF.belt[k]=Math.min(PROF.belt[k]||0,PROF.stash[k]);}}
+function xpNeed(l){return 200+l*150;}
+function attrsOf(cls){const c=PROF.chars[cls],a=Object.assign({},CBASE[cls]);for(const k in LVGAIN[cls])a[k]+=LVGAIN[cls][k]*(c.lvl-1);
+  for(const s of SLOTS){if(s==='pocket')continue;const it=c.eq[s];if(!it)continue;for(const [k,v] of it.a)if(a[k]!==undefined)a[k]+=v;const b=GB[it.b];if(b.per)a.per+=b.per;}return a;}
+/* everything the run uses, computed from class, level and gear */
+function calcStats(cls){ensureChars();const c=PROF.chars[cls],A=attrsOf(cls),S=Object.assign({},STATS[cls]),B0=CBASE[cls];
+  const eq=s=>c.eq[s]&&s!=='pocket'?c.eq[s]:null;
+  const bsum=k=>SLOTS.reduce((t,s)=>{const it=eq(s);return t+(it&&GB[it.b][k]||0);},0);
+  const asum=k=>SLOTS.reduce((t,s)=>{const it=eq(s);if(!it)return t;for(const [ak,av] of it.a)if(ak===k)t+=av;return t;},0);
+  const fx={};for(const s of SLOTS){const it=eq(s);if(it&&it.lg)fx[it.lg]=1;}
+  const W=eq('main')?GB[eq('main').b]:{dmg:6,spd:.5,reach:1.05,n:'Fists'};const O=eq('off')?GB[eq('off').b]:null;
+  S.weapon=W.n;S.wbase=eq('main')?eq('main').b:null;S.two=!!W.two;
+  S.hp=Math.round(STATS[cls].hp+(A.vit-B0.vit)*6+bsum('hp')+asum('hp'));
+  const arm=bsum('arm')+asum('arm');S.armorPts=arm;S.armor=arm/(arm+60);
+  const melee=(cls==='wizard'?1:1+(A.str-B0.str)*.03)*(1+asum('dmg')/100);S.dmg=Math.round(W.dmg*melee);S.pw=+(melee*(W.cleave||1)).toFixed(2);S.stag=W.stag||0;
+  S.swing=+(W.spd*(1-(A.agi-B0.agi)*.012)).toFixed(2);S.reach=W.reach;S.cost=Math.round(STATS[cls].cost*Math.sqrt(W.spd/STATS[cls].swing));
+  S.sp=+(1+(A.int-B0.int)*.04+bsum('sp')+asum('sp')/100).toFixed(2);
+  S.block=O&&O.block?O.block:{thief:.4,warrior:.5,wizard:.25}[cls];S.parry=STATS[cls].parry+bsum('parry')+asum('parry')/1000;
+  let noise=1;for(const s of ['head','chest','hands','feet']){const it=eq(s);if(it&&GB[it.b].wt)noise+=WTNOISE[GB[it.b].wt];}
+  S.noise=Math.max(.4,noise-bsum('quiet')-asum('quiet')/100-(A.agi-B0.agi)*.01);S.stealth=Math.max(.45,1-bsum('stealth')-asum('stealth')/100-(fx.ghost?.12:0));
+  S.staMul=1+(A.agi-B0.agi)*.02+asum('sta')/100;S.moveCost=fx.quick?.5:1;S.cdr=Math.min(.5,bsum('cdr')+asum('cdr')/100);
+  S.walk=STATS[cls].walk*(1+(A.agi-B0.agi)*.006)*(1-bsum('slow'));
+  S.trap=1.9+(A.per-B0.per)*.12;S.fence=1+(A.per-B0.per)*.02+asum('gold')/100;S.fx=fx;S.attrs=A;S.lvl=c.lvl;
+  return S;}
+function runStats(cls){return calcStats(cls);}
+/* ---------- grids ---------- */
+function gridOcc(list,W,H,skip){const g=[];for(let y=0;y<H;y++)g.push(new Array(W).fill(null));for(const e of list){if(e===skip)continue;const b=GB[e.it.b];for(let y=0;y<b.h;y++)for(let x=0;x<b.w;x++)if(g[e.y+y])g[e.y+y][e.x+x]=e;}return g;}
+function fitsAt(list,W,H,w,h,x,y,skip){if(x<0||y<0||x+w>W||y+h>H)return false;const g=gridOcc(list,W,H,skip);for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++)if(g[y+yy][x+xx])return false;return true;}
+function findSpot(list,w,h,W,H){for(let x=0;x<=W-w;x++)for(let y=0;y<=H-h;y++)if(fitsAt(list,W,H,w,h,x,y))return [x,y];return null;}
+function bagAdd(cls,it){const c=PROF.chars[cls],b=GB[it.b];const p=findSpot(c.bag,b.w,b.h,BAGW,BAGH);if(!p)return false;c.bag.push({it,x:p[0],y:p[1]});return true;}
+function stashAdd(it){const b=GB[it.b];const p=findSpot(PROF.stashG,b.w,b.h,STW,STH);if(!p)return false;PROF.stashG.push({it,x:p[0],y:p[1]});return true;}
+/* ---------- XP ---------- */
+function gainXP(n,why){if(!G||G.tavern)return;G.xpRun=(G.xpRun||0)+n;}
+function awardXP(cls,n){const c=PROF.chars[cls];c.xp+=n;const ups=[];while(c.lvl<30&&c.xp>=xpNeed(c.lvl)){c.xp-=xpNeed(c.lvl);c.lvl++;ups.push(c.lvl);}return ups;}
+/* ---------- item icons: simple original line drawings ---------- */
+const ICONS={dagger:'M8 28 L22 6 L25 9 L11 31 Z M6 30 l4 -2 M9 26 l5 3',sword:'M7 31 L25 5 L28 8 L10 33 Z M5 27 l8 6 M7 31 l-3 3',axe:'M10 33 L22 5 M17 9 q10 -4 12 6 q-8 2 -12 -6 Z',club:'M9 33 L19 13 q4 -9 9 -6 q4 4 -3 10 L13 34 Z',
+  hammer:'M10 33 L21 9 M14 6 l14 6 l-3 7 l-14 -6 Z',spear:'M8 34 L26 6 M26 6 l-1 7 l-5 -3 Z',staff:'M9 34 L25 4 M23 3 a3 3 0 1 0 5 3 a3 3 0 1 0 -5 -3',wand:'M10 31 L24 9 M24 9 l2 -4 M21 6 l6 2 M27 11 l-2 -4',
+  shield:'M18 4 L30 9 Q30 25 18 33 Q6 25 6 9 Z M18 4 V33',book:'M7 7 h11 v24 h-11 Z M18 7 h11 v24 h-11 Z M10 12 h5 M21 12 h5',bag:'M11 13 q7 -8 14 0 l3 17 h-20 Z M14 13 h8',lantern:'M13 9 h10 v18 h-10 Z M15 9 l3 -5 l3 5 M13 18 h10',
+  hood:'M8 30 Q8 6 18 5 Q28 6 28 30 Q18 24 8 30 Z M13 20 q5 4 10 0',mask:'M5 14 q13 -6 26 0 q-2 8 -8 8 q-3 -4 -5 0 q-2 -4 -5 0 q-6 0 -8 -8 Z',hat:'M4 28 h28 M10 28 L20 4 L26 28 M20 4 l6 -2',cap:'M6 24 q0 -16 12 -16 q12 0 12 16 Z M6 24 h24',
+  helm:'M7 26 q0 -20 11 -20 q11 0 11 20 Z M7 18 h22 M18 18 v10',robe:'M12 5 h12 l6 28 h-24 Z M18 5 v28',tunic:'M10 5 h16 l4 6 l-4 3 v19 h-16 v-19 l-4 -3 Z',cloak:'M14 4 h8 l8 29 h-24 Z M14 4 q4 6 8 0',mail:'M10 5 h16 l4 6 v22 h-24 v-22 Z M10 12 h16 M10 18 h16 M10 24 h16',
+  plate:'M9 6 q9 -4 18 0 l2 12 q-11 18 -22 0 Z M18 4 v26',glove:'M11 33 v-14 l-3 -8 l3 -1 l3 7 v-12 h3 v10 v-11 h3 v11 v-9 h3 v13 l3 -4 l2 2 l-5 16 Z',gauntlet:'M10 33 v-16 h16 v16 Z M10 17 l2 -10 h12 l2 10 M14 7 v10 M18 7 v10 M22 7 v10',
+  boot:'M12 5 h8 v20 l10 3 v5 h-18 Z',ring:'M18 8 a8 8 0 1 0 0.1 0 Z M18 12 a4 4 0 1 1 -0.1 0 Z M15 6 l3 -3 l3 3',amulet:'M8 4 q10 14 20 0 M18 18 a6 6 0 1 0 0.1 0',gem:'M10 14 l8 -8 l8 8 l-8 16 Z M10 14 h16',plate2:'M4 18 a14 7 0 1 0 28 0 a14 7 0 1 0 -28 0',
+  candle:'M14 33 h8 M18 33 v-22 M15 11 h6 M18 11 q-2 -4 0 -7 q2 3 0 7',goblet:'M11 6 h14 q0 12 -7 12 q-7 0 -7 -12 Z M18 18 v10 M12 30 h12',idol:'M13 32 h10 l-2 -10 h-6 Z M18 22 a5 5 0 1 0 0.1 0 M12 14 l-4 -4 M24 14 l4 -4',scroll:'M9 6 h18 v24 h-18 Z M9 10 h18 M9 26 h18',crown:'M6 28 h24 l2 -18 l-8 7 l-6 -10 l-6 10 l-8 -7 Z'};
+function iconSVG(it,size){const b=GB[it.b],c=itemColor(it);return `<svg viewBox="0 0 36 36" width="${size||30}" height="${size||30}" aria-hidden="true"><path d="${ICONS[b.ic]||ICONS.bag}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;}
+function itemTip(it,cls,price){const b=GB[it.b];const L=[];L.push(`<b style="color:${itemColor(it)}">${esc(itemName(it))}</b>`);
+  L.push(`<span class="tipsub">${b.val?'Valuable':RAR[it.r].n+' '+(SLOTNAME[b.slot==='ring'?'ring1':b.slot]||'')}${b.wt?' · '+b.wt+' armor':''}${b.two?' · two hands':''}</span>`);
+  if(b.dmg)L.push(`${b.dmg} damage · ${b.spd}s swing · reach ${b.reach}`);if(b.arm)L.push(`${b.arm} armor`);if(b.block)L.push(`Blocks ${Math.round(b.block*100)}%`);if(b.sp)L.push(`+${Math.round(b.sp*100)}% spell power`);
+  if(b.parry)L.push(`+${Math.round(b.parry*1000)}ms parry window`);if(b.stealth)L.push(b.stealth>0?`${Math.round(b.stealth*100)}% harder to spot`:`${Math.round(-b.stealth*100)}% easier to spot`);if(b.quiet)L.push(`${Math.round(b.quiet*100)}% quieter footsteps`);if(b.hp)L.push(`+${b.hp} health`);if(b.per)L.push(`+${b.per} Perception`);
+  for(const [k,v] of it.a)L.push(`<span class="afx">${AFX[k].n(v)}</span>`);if(it.lg)L.push(`<span class="leg">${LEGS[it.lg].d}</span>`);if(b.d&&!it.lg)L.push(`<i>${b.d}</i>`);
+  if(b.cls)L.push(`<span class="${cls&&!b.cls.includes(cls)?'bad':'tipsub'}">${b.cls.map(c=>CLS[c].name).join(', ')} only</span>`);else if(b.wt&&cls&&!WT_OK[cls].includes(b.wt))L.push(`<span class="bad">Too heavy for the ${CLS[cls].name}</span>`);
+  L.push(`<span class="tipsub">${price!=null?price:itemValue(it)} gold${price!=null?'':' to the vendor'}</span>`);return L.join('<br>');}
+
+/* ================= inventory screen: paper doll, bag, stash, vendor, gambler ================= */
+const INV={open:false,cls:'thief',ctx:'board',shop:null,sel:null,stock:null,stockFor:null,gambled:null,msg:''};
+let CELL=38;
+const GAMBLE={main:{n:'Weapon',p:220},off:{n:'Off hand',p:170},head:{n:'Head',p:140},chest:{n:'Body armor',p:190},hands:{n:'Hands',p:120},feet:{n:'Feet',p:120},ring:{n:'Ring',p:240},neck:{n:'Amulet',p:260}};
+const CONS=['draught','tonic','firepot','smoke'];
+function buyPrice(it){return Math.round(itemValue(it)*2.5/5)*5;}
+function sellPrice(it){const b=GB[it.b];const S=calcStats(INV.cls);return b.val?Math.round(b.v*S.fence):Math.max(1,Math.round(itemValue(it)*.35));}
+function makeStock(){const R=mulberry((Math.random()*1e9)>>>0);const out=[];const cls=INV.cls;
+  for(let i=0;i<12;i++){const forMe=i<8;const it=randomGear(R,forMe?cls:null,false);if(it.r>2){it.r=2;it.a=it.a.slice(0,2);}out.push(it);}
+  INV.stock=out;INV.stockFor=cls;}
+function openInv(ctx,shop){ensureChars();INV.ctx=ctx;INV.shop=shop||null;INV.sel=null;INV.msg='';if(G)INV.cls=G.cls;
+  if(shop==='vendor'&&(!INV.stock||INV.stockFor!==INV.cls))makeStock();
+  if(document.pointerLockElement)document.exitPointerLock();if(G&&!G.mp&&!G.paused)setPause(true,'Inventory','');
+  INV.open=true;$('#invov').hidden=false;renderInv();}
+function closeInv(){INV.open=false;$('#invov').hidden=true;$('#invtip').hidden=true;saveProf();if(G){applyGear();G.sideDirty=true;}else renderStash();}
+function applyGear(){if(!G)return;const r=G.P.hp/G.P.max;G.S=runStats(G.cls);G.P.max=G.S.hp;G.P.hp=Math.max(1,Math.round(r*G.S.hp));if(R3.ok)build3D();}
+/* references: {src:'bag'|'stash'|'eq'|'shop', key} */
+function refList(src){return src==='bag'?PROF.chars[INV.cls].bag:src==='stash'?PROF.stashG:null;}
+function refItem(r){if(r.src==='eq')return PROF.chars[INV.cls].eq[r.key];if(r.src==='shop')return INV.stock[r.key];const e=refList(r.src)[r.key];return e&&e.it;}
+function say(t,bad){INV.msg=`<span class="${bad?'bad':'ok'}">${t}</span>`;}
+function takeOut(r){const c=PROF.chars[INV.cls];if(r.src==='eq'){const it=c.eq[r.key];delete c.eq[r.key];return {it,undo:()=>{c.eq[r.key]=it;}};}
+  if(r.src==='shop'){const it=INV.stock[r.key];return {it,undo:()=>{},shop:true};}
+  const L=refList(r.src),e=L[r.key];L.splice(r.key,1);return {it:e.it,undo:()=>{L.splice(r.key,0,e);},from:e,list:L};}
+function putGrid(src,it,x,y){const L=refList(src),W=src==='bag'?BAGW:STW,H=src==='bag'?BAGH:STH,b=GB[it.b];
+  if(x==null){const p=findSpot(L,b.w,b.h,W,H);if(!p)return false;x=p[0];y=p[1];}if(!fitsAt(L,W,H,b.w,b.h,x,y))return false;L.push({it,x,y});return true;}
+function equipCheck(it,slot){const c=PROF.chars[INV.cls],b=GB[it.b];if(!slotFits(b,slot))return `That doesn't go in the ${SLOTNAME[slot].toLowerCase()} slot.`;
+  if(slot!=='pocket'&&!canUse(b,INV.cls))return b.val?'You can\'t wear that.':b.cls&&!b.cls.includes(INV.cls)?`Only ${b.cls.map(x=>CLS[x].name).join(' or ')} can use that.`:`Too heavy for the ${CLS[INV.cls].name}.`;
+  if(slot==='off'&&c.eq.main&&GB[c.eq.main.b].two)return 'Your weapon needs both hands.';return null;}
+/* move an item; dest {src:'bag'|'stash', x,y} | {src:'eq', key} | {src:'sell'} */
+function moveItem(r,dest){const c=PROF.chars[INV.cls];const it0=refItem(r);if(!it0)return;
+  if(dest.src==='sell'){if(r.src==='shop')return;if(!INV.shop){say('Nobody here to sell to.',1);return;}const t=takeOut(r);const p=sellPrice(t.it);PROF.gold+=p;say(`Sold ${itemName(t.it)} for ${p} gold.`);INV.sel=null;return;}
+  if(r.src==='shop'){const price=buyPrice(it0);if(PROF.gold<price){say(`You need ${price} gold.`,1);return;}}
+  if((dest.src==='stash'||r.src==='stash')&&INV.ctx==='run'){say('Your stash is back home.',1);return;}
+  const t=takeOut(r);let ok=false;
+  if(dest.src==='bag'||dest.src==='stash'){ok=putGrid(dest.src,t.it,dest.x,dest.y);
+    if(!ok&&dest.x!=null){// swap with the single item under the drop point, grid to grid
+      const L=refList(dest.src),W=dest.src==='bag'?BAGW:STW,H=dest.src==='bag'?BAGH:STH;const g=gridOcc(L,W,H);const under=g[dest.y]&&g[dest.y][dest.x];
+      if(under&&r.src==='eq'&&slotFits(GB[under.it.b],r.key)&&!equipCheck(under.it,r.key)){L.splice(L.indexOf(under),1);if(putGrid(dest.src,t.it,under.x,under.y)||putGrid(dest.src,t.it)){c.eq[r.key]=under.it;ok=true;}else L.push(under);}}}
+  else if(dest.src==='eq'){const err=equipCheck(t.it,dest.key);if(err){t.undo();say(err,1);return;}
+    const old=c.eq[dest.key];
+    if(dest.key==='main'&&GB[t.it.b].two&&c.eq.off){if(!putGrid('bag',c.eq.off)){t.undo();say('No room in your bag for your off hand.',1);return;}delete c.eq.off;}
+    if(old){delete c.eq[dest.key];let back=false;if(r.src==='eq'&&slotFits(GB[old.b],r.key)&&!equipCheck(old,r.key)){c.eq[r.key]=old;back=true;}
+      else if(t.from&&fitsAt(t.list,t.list===PROF.chars[INV.cls].bag?BAGW:STW,t.list===PROF.chars[INV.cls].bag?BAGH:STH,GB[old.b].w,GB[old.b].h,t.from.x,t.from.y)){t.list.push({it:old,x:t.from.x,y:t.from.y});back=true;}
+      else back=putGrid('bag',old)||(INV.ctx!=='run'&&putGrid('stash',old));if(!back){c.eq[dest.key]=old;t.undo();say('No room to swap that out.',1);return;}}
+    c.eq[dest.key]=t.it;ok=true;}
+  if(!ok){t.undo();say('No room there.',1);return;}
+  if(t.shop){const price=buyPrice(it0);PROF.gold-=price;INV.stock.splice(r.key,1);say(`Bought ${itemName(it0)} for ${price} gold.`);}
+  INV.sel=null;}
+function gamble(slot){const g=GAMBLE[slot];if(PROF.gold<g.p){say(`The gambler wants ${g.p} gold.`,1);renderInv();return;}
+  const R=mulberry((Math.random()*1e9)>>>0);let it=null;for(let i=0;i<20&&!it;i++){const cand=randomGear(R,INV.cls,true,slot);if(cand)it=cand;}
+  if(!it){say('He has nothing like that for you.',1);renderInv();return;}
+  if(!putGrid('bag',it)){say('Make room in your bag first.',1);renderInv();return;}
+  PROF.gold-=g.p;INV.gambled=it;say(`The gambler slides over a ${RAR[it.r].n.toLowerCase()} ${GB[it.b].n.toLowerCase()}.`,it.r===0);saveProf();renderInv();}
+function invAction(a){const r=INV.sel;if(!r)return;const it=refItem(r);if(!it)return;const b=GB[it.b];
+  if(a==='equip'){let slot=b.slot==='ring'?(PROF.chars[INV.cls].eq.ring1?(PROF.chars[INV.cls].eq.ring2?'ring1':'ring2'):'ring1'):b.slot;moveItem(r,{src:'eq',key:slot});}
+  else if(a==='pocket')moveItem(r,{src:'eq',key:'pocket'});
+  else if(a==='bag')moveItem(r,{src:'bag'});else if(a==='stash')moveItem(r,{src:'stash'});else if(a==='sell')moveItem(r,{src:'sell'});else if(a==='buy')moveItem(r,{src:'bag'});
+  else if(a==='drop'){if(INV.dropArm!==it.u){INV.dropArm=it.u;say('Click Drop again to throw it away for good.',1);renderInv();return;}takeOut(r);INV.sel=null;say(`Threw away ${itemName(it)}.`);}
+  saveProf();renderInv();}
+function itemEl(it,src,key,x,y,extra){const b=GB[it.b];const pos=x!=null?`left:${x*CELL}px;top:${y*CELL}px;width:${b.w*CELL-2}px;height:${b.h*CELL-2}px;`:'';
+  const sel=INV.sel&&INV.sel.src===src&&INV.sel.key===key;return `<div class="itm r${b.val?'v':it.r}${sel?' sel':''}${extra||''}" style="${pos}--rc:${itemColor(it)}" data-src="${src}" data-key="${key}">${iconSVG(it,x==null||Math.min(b.w,b.h)>1?44:30)}</div>`;}
+function gridHTML(src,W,H){const L=refList(src);return `<div class="gridwrap"><div class="igrid" data-drop="${src}" style="width:${W*CELL}px;height:${H*CELL}px;--cell:${CELL}px">${L.map((e,i)=>itemEl(e.it,src,i,e.x,e.y)).join('')}</div></div>`;}
+function statsHTML(){const S=calcStats(INV.cls),A=S.attrs,c=PROF.chars[INV.cls];const pc=v=>Math.round(v*100)+'%';
+  return `<div class="istats"><div class="lvl">Level ${c.lvl} <span class="xpbar"><i style="width:${Math.min(100,c.xp/xpNeed(c.lvl)*100)}%"></i></span> <span class="mono">${c.xp}/${xpNeed(c.lvl)} xp</span></div>
+   <div class="attrs">${['str','vit','agi','int','per'].map(k=>`<span><b>${A[k]}</b>${({str:'Strength',vit:'Vitality',agi:'Agility',int:'Intellect',per:'Perception'})[k]}</span>`).join('')}</div>
+   <dl><dt>Health</dt><dd>${S.hp}</dd><dt>Armor</dt><dd>${S.armorPts} (${pc(S.armor)} less damage)</dd><dt>${esc(S.weapon)}</dt><dd>${S.dmg} damage, ${S.swing}s swing</dd><dt>Spell power</dt><dd>${pc(S.sp)}</dd>
+   <dt>Block</dt><dd>${pc(S.block)} · parry ${Math.round(S.parry*1000)}ms</dd><dt>Footsteps</dt><dd>${pc(S.noise)} as loud</dd><dt>Seen at</dt><dd>${pc(S.stealth)} of the usual light</dd><dt>Stamina recovery</dt><dd>${pc(S.staMul)}</dd>
+   ${S.cdr?`<dt>Cooldowns</dt><dd>${pc(S.cdr)} faster</dd>`:''}<dt>Fence pays</dt><dd>${pc(S.fence)}</dd></dl>
+   <p class="note">${({thief:'Each level: +2 Agility, +1 Perception, +1 Vitality.',warrior:'Each level: +2 Strength, +2 Vitality.',wizard:'Each level: +2 Intellect, +1 Perception, +1 Vitality.'})[INV.cls]} Levels are never lost, even when your gear is.</p></div>`;}
+function renderInv(){CELL=Math.max(28,Math.min(38,Math.floor((window.innerWidth-56)/10)));const c=PROF.chars[INV.cls];const el=$('#invbox');const ctx=INV.ctx;
+  const doll=`<div class="doll">${SLOTS.map(s=>{const it=c.eq[s];return `<div class="slot s-${s}" data-drop="eq" data-key="${s}"><span class="sl">${SLOTNAME[s]}</span>${it?itemEl(it,'eq',s):''}</div>`;}).join('')}<div class="figure f-${INV.cls}"></div></div>`;
+  let side='';
+  if(INV.shop==='vendor'){side=`<h3>The vendor</h3><p class="note">Drag to buy. Drop your things here to sell them.</p><div class="shop" data-drop="sell">${INV.stock.map((it,i)=>`<div class="shoprow">${itemEl(it,'shop',i)}<span><b style="color:${itemColor(it)}">${esc(itemName(it))}</b><br><span class="mono">${buyPrice(it)}g</span></span></div>`).join('')||'<p class="note">Sold out.</p>'}</div>
+      <div class="consbuy">${CONS.map(k=>`<button class="btn sm" data-cons="${k}">${ITEMS[k].name} ${ITEMS[k].price}g</button>`).join('')}</div><button class="linkbtn" id="restock">New stock (25g)</button>`;}
+  else if(INV.shop==='gambler'){side=`<h3>The gambler</h3><p class="note">Pay for a covered item. Most are junk. Some aren't.</p><div class="gamble">${Object.entries(GAMBLE).map(([k,g])=>`<button class="btn" data-gamble="${k}">${g.n}<span class="mono">${g.p}g</span></button>`).join('')}</div>
+      ${INV.gambled?`<div class="gambled">${iconSVG(INV.gambled,48)}<b style="color:${itemColor(INV.gambled)}">${esc(itemName(INV.gambled))}</b></div>`:''}<p class="note">Odds here: about 1 in 3 is Fine, 1 in 5 Rare, 1 in 10 Masterwork, 1 in 25 Legendary.</p>`;}
+  else if(ctx!=='run')side=`<h3>Stash</h3><p class="note">Shared by all three of your characters.</p>${gridHTML('stash',STW,STH)}`;
+  else side=`<h3>On the job</h3><p class="note">Your stash is back home. Anything in your bag or on you is lost if you fall, except what's in your sewn-in pocket.</p>`;
+  const it=INV.sel&&refItem(INV.sel);let acts='';
+  if(it){const b=GB[it.b],src=INV.sel.src;const A=[];if(src!=='eq'&&src!=='shop'&&canUse(b,INV.cls))A.push(['equip','Equip']);if(src!=='eq'&&src!=='shop')A.push(['pocket','Pocket']);if(src!=='bag'&&src!=='shop')A.push(['bag','To bag']);
+    if(src!=='stash'&&src!=='shop'&&ctx!=='run')A.push(['stash','To stash']);if(INV.shop==='vendor'&&src!=='shop')A.push(['sell',`Sell ${sellPrice(it)}g`]);if(src==='shop')A.push(['buy',`Buy ${buyPrice(it)}g`]);if(src!=='shop')A.push(['drop','Drop']);
+    acts=`<div class="selbar"><div class="tip">${itemTip(it,INV.cls,src==='shop'?buyPrice(it):null)}</div><div class="acts">${A.map(([k,l])=>`<button class="btn sm" data-act="${k}">${l}</button>`).join('')}</div></div>`;}
+  el.innerHTML=`<div class="invtop"><div class="tabs">${ROLES.map(r=>`<button class="tab ${r===INV.cls?'on':''}" data-cls="${r}" ${ctx!=='board'&&r!==INV.cls?'disabled':''} style="--cc:${CLS[r].color}">${CLS[r].name} <span class="mono">${PROF.chars[r].lvl}</span></button>`).join('')}</div>
+     <span class="mono gold">${PROF.gold.toLocaleString()} gold</span><button class="btn" id="invClose">Close (I)</button></div>
+    <div class="invmsg">${INV.msg||'&nbsp;'}</div>
+    <div class="invcols"><div class="col1">${doll}${statsHTML()}</div><div class="col2"><h3>Bag</h3>${gridHTML('bag',BAGW,BAGH)}${acts||'<p class="note">Click an item to see it. Drag to move, equip or sell.</p>'}</div><div class="col3">${side}</div></div>`;
+  el.querySelector('#invClose').onclick=closeInv;
+  el.querySelectorAll('[data-cls]').forEach(b=>b.onclick=()=>{if(INV.ctx!=='board')return;INV.cls=b.dataset.cls;INV.sel=null;renderInv();});
+  el.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>invAction(b.dataset.act));
+  el.querySelectorAll('[data-gamble]').forEach(b=>b.onclick=()=>gamble(b.dataset.gamble));
+  el.querySelectorAll('[data-cons]').forEach(b=>b.onclick=()=>{const k=b.dataset.cons;if(PROF.gold<ITEMS[k].price){say('Not enough gold.',1);}else{PROF.gold-=ITEMS[k].price;PROF.stash[k]++;if(beltTotal()<BELT)PROF.belt[k]++;say(`Bought a ${ITEMS[k].name.toLowerCase()}. It's on your belt if there's room.`);saveProf();}renderInv();});
+  const rs=el.querySelector('#restock');if(rs)rs.onclick=()=>{if(PROF.gold<25){say('Not enough gold.',1);}else{PROF.gold-=25;makeStock();say('Fresh stock off the cart.');}renderInv();};
+  el.querySelectorAll('.itm').forEach(n=>{n.addEventListener('pointerdown',dragStart);n.addEventListener('pointerenter',ev=>showTip(ev,n));n.addEventListener('pointerleave',()=>{$('#invtip').hidden=true;});});}
+function showTip(ev,n){if(INV.drag)return;const it=refItem({src:n.dataset.src,key:n.dataset.src==='eq'?n.dataset.key:+n.dataset.key});if(!it)return;const t=$('#invtip');t.innerHTML=itemTip(it,INV.cls,n.dataset.src==='shop'?buyPrice(it):null);t.hidden=false;
+  const r=n.getBoundingClientRect();t.style.left=Math.min(window.innerWidth-260,r.right+8)+'px';t.style.top=Math.max(8,Math.min(window.innerHeight-t.offsetHeight-8,r.top))+'px';}
+function dragStart(ev){if(ev.button!==0&&ev.pointerType==='mouse')return;ev.preventDefault();const n=ev.currentTarget;const r={src:n.dataset.src,key:n.dataset.src==='eq'?n.dataset.key:+n.dataset.key};const it=refItem(r);if(!it)return;
+  const b=GB[it.b];const rect=n.getBoundingClientRect();INV.drag={r,sx:ev.clientX,sy:ev.clientY,moved:false,ox:ev.clientX-rect.left,oy:ev.clientY-rect.top,w:b.w,h:b.h};
+  const gh=$('#invghost');gh.innerHTML=iconSVG(it,44);gh.style.width=b.w*CELL+'px';gh.style.height=b.h*CELL+'px';gh.style.setProperty('--rc',itemColor(it));
+  const mv=e=>{const d=INV.drag;if(!d)return;if(Math.hypot(e.clientX-d.sx,e.clientY-d.sy)>5){d.moved=true;gh.hidden=false;$('#invtip').hidden=true;}gh.style.left=(e.clientX-Math.min(d.ox,CELL/2))+'px';gh.style.top=(e.clientY-Math.min(d.oy,CELL/2))+'px';};
+  const up=e=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);gh.hidden=true;const d=INV.drag;INV.drag=null;if(!d)return;
+    if(!d.moved){INV.sel=(INV.sel&&INV.sel.src===d.r.src&&INV.sel.key===d.r.key)?null:d.r;INV.dropArm=null;renderInv();return;}
+    const hit=document.elementFromPoint(e.clientX,e.clientY);const z=hit&&hit.closest('[data-drop]');if(!z){return;}
+    const kind=z.dataset.drop;if(kind==='eq')moveItem(d.r,{src:'eq',key:z.dataset.key});else if(kind==='sell')moveItem(d.r,{src:'sell'});
+    else{const zr=z.getBoundingClientRect();const x=Math.round((e.clientX-Math.min(d.ox,CELL/2)-zr.left)/CELL),y=Math.round((e.clientY-Math.min(d.oy,CELL/2)-zr.top)/CELL);moveItem(d.r,{src:kind,x,y});}
+    saveProf();renderInv();};
+  window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);}
+
+loadProf();ensureChars();
+function renderStash(){const el=$('#stash');if(!el)return;ensureChars();const P=PROF;
+  el.innerHTML=`<div class="stashhead"><h3>Your crew</h3><span class="mono gold">${P.gold.toLocaleString()} gold</span></div>
     ${P.haul?`<p class="note haul">${esc(P.haul)}</p>`:''}
-    <div class="stashgrid">${['draught','tonic','firepot'].map(k=>{const I=ITEMS[k];return `<div class="stitem"><b>${I.name}</b><span class="note">${I.desc}</span>
+    <div class="crewcards">${ROLES.map(r=>{const c=P.chars[r],S=calcStats(r);return `<button class="ccard" data-inv="${r}" style="--cc:${CLS[r].color}"><span class="cchead"><b>${CLS[r].name}</b><span class="mono">Level ${c.lvl}</span></span>
+      <span class="xpbar"><i style="width:${Math.min(100,c.xp/xpNeed(c.lvl)*100)}%"></i></span><span class="note">${esc(S.weapon)} · ${S.hp} health · ${S.armorPts} armor</span></button>`;}).join('')}</div>
+    <div class="gearrow"><button class="btn primary" id="gearBtn">Characters and gear</button><button class="btn" id="soloTavern">Visit the tavern</button><span class="note">The vendor sells honest kit. The gambler sells covered items: mostly junk, sometimes not.</span></div>
+    <h4 class="beltH">Belt</h4>
+    <div class="stashgrid">${Object.keys(ITEMS).map(k=>{const I=ITEMS[k];return `<div class="stitem"><b>${I.name}</b><span class="note">${I.desc}</span>
       <span class="row"><span>In stash: <b class="mono">${P.stash[k]}</b></span><button class="btn sm" data-buy="${k}" ${P.gold<I.price?'disabled':''}>Buy ${I.price}g</button></span>
       <span class="row"><span>On your belt: <b class="mono">${P.belt[k]}</b></span><span><button class="btn sm" data-belt="${k}" data-d="-1" ${P.belt[k]<=0?'disabled':''}>−</button> <button class="btn sm" data-belt="${k}" data-d="1" ${P.belt[k]>=P.stash[k]||beltTotal()>=BELT?'disabled':''}>+</button></span></span></div>`;}).join('')}</div>
-    <p class="note">Your belt holds ${BELT}. What you carry onto a job is at risk: die or abandon the run and it's gone. Get out by the stairs and whatever is left comes home, and the fence buys everything in your pack.</p>`;
+    <p class="note">Your belt holds ${BELT}. Everything you carry onto a job is at risk: fall or abandon the run and you lose your bag and what you're wearing, except the sewn-in pocket. Get out by the stairs and the fence buys your valuables. Levels and attributes are never lost.</p>`;
   el.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const k=b.dataset.buy;if(PROF.gold<ITEMS[k].price)return;PROF.gold-=ITEMS[k].price;PROF.stash[k]++;if(beltTotal()<BELT)PROF.belt[k]++;saveProf();renderStash();});
-  el.querySelectorAll('[data-belt]').forEach(b=>b.onclick=()=>{const k=b.dataset.belt,d=+b.dataset.d;const n=PROF.belt[k]+d;if(n<0||n>PROF.stash[k]||(d>0&&beltTotal()>=BELT))return;PROF.belt[k]=n;saveProf();renderStash();});}
-function packBelt(){const out=[];for(const k of ['draught','tonic','firepot'])for(let i=0;i<PROF.belt[k];i++){out.push(k);PROF.stash[k]--;}
+  el.querySelectorAll('[data-belt]').forEach(b=>b.onclick=()=>{const k=b.dataset.belt,d=+b.dataset.d;const n=PROF.belt[k]+d;if(n<0||n>PROF.stash[k]||(d>0&&beltTotal()>=BELT))return;PROF.belt[k]=n;saveProf();renderStash();});
+  el.querySelectorAll('[data-inv]').forEach(b=>b.onclick=()=>{INV.cls=b.dataset.inv;openInv('board');});
+  $('#gearBtn').onclick=()=>openInv('board');$('#soloTavern').onclick=()=>startTavern('solo');}
+function packBelt(){const out=[];for(const k of Object.keys(ITEMS))for(let i=0;i<PROF.belt[k];i++){out.push(k);PROF.stash[k]--;}
   for(const k in PROF.belt)PROF.belt[k]=Math.min(PROF.belt[k],PROF.stash[k]);PROF.haul=null;saveProf();
-  // the belt you take next time defaults to what you took this time, if you can still afford to fill it
   return out;}
-function packWeight(){return G.pack.reduce((a,k)=>a+ITEMS[k].w,0);}
-function packValue(){return G.pack.reduce((a,k)=>a+ITEMS[k].v,0);}
-function settle(ok,pay){if(!G||G.tavern||G.settled)return;G.settled=true;const lines=[];
-  if(ok){const back=G.belt.filter(Boolean);for(const k of back){PROF.stash[k]++;}const v=packValue();PROF.gold+=v+(pay||0);
+function bagValue(cls){return PROF.chars[cls].bag.reduce((a,e)=>a+(GB[e.it.b].val?GB[e.it.b].v:0),0);}
+function settle(ok,pay){if(!G||G.tavern||G.settled)return;G.settled=true;const lines=[];ensureChars();const c=PROF.chars[G.cls],S=calcStats(G.cls);let xp=G.xpRun||0;
+  if(ok){const back=G.belt.filter(Boolean);for(const k of back){PROF.stash[k]++;}
     for(const k of back)if(beltTotal()<BELT&&PROF.belt[k]<PROF.stash[k])PROF.belt[k]++;
-    if(v)lines.push(`The fence paid ${v} gold for ${G.pack.length} item${G.pack.length>1?'s':''} from your pack.`);if(pay)lines.push(`Your cut of the strongbox: ${pay} gold.`);if(back.length)lines.push(`${back.length} belt item${back.length>1?'s':''} came home.`);}
-  else{const lost=G.belt.filter(Boolean).length+G.pack.length;if(lost)lines.push(`You lost ${lost} item${lost>1?'s':''} you were carrying.`);}
+    const vals=c.bag.filter(e=>GB[e.it.b].val);let v=0;for(const e of vals)v+=Math.round(GB[e.it.b].v*S.fence);c.bag=c.bag.filter(e=>!GB[e.it.b].val);
+    PROF.gold+=v+(pay||0);xp+=50+(G.looted?150:0);
+    if(v)lines.push(`The fence paid ${v} gold for ${vals.length} valuable${vals.length>1?'s':''}.`);if(pay)lines.push(`Your cut of the strongbox: ${pay} gold.`);
+    const ng=(G.gearFound||0);if(ng)lines.push(`You brought home ${ng} piece${ng>1?'s':''} of gear. It's in the ${CLS[G.cls].name}'s bag.`);
+    if(back.length)lines.push(`${back.length} belt item${back.length>1?'s':''} came home.`);}
+  else{xp=Math.floor(xp/2);let n=c.bag.length+G.belt.filter(Boolean).length;c.bag=[];
+    for(const s of SLOTS){if(s==='pocket'||!c.eq[s])continue;if(!(c.eq[s].r===0&&c.eq[s].s===1&&!c.eq[s].a.length))n++;delete c.eq[s];}
+    const kit=STARTKIT[G.cls];for(const s of SLOTS)if(kit[s]&&!c.eq[s])c.eq[s]=makeItem(kit[s],0,1);
+    if(n)lines.push(`You lost ${n} item${n>1?'s':''}: your bag and everything you wore${c.eq.pocket?', except what was sewn into your pocket':''}. The fence lends you some plain kit to get started again.`);}
+  if(xp){const ups=awardXP(G.cls,xp);lines.push(`+${xp} xp for the ${CLS[G.cls].name}.`);if(ups.length)lines.push(`Level up! The ${CLS[G.cls].name} is now level ${c.lvl}.`);}
   PROF.haul=lines.join(' ')||null;saveProf();return PROF.haul;}
+/* valuables by room; each biome adds its own */
+const LOOTT={hall:[['purse',3],['silver',2],['signet',1],['candlestick',2]],barracks:[['purse',4],['signet',1]],captain:[['ledger',3],['signet',2],['gems',1],['deeds',2]],vault:[['idol',3],['silver',2],['gems',2],['painting',1]],
+  larder:[['silver',3],['purse',1],['goblet',1]],pool:[['signet',2],['idol',1],['gems',1]]};
+const LOOTB={crypt:[['grave',3],['reliquary',1],['candlestick',1]],sewer:[['purse',2],['trinkets',1],['goblet',1]],keep:[['silver',2],['painting',1],['ledger',1]],lair:[['trinkets',4],['ratcrown',1]]};
+function pickW(R,tb){let tot=tb.reduce((a,b)=>a+b[1],0),r=R()*tot;for(const [k,wt] of tb){if((r-=wt)<0)return k;}return tb[0][0];}
 function placeLoot(w,seed,taken){const R=mulberry(seed^0x10071);const out=[];const occ=new Set(w.enemies.map(o=>Math.floor(o.x)+','+Math.floor(o.y)));for(const t of w.traps)occ.add(t.x+','+t.y);
-  const table={hall:[['purse',3],['silver',2],['ring',1]],barracks:[['purse',4],['ring',1]],captain:[['ledger',3],['ring',2],['silver',1]],vault:[['idol',3],['silver',2]],larder:[['silver',3],['purse',1]],pool:[['ring',2],['idol',1]]};
-  for(const c of w.cells){if(c.role==='entrance')continue;const tb=c.crew?table.vault:table[c.role]||table.hall;const n=c.crew?3:c.role==='vault'?2:c.role==='hall'?(R()<.55?1:0):1+(R()<.4?1:0);
+  const extra=LOOTB[w.biome]||[];
+  for(const c of w.cells){if(c.role==='entrance')continue;const tb=(c.crew?LOOTT.vault:LOOTT[c.role]||LOOTT.hall).concat(extra);const n=c.crew?3:c.role==='vault'?2:c.role==='hall'?(R()<.55?1:0):1+(R()<.4?1:0);
+    const gearN=c.crew?1:c.role==='vault'?1:c.role==='captain'?(R()<.5?1:0):R()<.12?1:0;
     const spots=[];for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++){if(w.t[y][x]!==FLOOR||occ.has(x+','+y))continue;if(DIRS.some(([dx,dy])=>w.t[y+dy][x+dx]===WALL))spots.push([x,y]);}
-    for(let i=0;i<n&&spots.length;i++){const [x,y]=spots.splice(Math.floor(R()*spots.length),1)[0];occ.add(x+','+y);let tot=tb.reduce((a,b)=>a+b[1],0),r=R()*tot,k=tb[0][0];for(const [kk,wt] of tb){if((r-=wt)<0){k=kk;break;}}
-      out.push({id:out.length,x:x+.5,y:y+.5,k,taken:false});}}
+    for(let i=0;i<n+gearN&&spots.length;i++){const [x,y]=spots.splice(Math.floor(R()*spots.length),1)[0];occ.add(x+','+y);let it;
+      if(i>=n){const g=randomGear(R,null,c.crew||c.role==='vault',null);it={b:g.b,r:g.r,s:g.s};}else it={b:pickW(R,tb),r:0,s:1};
+      out.push({id:out.length,x:x+.5,y:y+.5,it,taken:false});}}
   for(const id of taken||[])if(out[id])out[id].taken=true;return out;}
+function lootItem(l){if(!l.item)l.item=makeItem(l.it.b,l.it.r,l.it.s);return l.item;}
+/* the host (or solo player) rolls drops when something dies */
+function dropGear(e){if(G.mode==='client'||G.tavern||!G.w.loot)return;const ft=FT(e);const ch=e.captain?1:ft.heavy?.6:e.reinf?.04:.07;if(Math.random()>ch)return;
+  const R=mulberry((Math.random()*1e9)>>>0);const g=randomGear(R,Math.random()<.5?G.cls:null,!!(e.captain||ft.heavy),null);
+  let x=e.x,y=e.y;if(!walkT(tileAt(x,y))){x=Math.floor(x)+.5;y=Math.floor(y)+.5;}
+  G.w.loot.push({id:G.w.loot.length,x,y,it:{b:g.b,r:g.r,s:g.s},taken:false,drop:true});G.featDirty=true;
+  if(g.r>=2){const t=`${nameOf(e)} drops something that glints ${RAR[g.r].n.toLowerCase()}.`;log(t,'good');if(G.mode==='host')netLog(t,'good');}}
+function foeXP(e){return e.captain?80:FT(e).heavy?30:e.reinf?6:10;}
 function useBelt(i){const P=G.P,k=G.belt[i];if(!k||G.over||G.down>0||G.tavern)return;
-  if(k==='draught'){P.heal=45;log('You knock back a healing draught.','good');}
+  if(k==='draught'){P.heal=45*(G.S.fx&&G.S.fx.saint?2:1);log('You knock back a healing draught.','good');}
   else if(k==='tonic'){P.st=100;P.tonic=10;log('The bitter tonic burns going down. Your breath comes easy.','good');}
   else if(k==='firepot'){breakInvis('Throwing breaks your invisibility.');const cam=R3.camera;const dir=new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion);
     G.proj.push({kind:'fire',pot:true,pos:cam.position.clone().add(dir.clone().multiplyScalar(.5)),vel:dir.clone().multiplyScalar(10).add(new THREE.Vector3(0,2.5,0)),t:0});log('You hurl a firepot.');}
+  else if(k==='smoke'){G.bursts=G.bursts||[];G.bursts.push({x:P.x,y:P.y,t:0,col:0x8a8a8a});
+    if(G.mode==='client'){sendAct({t:'smoke'});log('You smash a smoke bomb at your feet.');}
+    else{const n=ccCone(P.x,P.y,0,'smoke',{key:'me'});log(n?`Smoke! ${n} foe${n>1?'s':''} choke and lose sight of you.`:'Smoke billows around you.','good');}}
   G.belt[i]=null;G.sideDirty=true;}
+function renderPack(){const el=$('#packP');if(!el)return;if(G.tavern||!G.belt){el.innerHTML=`<li class="note">Press I (or Tab) for your gear and bag. The vendor and the gambler are at the counters by the walls.</li>`;return;}
+  ensureChars();const c=PROF.chars[G.cls];const used=c.bag.reduce((a,e)=>a+GB[e.it.b].w*GB[e.it.b].h,0);
+  el.innerHTML=`<li class="ph"><span>Carrying</span><span class="mono">${used}/${BAGW*BAGH} · ${bagValue(G.cls)}g in valuables</span></li>`+
+    (c.bag.length?c.bag.slice(-7).reverse().map(e=>`<li><span style="color:${itemColor(e.it)}">${esc(itemName(e.it))}</span><span class="mono">${GB[e.it.b].val?GB[e.it.b].v+'g':RAR[e.it.r].n}</span></li>`).join(''):'<li class="note">Empty. Look for valuables along the walls.</li>')+
+    `<li class="note">Press I (or Tab) to open your bag and change gear.</li>`;}
 /* ---------- enemy types: each wants a different answer ---------- */
 const FOES={
   guard:{hp:40,dmg:20,wind:.85,cool:1.35,speed:1},
@@ -897,12 +1286,12 @@ function moveAbility(){const P=G.P;if(G.paused||G.down>0||G.tavern&&false)return
   if(P.dodgeCd>0||P.st<28||P.climb)return;
   const K=G.keys;let f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0);if(G.stick[0]||G.stick[1]){s=G.stick[0];f=-G.stick[1];}if(!f&&!s)f=1;
   const fx=-Math.sin(P.yaw),fy=-Math.cos(P.yaw),rx=Math.cos(P.yaw),ry=-Math.sin(P.yaw);const l=Math.hypot(f,s);const dx=(fx*f+rx*s)/l,dy=(fy*f+ry*s)/l;
-  if(G.cls==='warrior'){P.charge=.42;P.chargeDir=[fx,fy];P.chargeHit=new Set();P.st-=28;P.stDelay=1;P.dodgeCd=1;P.blocking=false;if(G.mode!=='client')noise(P.x,P.y,10,.5,.8,true);log('You put your shoulder down and charge.');return;}
+  if(G.cls==='warrior'){P.charge=.42;P.chargeDir=[fx,fy];P.chargeHit=new Set();P.st-=28*(G.S.moveCost||1);P.stDelay=1;P.dodgeCd=1;P.blocking=false;if(G.mode!=='client')noise(P.x,P.y,10,.5,.8,true);log('You put your shoulder down and charge.');return;}
   // wizard blink: walls stop it, pits don't
   let bx=P.x,by=P.y;const steps=26;let land=null;for(let i=1;i<=steps;i++){const x=P.x+dx*2.8*i/steps,y=P.y+dy*2.8*i/steps;const t=tileAt(x,y);if(opaqueT(t)||t===LEDGE||t===GATE||t===BARR||t===WARD)break;if(!blockedAt(x,y,.24))land=[x,y];}
   if(!land||Math.hypot(land[0]-P.x,land[1]-P.y)<.4){toast('Nowhere to blink.');return;}
   G.bursts=G.bursts||[];G.bursts.push({x:P.x,y:P.y,t:.2,col:0x9a95f5});P.x=land[0];P.y=land[1];G.bursts.push({x:P.x,y:P.y,t:.2,col:0x9a95f5});
-  P.st-=28;P.stDelay=1;P.dodgeCd=1.1;P.iframe=.25;breakInvis('Blinking breaks your invisibility.');if(G.mode!=='client')noise(P.x,P.y,4,.3,.6);}
+  P.st-=28*(G.S.moveCost||1);P.stDelay=1;P.dodgeCd=1.1;P.iframe=.25;breakInvis('Blinking breaks your invisibility.');if(G.mode!=='client')noise(P.x,P.y,4,.3,.6);}
 function updMove(dt){const P=G.P;
   if(P.charge>0){P.charge-=dt;const k=9/T*dt;const mx=P.chargeDir[0]*k,my=P.chargeDir[1]*k;
     const ax=Math.floor(P.x+P.chargeDir[0]*.5),ay=Math.floor(P.y+P.chargeDir[1]*.5);if(G.w.t[ay]&&G.w.t[ay][ax]===BARR){const d={k:'tile',x:ax,y:ay};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:'warrior',name:'You'});P.charge=0;}
@@ -919,7 +1308,7 @@ function startRun(m,cls,opts){
   const rt=m.state&&m.state.rt;
   for(const e of w.enemies){if(!(rt&&m.state.pos[e.id])){e.x+=.5;e.y+=.5;}
     Object.assign(e,{ang:e.homeAng,aw:0,state:e.base,atk:0,cool:0,path:null,repath:0,timer:Math.random()*2,unseen:0,look:0,walkPh:Math.random()*6});}
-  const S=STATS[cls];
+  const S=runStats(cls);
   let best=DIRS[0],bl=-1;for(const d of DIRS){let l=0;while(l<12&&walkT(w.t[w.start[1]+d[1]*(l+1)]?.[w.start[0]+d[0]*(l+1)]))l++;if(l>bl){bl=l;best=d;}}
   G={m,w,cls,S,torches:placeTorches(w,m.seed),time:0,log:[],did:[],kills:0,over:false,looted:false,explored:new Set(),proj:[],prev:{},
     mode:opts.mode||'solo',mp:!!opts.mode,down:0,swingN:0,lastActor:'me',credits:{},wsig:'',
@@ -927,14 +1316,14 @@ function startRun(m,cls,opts){
     P:{x:w.start[0]+.5,y:w.start[1]+.5,yaw:Math.atan2(-best[0],-best[1]),pitch:0,hp:S.hp,max:S.hp,st:100,stDelay:0,blocking:false,blockAt:-9,dodge:0,dodgeCd:0,iframe:0,arrows:{broad:8,water:3,rope:2},arrowSel:'broad',crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
   for(const id of (w.snuffed||[]))if(G.torches[id])G.torches[id].out=true;
   G.objs=objList(m,BIOMES[m.biome].boss);
-  G.belt=packBelt();G.pack=[];w.loot=placeLoot(w,m.seed,m.state&&m.state.lo);
+  G.belt=packBelt();G.xpRun=0;G.gearFound=0;G.fromTav=!!opts.fromTav;w.loot=placeLoot(w,m.seed,m.state&&m.state.lo);
   G.eproj=[];G.eprojV=[];
   for(const [x,y,t] of (m.state&&m.state.ro)||[])if(w.t[y]&&CREWT.includes(w.t[y][x]))w.t[y][x]=t;w.ropes=((m.state&&m.state.ro)||[]).slice();
   w.bell=placeBell(w,m.seed);w.bellCut=!!(m.state&&m.state.bc);G.alarm=(m.state&&m.state.al)||0;G.alarmT=0;G.alertT=0;G.calmT=0;G.waves=0;G.waveT=0;G.baseN=w.enemies.length;
   for(const r in G.objs)for(const o of G.objs[r])G.prev[o.id]=objDone(w,o.id);
   if(w.scried)for(let i=0;i<w.W*w.H;i++)G.explored.add(i);
   $('#board').hidden=true;$('#game').hidden=false;
-  $('#gTitle').textContent=m.title;const b=$('#gClass');b.textContent=CLS[cls].name;b.style.color=CLS[cls].color;
+  $('#gTitle').textContent=m.title;$('#abandon').textContent='Abandon run';const b=$('#gClass');b.textContent=CLS[cls].name;b.style.color=CLS[cls].color;
   $('#toasts').innerHTML='';
   $('#abl').innerHTML=KIT[cls].lines.map(l=>`<li>${l}</li>`).join('');
   const prior=m.history.length?` Earlier on this job: ${m.history.map(h=>(h.by==='You'?'you':h.by)+' as '+CLS[h.cls].name).join(', ')}.`:'';
@@ -990,12 +1379,14 @@ view.addEventListener('touchmove',ev=>{ev.preventDefault();for(const t of ev.cha
   if(t.identifier===lookId&&lookLast){look((t.clientX-lookLast[0])*2,(t.clientY-lookLast[1])*2);lookLast=[t.clientX,t.clientY];}}},{passive:false});
 view.addEventListener('touchend',ev=>{for(const t of ev.changedTouches){if(t.identifier===stickId){stickId=null;if(G)G.stick=[0,0];knob.style.transform='';}if(t.identifier===lookId)lookId=null;}});
 document.querySelectorAll('.tbtns button').forEach(b=>b.addEventListener('touchstart',ev=>{ev.preventDefault();if(!G||G.paused)return;const t=b.dataset.t;
-  if(t==='attack')attack();else if(t==='block')G.blockHeld=true;else if(t==='dodge')moveAbility();else if(t==='belt'){const i=G.belt?G.belt.findIndex(Boolean):-1;if(i>=0)useBelt(i);}else if(t==='use')interact();else if(t==='crouch'){G.P.crouch=!G.P.crouch;}else{const A=KIT[G.cls].abil[+t-1];if(A)useAbility(A.id);}},{passive:false}));
+  if(t==='attack')attack();else if(t==='block')G.blockHeld=true;else if(t==='dodge')moveAbility();else if(t==='belt'){const i=G.belt?G.belt.findIndex(Boolean):-1;if(i>=0)useBelt(i);}else if(t==='use')interact();else if(t==='inv')openInv(G.tavern?'tavern':'run');else if(t==='crouch'){G.P.crouch=!G.P.crouch;}else{const A=KIT[G.cls].abil[+t-1];if(A)useAbility(A.id);}},{passive:false}));
 document.querySelectorAll('.tbtns button[data-t="block"]').forEach(b=>b.addEventListener('touchend',()=>{if(G)G.blockHeld=false;}));
 document.addEventListener('keydown',ev=>{
+  if(INV.open){if(['KeyI','Tab','Escape'].includes(ev.code)){ev.preventDefault();closeInv();}return;}
   if(!G||$('#game').hidden||ev.target.tagName==='TEXTAREA'||!$('#modal').hidden)return;
   G.keys[ev.code]=true;
   if(['KeyW','KeyA','KeyS','KeyD','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ControlLeft'].includes(ev.code))ev.preventDefault();
+  if((ev.code==='KeyI'||ev.code==='Tab')&&!ev.repeat&&!G.over){ev.preventDefault();G.keys={};openInv(G.tavern?'tavern':'run');return;}
   if(G.paused)return;
   if(ev.code==='KeyC'||ev.code==='ControlLeft'||ev.code==='ControlRight'){if(!ev.repeat)G.P.crouch=!G.P.crouch;}
   if(ev.code==='KeyE'||ev.code==='KeyF'){if(!ev.repeat)interact();}
@@ -1016,7 +1407,7 @@ function update(dt){
   if(G.glimpse>0)G.glimpse-=dt;
   if(P.swing>0)P.swing-=dt;
   if(G.down>0){G.down-=dt;if(G.down<=0){G.down=0;P.x=G.w.start[0]+.5;P.y=G.w.start[1]+.5;P.hp=Math.ceil(P.max/2);log('You stagger back to your feet at the stairs.');setPause(G.paused);}}
-  const inputOn=!G.paused&&G.down<=0&&!P.climb&&!(P.charge>0);const K=inputOn?G.keys:{};if(!inputOn)G.stick=G.paused?[0,0]:G.stick;
+  const inputOn=!G.paused&&!INV.open&&G.down<=0&&!P.climb&&!(P.charge>0);const K=inputOn?G.keys:{};if(!inputOn)G.stick=G.paused?[0,0]:G.stick;
   // movement
   if(K.ArrowLeft)P.yaw+=2.2*dt;if(K.ArrowRight)P.yaw-=2.2*dt;
   let f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0);
@@ -1025,28 +1416,28 @@ function update(dt){
   if(P.guardBroken>0)P.guardBroken-=dt;if(P.iframe>0)P.iframe-=dt;if(P.dodgeCd>0)P.dodgeCd-=dt;
   const len=Math.hypot(f,s);P.sprint=!!(K.ShiftLeft||K.ShiftRight)&&f>0&&!P.crouch&&!P.blocking&&P.st>2;
   if(P.sprint&&len>.1){P.st-=13*dt;P.stDelay=.6;}
-  if(P.stDelay>0)P.stDelay-=dt;else if(!P.blocking)P.st=Math.min(100,P.st+(G.cls==='warrior'?20:24)*dt);
+  if(P.stDelay>0)P.stDelay-=dt;else if(!P.blocking)P.st=Math.min(100,P.st+(G.cls==='warrior'?20:24)*(S.staMul||1)*dt);
   if(P.heal>0){const h=Math.min(P.heal,15*dt);P.heal-=h;P.hp=Math.min(P.max,P.hp+h);}
   if(P.tonic>0){P.tonic-=dt;P.st=Math.min(100,P.st+24*dt);}
   if(!G.tavern)updMove(dt);
   if(P.dodge>0){P.dodge-=dt;const k=7.5/T*dt;const mx=P.dodgeDir[0]*k,my=P.dodgeDir[1]*k;if(!blockedAt(P.x+mx,P.y,.24))P.x+=mx;if(!blockedAt(P.x,P.y+my,.24))P.y+=my;}
-  let spd=S.walk*(P.crouch?.5:P.sprint?1.75:1)*(P.blocking?.5:1)*(G.looted?.85:1)*(!G.tavern&&G.pack&&packWeight()>PACKCAP[G.cls]*.7?.88:1);
+  let spd=S.walk*(P.crouch?.5:P.sprint?1.75:1)*(P.blocking?.5:1)*(G.looted?.85:1);
   P.moving=len>.1;
   if(P.moving){const fx=-Math.sin(P.yaw),fy=-Math.cos(P.yaw),rx=Math.cos(P.yaw),ry=-Math.sin(P.yaw);const k=Math.min(1,len)/len*spd/T*dt;
     const mx=(fx*f+rx*s)*k,my=(fy*f+ry*s)*k;const r=.24;
     const stuck=blockedAt(P.x,P.y,r);if(stuck||!blockedAt(P.x+mx,P.y,r))P.x+=mx;if(stuck||!blockedAt(P.x,P.y+my,r))P.y+=my;
     P.bob+=dt*spd*2.6;P.stepT-=dt*(P.sprint?1.6:1);
     if(P.stepT<=0){P.stepT=.5;const thief=G.cls==='thief',war=G.cls==='warrior';
-      const rad=P.crouch?(thief?0:2):P.sprint?(war?13:10):(thief?3:war?7:5);if(rad&&G.mode!=='client')noise(P.x,P.y,rad,P.sprint?.45:.3,.7,true);}}
+      const rad=P.crouch?(thief?0:2):P.sprint?(war?13:10):(thief?3:war?7:5);if(rad&&G.mode!=='client')noise(P.x,P.y,rad*(S.noise||1),P.sprint?.45:.3,.7,true);}}
   for(const e of G.w.enemies){if(e.dead)continue;const dx=P.x-e.x,dy=P.y-e.y,d=Math.hypot(dx,dy);if(d<.34&&d>0){P.x+=dx/d*(.34-d)*.5;P.y+=dy/d*(.34-d)*.5;if(blockedAt(P.x,P.y,.24)){P.x-=dx/d*(.34-d)*.5;P.y-=dy/d*(.34-d)*.5;}}}
   P.eye+=((P.crouch?CEYE:EYE)-P.eye)*Math.min(1,dt*10);
   // traps
   for(const tr of G.w.traps){if(tr.disarmed)continue;const d=Math.hypot(P.x-tr.x-.5,P.y-tr.y-.5);
-    if(G.cls==='thief'&&!tr.revealed&&d<1.9&&losT(P.x,P.y,tr.x+.5,tr.y+.5)){tr.revealed=true;G.featDirty=true;log('Your eye catches a pressure plate. Trap spotted.','good');if(G.mode==='client')sendAct({t:'rev',id:tr.id});}
+    if(G.cls==='thief'&&!tr.revealed&&d<(S.trap||1.9)&&losT(P.x,P.y,tr.x+.5,tr.y+.5)){tr.revealed=true;G.featDirty=true;log('Your eye catches a pressure plate. Trap spotted.','good');if(G.mode==='client')sendAct({t:'rev',id:tr.id});}
     if(d<.36&&G.down<=0){tr.disarmed=true;tr.revealed=true;G.featDirty=true;hurt(25,'Click. Darts hiss out of the wall.');if(G.mode==='client')sendAct({t:'trap',id:tr.id});else noise(tr.x+.5,tr.y+.5,12,.6,.9);if(G.over)return;}}
   // light & visibility
   G.lightT-=dt;if(G.lightT<=0){G.lightT=.1;G.light=lightAt(P.x,P.y);}
-  let v=G.light;if(P.crouch)v*=G.cls==='thief'?.28:.6;if(P.moving)v*=P.sprint?1.6:1.15;if(P.invis>0)v=0;G.vis=Math.min(1,v);
+  let v=G.light;if(P.crouch)v*=G.cls==='thief'?.28:.6;if(P.moving)v*=P.sprint?1.6:1.15;if(P.invis>0)v=0;G.vis=Math.min(1,v*(S.stealth||1));
   // explored
   G.expT-=dt;if(G.expT<=0){G.expT=.25;const px=Math.floor(P.x),py=Math.floor(P.y);for(let y=py-7;y<=py+7;y++)for(let x=px-7;x<=px+7;x++){if(x<0||y<0||x>=G.w.W||y>=G.w.H)continue;const key=y*G.w.W+x;if(G.explored.has(key))continue;if(losT(P.x,P.y,x+.5,y+.5)||(opaqueT(G.w.t[y][x])&&DIRS.some(([dx,dy])=>G.explored.has((y+dy)*G.w.W+x+dx))))G.explored.add(key);}}
   if(G.mode==='client'){for(const e of G.w.enemies){if(e.tx==null)continue;const k=Math.min(1,dt*10);e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.ang+=angDiff(e.tang,e.ang)*k;}}
@@ -1065,18 +1456,19 @@ function hurt(d,msg,src){const P=G.P,S=G.S;if(G.down>0)return;
   if(src&&P.blocking){const a=Math.abs(angDiff(Math.atan2(src.y-P.y,src.x-P.x),Math.atan2(fwd()[1],fwd()[0])));
     if(a<1.15){if(G.time-P.blockAt<S.parry){P.st=Math.max(0,P.st-5);G.parryFx=.25;log('Parry! They stagger back.','good');return 'parry';}
       const bf=src.heavy&&G.cls!=='warrior'?0:S.block;const cost=d*(G.cls==='warrior'?.8:1.3);P.st-=cost;P.stDelay=1;
+      if(P.st<0&&S.fx&&S.fx.bulwark)P.st=0;
       if(P.st<0){P.st=0;P.blocking=false;P.guardBroken=1.4;log('Your guard breaks!','bad');}
       else if(bf>0){d*=1-bf;G.blockFx=.15;}else log('Too heavy to block without a shield. Dodge or parry it.','bad');}}
   const dmg=Math.round(d*(1-S.armor));if(dmg<=0)return 'block';P.hp-=dmg;G.flash=true;log(`${msg} You take ${dmg}.`,'bad');if(P.hp<=0)die();return 'hit';}
 function dodge(){const P=G.P;if(G.paused||G.down>0||P.dodgeCd>0||P.st<18)return;
   const K=G.keys;let f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0);if(G.stick[0]||G.stick[1]){s=G.stick[0];f=-G.stick[1];}if(!f&&!s)f=-1;
   const fx=-Math.sin(P.yaw),fy=-Math.cos(P.yaw),rx=Math.cos(P.yaw),ry=-Math.sin(P.yaw);const l=Math.hypot(f,s);
-  P.dodgeDir=[(fx*f+rx*s)/l,(fy*f+ry*s)/l];P.dodge=.26;P.iframe=.3;P.dodgeCd=.7;P.st-=18;P.stDelay=.9;P.blocking=false;
+  P.dodgeDir=[(fx*f+rx*s)/l,(fy*f+ry*s)/l];P.dodge=.26;P.iframe=.3;P.dodgeCd=.7;P.st-=18*(G.S.moveCost||1);P.stDelay=.9;P.blocking=false;
   if(G.mode!=='client')noise(P.x,P.y,G.cls==='warrior'?7:4,.3,.7,true);}
-function ccCone(x,y,ang,kind,actor){const range=kind==='repel'?2.7:2.4,arc=kind==='repel'?.95:.85;let n=0;
+function ccCone(x,y,ang,kind,actor){const range=kind==='repel'?2.7:kind==='smoke'?2.8:2.4,arc=kind==='repel'?.95:kind==='smoke'?7:.85;let n=0;
   for(const e of G.w.enemies){if(e.dead)continue;const dx=e.x-x,dy=e.y-y,d=Math.hypot(dx,dy);if(d>range||(Math.abs(angDiff(Math.atan2(dy,dx),ang))>arc&&d>.5)||!losT(x,y,e.x,e.y))continue;n++;
     if(kind==='repel'){stagger(e,e.captain?.5:2.2);if(!e.captain){const ux=dx/(d||1),uy=dy/(d||1);for(let i=0;i<12;i++){const nx=e.x+ux*.12,ny=e.y+uy*.12;if(!walkT(tileAt(nx,ny)))break;e.x=nx;e.y=ny;}}}
-    else{stagger(e,e.captain?1.4:3.2);e.aw=1;}
+    else{stagger(e,e.captain?1.4:3.2);e.aw=1;if(kind==='smoke'){e.unseen=Math.max(e.unseen||0,4);e.last=[x+(Math.random()-.5)*6,y+(Math.random()-.5)*6];}}
     if(e.state!=='alert')goAlert(e,true,[x,y]);}
   noise(x,y,kind==='repel'?9:6,1,1);return n;}
 
@@ -1182,7 +1574,7 @@ function updGuard(e,dt){
       if(e.atk>0){e.atk-=dt;if(tp&&e.atk>e.atkMax*.4)turnTo(e,Math.atan2(tp.y-e.y,tp.x-e.x),dt*3);
         if(e.atk<=0&&FT(e).ranged&&!e.captain){e.cool=FT(e).cool;if(tp){const a=Math.atan2(tp.y-e.y,tp.x-e.x);G.eproj.push({x:e.x+Math.cos(a)*.4,y:e.y+Math.sin(a)*.4,vx:Math.cos(a)*4.5,vy:Math.sin(a)*4.5,t:0,dmg:e.dmg,id:e.id,name:nameOf(e)});}break;}
         if(e.atk<=0){e.cool=e.captain?1.7:FT(e).cool;for(const pl of players()){const dd=Math.hypot(pl.x-e.x,pl.y-e.y);if(dd>1.15||pl.invis||Math.abs(angDiff(Math.atan2(pl.y-e.y,pl.x-e.x),e.ang))>.9)continue;
-          if(pl.key==='me'){if(hurt(e.dmg,`${nameOf(e)} hits you.`,{x:e.x,y:e.y,heavy:!!(e.captain||FT(e).heavy)})==='parry')stagger(e,e.captain?1.1:1.7,true);}
+          if(pl.key==='me'){if(hurt(e.dmg,`${nameOf(e)} hits you.`,{x:e.x,y:e.y,heavy:!!(e.captain||FT(e).heavy)})==='parry'){stagger(e,e.captain?1.1:1.7,true);if(G.S.fx&&G.S.fx.fang){G.lastActor='me';applyHit(e,G.cls,'counter');}}}
           else{NET.hitsOut.push({n:++NET.hitSeq,to:pl.key,d:e.dmg,m:nameOf(e),id:e.id,hv:e.captain||FT(e).heavy?1:0});if(NET.hitsOut.length>8)NET.hitsOut.shift();}}}break;}
       if(FT(e).ranged&&!e.captain&&tp){const los=losT(e.x,e.y,tp.x,tp.y);
         if(d<2.2){const ux=(e.x-tp.x)/d,uy=(e.y-tp.y)/d;const bx=e.x+ux*1.5,by=e.y+uy*1.5;if(walkT(tileAt(bx,by)))moveTo(e,bx,by,3*sickMul,dt);else if(d<1&&e.cool<=0){e.atkMax=.6;e.atk=.6;}break;}
@@ -1203,22 +1595,23 @@ function applyHit(e,cls,kind,o){
   const say=(t,c)=>{if(me)log(t,c);if(G.mode==='host')netLog(me?t.replace(/^You /,'The host '):t,c);};
   if(kind==='melee'&&cls==='thief'&&o.bs&&e.state!=='alert'){
     if(e.undead&&!o.venom){e.hp-=25;say(`${who==='You'?'Your':who+"'s"} blade finds no heartbeat in ${lc(nameOf(e))}. The dead don't die quietly.`,'bad');if(e.hp<=0){kill(e,actor);return;}goAlert(e,true,o.src);e.hitT=G.time;return;}
-    if(!(e.captain||FT(e).noBackstab)||o.venom){say(`${who==='You'?'You slip':who+' slips'} a blade into ${lc(nameOf(e))}. Not a sound.`,'good');kill(e,actor);return;}
-    e.hp-=60;say(`${who==='You'?'Your':who+"'s"} backstab staggers ${lc(nameOf(e))}, but a captain takes more than one blade.`,'bad');goAlert(e,true,o.src);e.hitT=G.time;return;}
+    if(!(e.captain||FT(e).noBackstab)||o.venom||(o.fx&&o.fx.widow)){say(`${who==='You'?'You slip':who+' slips'} a blade into ${lc(nameOf(e))}. Not a sound.`,'good');kill(e,actor);return;}
+    e.hp-=o.bsx?95:60;say(`${who==='You'?'Your':who+"'s"} backstab staggers ${lc(nameOf(e))}, but a captain takes more than one blade.`,'bad');goAlert(e,true,o.src);e.hitT=G.time;return;}
   let d=0;
-  if(kind==='melee'){d={thief:18,warrior:30,wizard:8}[cls]||8;
+  if(kind==='melee'){d=o.dm||({thief:18,warrior:30,wizard:8}[cls]||8);if(o.fx&&o.fx.grave&&e.undead)d*=2;
     if(cls==='thief'&&e.atk>0){d*=2;stagger(e,.8);say(`${who==='You'?'You catch':who+' catches'} ${lc(nameOf(e))} mid-swing.`,'good');}
     if(cls==='thief'&&o.venom)d+=20;if(e.undead&&cls==='thief')d=Math.round(d*.6);if(e.undead&&cls==='warrior')d=Math.round(d*1.25);if(cls==='warrior'&&e.captain)d=Math.round(d*1.5);}
-  else if(kind==='cleave'){d=35;}
+  else if(kind==='cleave'){d=Math.round(35*(o.pw||1));}
+  else if(kind==='counter'){d=30;stagger(e,1.2,true);say(`${who==='You'?'Your':who+"'s"} counter-cut opens ${lc(nameOf(e))} up.`,'good');}
   else if(kind==='charge'){d=12;stagger(e,1.3);}
   else if(kind==='arrow'){d=18;if(o.ua&&e.state!=='alert'&&!e.captain&&!FT(e).noBackstab&&!e.undead){e.hp=0;say(`${who==='You'?'Your':who+"'s"} arrow drops ${lc(nameOf(e))} without a sound.`,'good');kill(e,actor);return;}if(e.undead)d=Math.round(d*.6);}
-  else if(kind==='fire'){d=24;if(e.captain)d=Math.round(d*.35);else if(FT(e).fireRes)d=Math.round(d*FT(e).fireRes);if(e.undead)d=Math.round(d*1.6);}
+  else if(kind==='fire'){d=Math.round(24*(o.sp||1));if(e.captain)d=Math.round(d*.35);else if(FT(e).fireRes)d=Math.round(d*FT(e).fireRes);if(e.undead)d=Math.round(d*1.6);}
   if(e.stag>0&&kind!=='fire')d=Math.round(d*1.5);
-  e.hp-=d;noise(e.x,e.y,10,1,1);if(kind==='cleave'&&e.hp>0)stagger(e,e.captain?.35:.9);
+  e.hp-=d;noise(e.x,e.y,10,1,1);if(kind==='cleave'&&e.hp>0)stagger(e,e.captain?.35:.9);if(kind==='melee'&&o.stg>0&&e.hp>0)stagger(e,o.stg*(e.captain?.5:1));
   if(e.hp<=0){say(kind==='fire'?`Fire takes ${lc(nameOf(e))}.`:`${who==='You'?'You cut':who+' cuts'} down ${lc(nameOf(e))}.`);kill(e,actor);}
   else{goAlert(e,true,o.src);e.hitT=G.time;}
 }
-function burstAt(x,y,cls,actor){let n=0;for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-x,e.y-y)<1.35&&losT(x,y,e.x,e.y)){applyHit(e,cls,'fire',{actor,src:actor&&actor.rr?[actor.rr.p.x,actor.rr.p.y]:undefined});n++;}}noise(x,y,10,1,1);return n;}
+function burstAt(x,y,cls,actor,sp,rad){let n=0;for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-x,e.y-y)<(rad||1.35)&&losT(x,y,e.x,e.y)){applyHit(e,cls,'fire',{actor,sp,src:actor&&actor.rr?[actor.rr.p.x,actor.rr.p.y]:undefined});n++;}}noise(x,y,10,1,1);return n;}
 function inArc(e,reach,arc){const P=G.P,[fx,fy]=fwd();const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>reach)return false;const a=Math.abs(angDiff(Math.atan2(dy,dx),Math.atan2(fy,fx)));return (a<arc||d<.35)&&losT(P.x,P.y,e.x,e.y);}
 function breakInvis(why){if(G.P.invis>0){G.P.invis=0;log(why);}}
 function attack(){
@@ -1227,12 +1620,12 @@ function attack(){
   const tg=G.w.enemies.filter(e=>!e.dead&&inArc(e,S.reach,.6)).sort((a,b)=>Math.hypot(a.x-P.x,a.y-P.y)-Math.hypot(b.x-P.x,b.y-P.y))[0];
   if(!tg)return;
   const venom=G.cls==='thief'&&P.venom;if(venom){P.venom=false;}
-  const bs=G.cls==='thief'&&tg.state!=='alert';
-  if(G.mode==='client'){sendAct({t:'hit',k:'melee',id:tg.id,bs,venom});if(bs)log(`You strike ${lc(nameOf(tg))} from the shadows.`,'good');return;}
-  G.lastActor='me';applyHit(tg,G.cls,'melee',{bs,venom});
+  const bs=G.cls==='thief'&&tg.state!=='alert';const gx={dm:S.dmg,stg:S.stag,bsx:S.wbase&&GB[S.wbase].bsx?1:0,fx:Object.keys(S.fx||{})};
+  if(G.mode==='client'){sendAct(Object.assign({t:'hit',k:'melee',id:tg.id,bs,venom},gx));if(bs)log(`You strike ${lc(nameOf(tg))} from the shadows.`,'good');return;}
+  G.lastActor='me';applyHit(tg,G.cls,'melee',Object.assign({bs,venom},gx,{fx:S.fx}));
 }
 function kill(e,actor){
-  e.dead=true;G.kills++;G.featDirty=true;G.lastActor=actor?actor.key:'me';
+  e.dead=true;G.kills++;gainXP(foeXP(e));dropGear(e);G.featDirty=true;G.lastActor=actor?actor.key:'me';
   if(e.group){const mates=G.w.enemies.filter(o=>!o.dead&&o.group===e.group&&o.state!=='alert');if(mates.length){log('The others at the table see their mate drop.','bad');mates.forEach(o=>goAlert(o,true));}}
 }
 function useAbility(id){
@@ -1247,24 +1640,25 @@ function useAbility(id){
     case 'firebolt':breakInvis('Casting breaks your invisibility.');G.proj.push({kind:'fire',pos:cam.position.clone().add(dir.clone().multiplyScalar(.5)).add(new THREE.Vector3(0,-.15,0)),vel:dir.clone().multiplyScalar(16),t:0});if(G.mode!=='client')noise(P.x,P.y,4,.2,.5);break;
     case 'cleave':{if(P.st<20){toast('Out of breath.');return;}P.st-=20;P.stDelay=.9;const hit=G.w.enemies.filter(e=>!e.dead&&inArc(e,1.45,1.05));P.swing=.6;G.swingStart=G.time;
       G.swingN=(G.swingN||0)+1;
-      if(G.mode==='client'){for(const e of hit)sendAct({t:'hit',k:'cleave',id:e.id});}
-      else{G.lastActor='me';for(const e of hit)applyHit(e,'warrior','cleave');noise(P.x,P.y,13,1,1);}
+      if(G.mode==='client'){for(const e of hit)sendAct({t:'hit',k:'cleave',id:e.id,pw:G.S.pw});}
+      else{G.lastActor='me';for(const e of hit)applyHit(e,'warrior','cleave',{pw:G.S.pw});noise(P.x,P.y,13,1,1);}
       log(hit.length?`You sweep through ${hit.length} foe${hit.length>1?'s':''}.`:'Your sweep cuts only air.');break;}
     case 'repel':case 'flash':{breakInvis('Casting breaks your invisibility.');const [fx,fy]=fwd(),ang=Math.atan2(fy,fx);G.bursts=G.bursts||[];G.bursts.push({x:P.x+fx*1.2,y:P.y+fy*1.2,t:0,col:id==='repel'?0x9a95f5:0xfff2c0});
       if(G.mode==='client'){sendAct({t:id,ang:+ang.toFixed(3)});log(id==='repel'?'You hurl the hex.':'You fling a fistful of flash powder.');}
       else{const n=ccCone(P.x,P.y,ang,id,{key:'me'});log(id==='repel'?(n?`The hex throws back ${n} foe${n>1?'s':''}.`:'The hex stirs only dust.'):(n?`Flash! ${n} foe${n>1?'s are':' is'} blinded.`:'The powder flares at nothing.'),n?'good':undefined);}break;}
     case 'venom':P.venom=true;log('You coat your blade. Your next strike is poisoned.','good');break;
     case 'second':P.hp=Math.min(P.max,P.hp+60);P.used[id]=true;log('You grit your teeth and catch your breath. +60 health.','good');break;
-    case 'invis':P.invis=8;log('You fold the light around yourself.');for(const e of G.w.enemies)if(!e.dead&&e.state==='alert')e.unseen=Math.max(e.unseen,2);break;
+    case 'invis':P.invis=8+(G.S.fx&&G.S.fx.ghost?4:0);log('You fold the light around yourself.');for(const e of G.w.enemies)if(!e.dead&&e.state==='alert')e.unseen=Math.max(e.unseen,2);break;
     case 'divine':{G.glimpse=8;G.divineAt=[P.x,P.y];let n=0;for(const tr of G.w.traps)if(!tr.disarmed&&!tr.revealed&&Math.hypot(tr.x-P.x,tr.y-P.y)<9){tr.revealed=true;n++;}
       const px=Math.floor(P.x),py=Math.floor(P.y);for(let y=py-9;y<=py+9;y++)for(let x=px-9;x<=px+9;x++)if(x>=0&&y>=0&&x<G.w.W&&y<G.w.H)G.explored.add(y*G.w.W+x);
       G.featDirty=true;log(`Your sight runs through the stone. ${n?n+' trap'+(n>1?'s':'')+' revealed.':'No new traps nearby.'}`,'good');break;}
   }
-  P.cd[id]=A.cd;G.sideDirty=true;
+  P.cd[id]=A.cd*(1-(G.S.cdr||0));G.sideDirty=true;
 }
 function fireBurst(x,y,pot){G.bursts=G.bursts||[];G.bursts.push({x,y,t:0});
-  if(G.mode==='client'){sendAct({t:pot?'pot':'burst',x:+x.toFixed(2),y:+y.toFixed(2)});return;}
-  G.lastActor='me';const n=burstAt(x,y,pot?'pot':'wizard');if(pot){if(!n)log('The firepot shatters and burns out.');return;}if(!n)log('Your fireburst splashes across the stone.');}
+  const sp=pot?1:G.S.sp||1,em=!pot&&G.S.fx&&G.S.fx.ember;
+  if(G.mode==='client'){sendAct({t:pot?'pot':'burst',x:+x.toFixed(2),y:+y.toFixed(2),sp:+sp.toFixed(2),em:em?1:0});return;}
+  G.lastActor='me';const n=burstAt(x,y,pot?'pot':'wizard',null,sp,em?2:1.35);if(pot){if(!n)log('The firepot shatters and burns out.');return;}if(!n)log('Your fireburst splashes across the stone.');}
 function updProj(dt){
   for(const p of G.proj){p.t+=dt;
     if(p.kind==='pebble')p.vel.y-=9.8*dt;if(p.kind==='arrow'){p.vel.y-=2.5*dt;const tt=tileAt(p.pos.x/T,p.pos.z/T);if(tt===PIT)p.over.add(Math.floor(p.pos.x/T)+','+Math.floor(p.pos.z/T));}
@@ -1287,9 +1681,9 @@ function updProj(dt){
 function findFocus(){
   const P=G.P,w=G.w,C=G.cls,[fx,fy]=fwd(),fa=Math.atan2(fy,fx),cands=[];
   const px=Math.floor(P.x),py=Math.floor(P.y);
-  for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if((G.tavern?[RACK,STREET,TABLE]:[DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT,PIT,LEDGE,GATE,GATEUP]).includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
+  for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if((G.tavern?[RACK,STREET,TABLE,VENDOR,GAMBLER]:[DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT,PIT,LEDGE,GATE,GATEUP]).includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
   for(const tr of w.traps)if(C==='thief'&&tr.revealed&&!tr.disarmed)cands.push({kind:'trap',tr,cx:tr.x+.5,cy:tr.y+.5});
-  if(!G.tavern)for(const l of w.loot||[])if(!l.taken&&Math.hypot(l.x-P.x,l.y-P.y)<1.6&&losT(P.x,P.y,l.x,l.y))cands.push({kind:'loot',l,cx:l.x,cy:l.y});
+  if(!G.tavern)for(const l of w.loot||[])if(l&&!l.taken&&Math.hypot(l.x-P.x,l.y-P.y)<1.6&&losT(P.x,P.y,l.x,l.y))cands.push({kind:'loot',l,cx:l.x,cy:l.y});
   if(w.bell&&!w.bellCut&&!G.tavern)cands.push({kind:'bell',cx:w.bell.px,cy:w.bell.py});
   if(C==='thief'&&!G.tavern)for(const to of G.torches)if(!to.out)cands.push({kind:'torch',to,cx:to.wx,cy:to.wy});
   let best=null,bs=9;
@@ -1303,7 +1697,8 @@ function focusLabel(c){
   const w=G.w,C=G.cls;
   if(c.kind==='trap')return {act:true,text:'<b>E</b> Disarm the pressure plate'};
   if(c.kind==='torch')return {act:true,text:'<b>E</b> Snuff the torch'};
-  if(c.kind==='loot'){const I=ITEMS[c.l.k];const full=packWeight()+I.w>PACKCAP[C];return full?{act:false,text:`${I.name} (${I.w} wt). Your pack is too full.`}:{act:true,text:`<b>E</b> Take the ${I.name} <span class="dim">${I.w} wt · ${I.v}g</span>`};}
+  if(c.kind==='loot'){const it=lootItem(c.l),b=GB[it.b];const nm=`<span style="color:${itemColor(it)}">${esc(itemName(it))}</span>`;ensureChars();const room=findSpot(PROF.chars[C].bag,b.w,b.h,BAGW,BAGH);
+    return room?{act:true,text:`<b>E</b> Take the ${nm} <span class="dim">${b.val?b.v+'g':RAR[it.r].n}</span>`}:{act:false,text:`${nm}. No room in your bag. Press I to make some.`};}
   if(c.kind==='bell')return G.alarm>=2?{act:false,text:'The alarm bell. Too late, it already rang.'}:{act:true,text:'<b>E</b> Cut the alarm bell rope'};
   switch(c.t){
     case EXIT:return {act:true,text:G.looted?'<b>E</b> Leave with the strongbox':'<b>E</b> Leave and repost the job'};
@@ -1332,7 +1727,7 @@ function interact(){
   if(c.kind==='tile'&&c.t===LEDGE){const o=crewAt(c.x,c.y);const ci=crossInfo(o);
     if(!ci.onTop){const dest=[ci.top[0],ci.top[1]];if(warriorNear(c.x,c.y)){G.P.x=dest[0];G.P.y=dest[1];log('A leg up and over you go.','good');return;}if(G.cls==='thief'){G.P.climb={t:1.8,dest,msg:'You haul yourself over the ledge.'};log('You find handholds and start climbing.');return;}return;}}
   const d={k:c.kind,id:c.kind==='trap'?c.tr.id:c.kind==='torch'?c.to.id:c.kind==='loot'?c.l.id:undefined,x:c.x,y:c.y};
-  if(c.kind==='loot'){c.l.taken=true;G.pack.push(c.l.k);G.featDirty=true;G.sideDirty=true;log(`You stow the ${ITEMS[c.l.k].name}.`,'good');}
+  if(c.kind==='loot'){const it=lootItem(c.l);if(!bagAdd(G.cls,it))return;c.l.taken=true;if(!GB[it.b].val)G.gearFound++;G.featDirty=true;G.sideDirty=true;log(`You stow the ${itemName(it)}.`,'good');}
   if(G.mode==='client'){sendAct(Object.assign({t:'use'},d));return;}
   doUse(d,{key:'me',cls:G.cls,name:'You'});
 }
@@ -1363,7 +1758,7 @@ function doUse(d,actor){
 }
 function checkObjectives(){
   if(G.tavern)return;
-  for(const r in G.objs)for(const o of G.objs[r]){const d=objDone(G.w,o.id);if(d&&!G.prev[o.id]){G.prev[o.id]=true;if(G.mode==='client'){G.sideDirty=true;continue;}
+  for(const r in G.objs)for(const o of G.objs[r]){const d=objDone(G.w,o.id);if(d&&!G.prev[o.id]){G.prev[o.id]=true;gainXP(o.bonus?60:100);if(G.mode==='client'){G.sideDirty=true;continue;}
     const txt=o.text.replace('Bonus: ','').replace(/ \(.*\)$/,'');
     G.did.push(txt.replace(/^Pick/,'Picked').replace(/^Break/,'Broke').replace(/^Dispel/,'Dispelled').replace(/^Eliminate/,'Eliminated').replace(/^Clear/,'Cleared').replace(/^poison|^Poison/,'Poisoned').replace(/^Scry/,'Scried'));
     log('Objective complete: '+txt,'good');G.sideDirty=true;
@@ -1375,7 +1770,7 @@ function leave(){
   if(G.mode==='client'){G.over=true;if(document.pointerLockElement)document.exitPointerLock();leaveRoom();const hl=settle(true);showModal('You slipped out',`<p>You left the job. Everything you did stays in the host's world, and they will repost it when they lead the crew out.</p>${hl?`<p class="note">${esc(hl)}</p>`:''}`);return;}
   G.over=true;if(document.pointerLockElement)document.exitPointerLock();
   const m=board.missions.find(x=>x.id===G.m.id)||G.m;
-  m.state=snapshot(G.w);m.state.ro=(G.w.ropes||[]).slice();m.state.lo=G.w.loot.filter(l=>l.taken).map(l=>l.id);m.state.al=Math.max(0,(G.alarm||0)-1);if(G.w.bellCut)m.state.bc=1;
+  m.state=snapshot(G.w);m.state.ro=(G.w.ropes||[]).slice();m.state.lo=G.w.loot.filter(l=>l&&l.taken&&!l.drop).map(l=>l.id);m.state.al=Math.max(0,(G.alarm||0)-1);if(G.w.bellCut)m.state.bc=1;
   const entry={by:'You',cls:G.cls,did:G.did.slice(),secs:Math.round(G.time)};
   if(G.looted){entry.did.push('Carried out the strongbox');entry.outcome='complete';m.status='complete';}
   m.history.push(entry);
@@ -1386,14 +1781,14 @@ function leave(){
   saveBoard(board);
   const crewN=1+(G.mode==='host'?[...NET.remote.values()].filter(r=>r.p).length:0);const hl=settle(true,G.looted?Math.round(m.payout/crewN):0);const hlP=hl?`<p class="note">${esc(hl)}</p>`:'';
   const st=roleStatus(m);const need=m.roles.filter(r=>!st[r]);
-  const back=G.mode==='host'&&NET.room?{label:'Back to the back room',fn:()=>startTavern('host',G.cls)}:null;
+  const back=G.mode==='host'&&NET.room?{label:'Back to the back room',fn:()=>startTavern('host',G.cls)}:G.fromTav?{label:'Back to the tavern',fn:()=>startTavern('solo',G.cls)}:null;
   if(G.looted)showModal('Payday',`<p>You walk out with the strongbox. The crew splits <b class="mono">${m.payout.toLocaleString()} gold</b>.</p><ul>${m.history.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls].name}: ${esc(h.did.join('; ')||'scouted')}</li>`).join('')}</ul>${hlP}`,back);
   else showModal('Reposted',`<p>${st[G.cls]?`Your part is done. The ${CLS[G.cls].name} is no longer needed on this job.`:`You left before finishing. The ${CLS[G.cls].name} role stays open.`}</p>
     <p>${need.length?'Still needed: <b>'+need.map(r=>CLS[r].name).join(', ')+'</b>. Take one of those on the board to walk into the world exactly as you left it.':'Every lock is open. Anyone can go in and carry out the strongbox.'}</p>
     ${G.did.length?`<ul>${G.did.map(d=>`<li>${esc(d)}</li>`).join('')}</ul>`:''}${hlP}`,back);
 }
 function die(){
-  if(G.mp){G.down=6;G.P.hp=0;G.P.invis=0;log('You go down. Back on your feet at the stairs in a few seconds.','bad');if(G.pack&&G.pack.length){log(`You lost what was in your pack (${G.pack.length} item${G.pack.length>1?'s':''}).`,'bad');G.pack=[];G.sideDirty=true;}if(G.mode==='host')netLog('A crew member went down.','bad');return;}
+  if(G.mp){G.down=6;G.P.hp=0;G.P.invis=0;log('You go down. Back on your feet at the stairs in a few seconds.','bad');{const c=PROF.chars[G.cls];const v=c.bag.filter(e=>GB[e.it.b].val);if(v.length){c.bag=c.bag.filter(e=>!GB[e.it.b].val);log(`You dropped the valuables in your bag (${v.length}). Your gear stays on you.`,'bad');G.sideDirty=true;}}if(G.mode==='host')netLog('A crew member went down.','bad');return;}
   G.over=true;G.P.hp=0;if(document.pointerLockElement)document.exitPointerLock();const lost=settle(false);
   showModal('You fell',`<p>The ${CLS[G.cls].name} goes down in the dark after ${Math.round(G.time)} seconds. Nothing from this run is saved. The contract stays on the board as it was when you took it.</p>${lost?`<p class="note">${esc(lost)}</p>`:''}`);
 }
@@ -1420,9 +1815,6 @@ function renderSide(){
   $('#log').innerHTML=G.log.slice(0,14).map(l=>`<li class="${l.cls||''}">${esc(l.msg)}</li>`).join('');
   G.sideDirty=false;
 }
-function renderPack(){const el=$('#packP');if(!el)return;if(G.tavern||!G.pack){el.innerHTML=`<li class="note">Your belt and pack come with you on the job. Set your belt on the board before you head out.</li>`;return;}
-  const wt=packWeight(),cap=PACKCAP[G.cls],grp={};for(const k of G.pack)grp[k]=(grp[k]||0)+1;
-  el.innerHTML=`<li class="ph"><span>Pack</span><span class="mono ${wt>cap*.7?'heavy':''}">${wt}/${cap} wt · ${packValue()}g</span></li>`+(G.pack.length?Object.entries(grp).map(([k,n])=>`<li><span>${ITEMS[k].name}${n>1?' ×'+n:''}</span><span class="mono">${ITEMS[k].v*n}g</span></li>`).join(''):'<li class="note">Empty. Look for valuables along the walls.</li>')+(wt>cap*.7?'<li class="note">Heavy load: you move slower.</li>':'');}
 function renderHUD(){
   const P=G.P;
   {const a=$('#alarm');const lv=G.tavern?0:G.alarm||0;a.hidden=!lv;if(lv){a.textContent='Alarm: '+ALARM[lv]+(lv===3&&G.mode!=='client'&&G.waves<3?` · next wave ${Math.max(0,Math.ceil(G.waveT))}s`:'');a.dataset.lv=lv;}}
@@ -1430,7 +1822,7 @@ function renderHUD(){
   const v=G.vis;const g=Math.round(30+v*200);$('#gem').style.background=`radial-gradient(circle at 40% 35%, rgb(${g+25},${g},${Math.round(g*.6)}), rgb(${Math.round(g*.35)},${Math.round(g*.3)},${Math.round(g*.2)}))`;
   const hunting=G.w.enemies.filter(e=>!e.dead&&e.state==='alert').length,sus=G.w.enemies.filter(e=>!e.dead&&(e.state==='suspicious'||e.state==='search')).length;
   $('#visTxt').textContent=(P.invis>0?'Invisible':v<.12?'Hidden':v<.4?'In shadow':v<.7?'Visible':'Exposed')+(P.crouch?' · crouched':'')+(hunting?` · ${hunting} on alert`:sus?` · ${sus} suspicious`:'');
-  $('#hudBelt').innerHTML=G.tavern||!G.belt?'':G.belt.map((k,i)=>`<div class="ab ${k?'':'off'}"><kbd>${i+5}</kbd>${k?({draught:'Draught',tonic:'Tonic',firepot:'Firepot'})[k]:'empty'}</div>`).join('');
+  $('#hudBelt').innerHTML=G.tavern||!G.belt?'':G.belt.map((k,i)=>`<div class="ab ${k?'':'off'}"><kbd>${i+5}</kbd>${k?({draught:'Draught',tonic:'Tonic',firepot:'Firepot',smoke:'Smoke'})[k]:'empty'}</div>`).join('');
   $('#hudAb').innerHTML=KIT[G.cls].abil.map(A=>{const cd=P.cd[A.id]||0,spent=A.once&&P.used[A.id];return `<div class="ab ${cd>0||spent?'off':''}"><kbd>${A.key}</kbd>${A.name}${A.id==='venom'&&P.venom?' (coated)':''}${A.id==='bow'&&P.arrows?`: ${ARROWS[P.arrowSel]} ${P.arrows[P.arrowSel]}`:''}${cd>0?` ${cd.toFixed(1)}`:''}${spent?' (spent)':''}<span class="cdf" style="width:${cd>0?100-cd/A.cd*100:100}%"></span></div>`;}).join('');
   const pr=$('#prompt');if(G.focus&&G.focus.label.text){pr.hidden=false;pr.innerHTML=G.focus.label.text;}else pr.hidden=true;
   $('#xhair').classList.toggle('hot',!!(G.focus&&G.focus.label.act));
@@ -1442,7 +1834,7 @@ function drawMini(){if(!G.tavern&&G.w.bell){}
   c.clearRect(0,0,cv.width,cv.height);
   for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++){if(!G.explored.has(y*w.W+x))continue;const t=w.t[y][x];if(t===WALL)continue;
     c.fillStyle=t===PIT?'#050505':t===ROPE||t===LADDER?'#8a6a3a':t===LEDGE?'#77736a':t===GATE||t===GATEUP?'#6a6e75':t===DOOR?'#c9952f':t===EXIT?'#e7e2d6':t===BARR?'#a07a48':t===WARD?'#9a95f5':t===CHEST?'#f1c860':t===POOL?'#3a5bd8':t===LARDER?'#7d5d3a':B.floor;c.fillRect(x*s,y*s,s+.3,s+.3);}
-  for(const l of w.loot||[]){if(l.taken||!G.explored.has(Math.floor(l.y)*w.W+Math.floor(l.x)))continue;c.fillStyle='#e7c27a';c.fillRect(l.x*s-1.5,l.y*s-1.5,3,3);}
+  for(const l of w.loot||[]){if(!l||l.taken||!G.explored.has(Math.floor(l.y)*w.W+Math.floor(l.x)))continue;c.fillStyle='#e7c27a';c.fillRect(l.x*s-1.5,l.y*s-1.5,3,3);}
   if(w.bell&&G.explored.has(w.bell.y*w.W+w.bell.x)){c.fillStyle=w.bellCut?'#6a5a3a':'#f1c860';c.beginPath();c.arc(w.bell.px*s,w.bell.py*s,Math.max(2,s*.4),0,7);c.fill();}
   for(const tr of w.traps)if(tr.revealed&&!tr.disarmed){c.fillStyle='#e0574a';c.fillRect(tr.x*s+s*.25,tr.y*s+s*.25,s*.5,s*.5);}
   for(const e of w.enemies){if(e.dead)continue;const seen=(losT(P.x,P.y,e.x,e.y)&&Math.hypot(e.x-P.x,e.y-P.y)<12&&(lightAt(e.x,e.y)>.1||Math.hypot(e.x-P.x,e.y-P.y)<3));
@@ -1521,10 +1913,18 @@ function build3D(){
   // weapon
   sc.add(R3.camera);while(R3.camera.children.length)R3.camera.remove(R3.camera.children[0]);
   const wpn=new THREE.Group();const L=c=>new THREE.MeshLambertMaterial({color:c});
-  if(G.cls==='thief'){const bl=new THREE.Mesh(new THREE.BoxGeometry(.025,.02,.32),L(0xc9ccd2));bl.position.z=-.18;const hd=new THREE.Mesh(new THREE.BoxGeometry(.035,.035,.12),L(0x3a2a1a));wpn.add(bl,hd);wpn.position.set(.22,-.2,-.38);}
-  else if(G.cls==='warrior'){const bl=new THREE.Mesh(new THREE.BoxGeometry(.05,.015,.8),L(0xb9bcc4));bl.position.z=-.45;const gd=new THREE.Mesh(new THREE.BoxGeometry(.22,.03,.04),L(0x7a5a2a));const hd=new THREE.Mesh(new THREE.BoxGeometry(.04,.04,.18),L(0x3a2a1a));hd.position.z=.1;wpn.add(bl,gd,hd);wpn.position.set(.26,-.26,-.42);wpn.rotation.x=.25;}
-  else{const st=new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,1.1,8),L(0x5a4130));st.rotation.x=-1.25;st.position.z=-.3;const orb=new THREE.Mesh(new THREE.SphereGeometry(.05,12,10),new THREE.MeshBasicMaterial({color:0xb6b2ff}));orb.position.set(0,.16,-.82);wpn.add(st,orb);wpn.position.set(.24,-.32,-.25);}
-  R3.shield=null;if(G.cls==='warrior'){const sh=new THREE.Group();const disc=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.04,20),L(0x7a5a2a));disc.rotation.x=Math.PI/2;const boss=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),L(0x9a9ea6));boss.position.z=-.03;sh.add(disc,boss);R3.camera.add(sh);R3.shield=sh;}
+  {const wb=G.S&&G.S.wbase?GB[G.S.wbase]:null,ic=wb?wb.ic:'fist',steel=L(0xc9ccd2),wood=L(0x5a4130),grip=L(0x3a2a1a);const rc=G.S&&PROF.chars[G.cls].eq.main?RAR[PROF.chars[G.cls].eq.main.r].c:'#888888';
+    const glow=rc==='#e8e4d8'||rc==='#888888'?L(0x7a5a2a):new THREE.MeshBasicMaterial({color:new THREE.Color(rc)});
+    if(ic==='dagger'){const bl=new THREE.Mesh(new THREE.BoxGeometry(.025,.02,.32),steel);bl.position.z=-.18;const hd=new THREE.Mesh(new THREE.BoxGeometry(.035,.035,.12),grip);const gd=new THREE.Mesh(new THREE.BoxGeometry(.1,.02,.02),glow);gd.position.z=-.03;wpn.add(bl,hd,gd);wpn.position.set(.22,-.2,-.38);}
+    else if(ic==='sword'){const len=Math.max(.4,(wb.reach-.9)*1.7);const bl=new THREE.Mesh(new THREE.BoxGeometry(wb.reach>1.35?.035:.05,.015,len),L(0xb9bcc4));bl.position.z=-len/2-.05;const gd=new THREE.Mesh(new THREE.BoxGeometry(.22,.03,.04),glow);const hd=new THREE.Mesh(new THREE.BoxGeometry(.04,.04,wb.two?.3:.18),grip);hd.position.z=wb.two?.16:.1;wpn.add(bl,gd,hd);wpn.position.set(.26,-.26,-.42);wpn.rotation.x=.25;}
+    else if(ic==='axe'||ic==='hammer'||ic==='club'){const hl=wb.two?.95:.62;const hf=new THREE.Mesh(new THREE.CylinderGeometry(.02,.024,hl,8),wood);hf.rotation.x=-Math.PI/2;hf.position.z=-hl/2+.1;
+      const hdm=ic==='axe'?new THREE.Mesh(new THREE.BoxGeometry(.02,.2,.16),L(0xb9bcc4)):ic==='hammer'?new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.22),L(0x8a8e96)):new THREE.Mesh(new THREE.CylinderGeometry(.05,.035,.24,8),wood);
+      if(ic==='club'){hdm.rotation.x=-Math.PI/2;hdm.position.set(0,0,-hl+.05);}else hdm.position.set(0,ic==='axe'?.08:0,-hl+.15);const band=new THREE.Mesh(new THREE.BoxGeometry(.05,.05,.03),glow);band.position.z=.02;wpn.add(hf,hdm,band);wpn.position.set(.26,-.28,-.4);wpn.rotation.x=.3;}
+    else if(ic==='spear'){const hf=new THREE.Mesh(new THREE.CylinderGeometry(.018,.02,1.5,8),wood);hf.rotation.x=-Math.PI/2;hf.position.z=-.55;const tip=new THREE.Mesh(new THREE.ConeGeometry(.04,.2,6),L(0xb9bcc4));tip.rotation.x=-Math.PI/2;tip.position.z=-1.38;const band=new THREE.Mesh(new THREE.BoxGeometry(.05,.05,.03),glow);band.position.z=-1.25;wpn.add(hf,tip,band);wpn.position.set(.24,-.3,-.25);wpn.rotation.x=.12;}
+    else if(ic==='staff'){const st=new THREE.Mesh(new THREE.CylinderGeometry(.018,.022,1.1,8),G.S.wbase==='ironstaff'?L(0x4a4a50):wood);st.rotation.x=-1.25;st.position.z=-.3;const orb=new THREE.Mesh(new THREE.SphereGeometry(.05,12,10),new THREE.MeshBasicMaterial({color:0xb6b2ff}));orb.position.set(0,.16,-.82);wpn.add(st,orb);wpn.position.set(.24,-.32,-.25);}
+    else if(ic==='wand'){const st=new THREE.Mesh(new THREE.CylinderGeometry(.01,.014,.38,8),G.S.wbase==='fetish'?L(0xd8d0b4):wood);st.rotation.x=-1.35;st.position.z=-.2;const orb=new THREE.Mesh(new THREE.SphereGeometry(.025,10,8),glow);orb.position.set(0,.04,-.39);wpn.add(st,orb);wpn.position.set(.22,-.22,-.3);}
+    else{const f=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.1),L(0xd9b896));wpn.add(f);wpn.position.set(.24,-.24,-.36);}}
+  R3.shield=null;{const oh=PROF.chars[G.cls]&&PROF.chars[G.cls].eq.off;if(oh&&GB[oh.b].ic==='shield'){const sh=new THREE.Group();const r=oh.b==='buckler'?.15:oh.b==='kite'?.28:.24;const disc=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.04,20),L(0x7a5a2a));disc.rotation.x=Math.PI/2;if(oh.b==='kite')disc.scale.set(1,1,1.35);const boss=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),L(0x9a9ea6));boss.position.z=-.03;sh.add(disc,boss);R3.camera.add(sh);R3.shield=sh;}}
   R3.wpn=wpn;R3.wpnBase={x:wpn.position.x,y:wpn.position.y,rx:wpn.rotation.x};R3.camera.add(wpn);
   if(G.tavern){sc.add(new THREE.AmbientLight(0xffc890,.38));sc.fog=new THREE.Fog(0x020203,10,40);}
   G.featDirty=true;R3.lightT=0;
@@ -1618,11 +2018,14 @@ function syncFeatures(){
       for(const hy of [.5,1.6,2.7]){const b=addMesh(new THREE.BoxGeometry(alongX?T:.06,.06,alongX?.06:T),Mt.iron,cx,hy+up,cz);}}
     else if(t===TABLE){addMesh(Gm.table,Mt.table,cx,.88,cz);addMesh(Gm.leg,Mt.table,cx,.41,cz);addMesh(Gm.die,Mt.bone,cx-.2,.99,cz);addMesh(Gm.die,Mt.bone,cx+.25,.99,cz+.2);}
   }
-  for(const l of w.loot||[]){if(l.taken)continue;const I=ITEMS[l.k],cx=l.x*T,cz=l.y*T;
-    if(l.k==='idol'){addMesh(new THREE.ConeGeometry(.16,.5,6),Mt.gold,cx,.25,cz);}
-    else if(l.k==='silver'){const p=addMesh(new THREE.CylinderGeometry(.22,.22,.03,16),new THREE.MeshLambertMaterial({color:0xd8dce4,emissive:0x202226}),cx,.02,cz);}
-    else if(l.k==='ledger'){addMesh(new THREE.BoxGeometry(.3,.08,.4),new THREE.MeshLambertMaterial({color:0x5a2a1a}),cx,.04,cz).rotation.y=.4;}
-    else if(l.k==='ring'){const r=addMesh(new THREE.TorusGeometry(.07,.02,6,12),Mt.gold,cx,.04,cz);r.rotation.x=Math.PI/2;}
+  for(const l of w.loot||[]){if(!l||l.taken)continue;const k=l.it.b,B=GB[k],cx=l.x*T,cz=l.y*T;
+    if(!B.val){const col=new THREE.Color(RAR[l.it.r].c);const m=addMesh(new THREE.BoxGeometry(.34,.1,.22),new THREE.MeshLambertMaterial({color:0x4a3a28}),cx,.05,cz);m.rotation.y=l.id;
+      const gl=addMesh(new THREE.OctahedronGeometry(.08),new THREE.MeshBasicMaterial({color:col}),cx,.32+.03*Math.sin(l.id),cz);gl.userData.spin=1;}
+    else if(k==='idol'||k==='reliquary'||k==='ratcrown'){addMesh(new THREE.ConeGeometry(.16,.5,6),Mt.gold,cx,.25,cz);}
+    else if(k==='silver'||k==='goblet'){const p=addMesh(new THREE.CylinderGeometry(.22,.22,.03,16),new THREE.MeshLambertMaterial({color:0xd8dce4,emissive:0x202226}),cx,.02,cz);}
+    else if(k==='ledger'||k==='deeds'||k==='painting'){addMesh(new THREE.BoxGeometry(.3,.08,.4),new THREE.MeshLambertMaterial({color:0x5a2a1a}),cx,.04,cz).rotation.y=.4;}
+    else if(k==='signet'||k==='gems'){const r=addMesh(new THREE.TorusGeometry(.07,.02,6,12),Mt.gold,cx,.04,cz);r.rotation.x=Math.PI/2;}
+    else if(k==='candlestick'){addMesh(new THREE.CylinderGeometry(.03,.07,.4,8),new THREE.MeshLambertMaterial({color:0xd8dce4,emissive:0x202226}),cx,.2,cz);}
     else{addMesh(new THREE.SphereGeometry(.15,10,8),new THREE.MeshLambertMaterial({color:0x6b4a2a}),cx,.12,cz).scale.set(1,.8,1);addMesh(R3.geo.gem,Mt.gold,cx,.26,cz).scale.setScalar(.5);}}
   if(w.bell){const b=w.bell,bx=(b.x+.5+b.dx*.42)*T,bz=(b.y+.5+b.dy*.42)*T;const arm=addMesh(new THREE.BoxGeometry(.1,.1,.7),Mt.woodDark,bx-b.dx*.3,2.5,bz-b.dy*.3);if(b.dx)arm.rotation.y=Math.PI/2;
     const bel=addMesh(new THREE.CylinderGeometry(.12,.3,.42,14,1,true),Mt.gold,bx-b.dx*.6,w.bellCut?.22:2.2,bz-b.dy*.6);bel.material=new THREE.MeshLambertMaterial({color:0xb08a3a,side:THREE.DoubleSide});
@@ -1632,7 +2035,7 @@ function syncFeatures(){
   G.featDirty=false;
 }
 function frame(){
-  requestAnimationFrame(frame);
+  requestAnimationFrame(frame);if(R3.dyn&&G&&!G.tavern&&R3.last){const tt=now();for(const m of R3.dyn.children)if(m.userData&&m.userData.spin)m.rotation.y=tt*2;}
   const t=now(),dt=Math.min(.05,t-(R3.last||t));R3.last=t;
   if(!G||!R3.ok||!R3.dyn||$('#game').hidden)return;
   if((!G.paused||G.mp)&&!G.over&&$('#modal').hidden)update(dt);
@@ -1681,6 +2084,6 @@ function frame(){
 }
 
 renderBoard();renderStash();
-window.__NET=NET;window.__TL={moveAbility,cycleArrow,crewAt,get PROF(){return PROF;},useBelt,settle,renderStash,buildAvatar,startTavern,launchJob,setClass,tavernUse,openJobPicker,get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
+window.__NET=NET;window.__TL={INV,openInv,closeInv,calcStats,makeItem,bagAdd,moveItem,gamble,invAction,GB,LEGS,RAR,lootItem,dropGear,awardXP,get CELL(){return CELL;},moveAbility,cycleArrow,crewAt,get PROF(){return PROF;},useBelt,settle,renderStash,buildAvatar,startTavern,launchJob,setClass,tavernUse,openJobPicker,get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
 </script>
 </body></html>

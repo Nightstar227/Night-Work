@@ -63,6 +63,10 @@ button:focus-visible,textarea:focus-visible{outline:2px solid var(--lantern);out
 textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);color:var(--text);border:1px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:.75rem;padding:8px;resize:vertical}
 .note{font-size:.85rem;color:var(--muted);margin:0}
 .coop{background:var(--slate);border:1px solid var(--lantern-dim);border-radius:10px;padding:14px 16px;margin-bottom:22px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between}
+.stash{background:var(--slate);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px 16px;margin-bottom:22px}.stashhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px}.stash h3{font-size:1.3rem;color:var(--lantern)}.stash .gold{color:var(--lantern);font-size:1.1rem}
+.stashgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:10px 0}.stitem{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:8px}.stitem .row{display:flex;justify-content:space-between;align-items:center;gap:8px}.btn.sm{padding:3px 10px;font-size:.85rem;min-height:0}.btn:disabled{opacity:.4;cursor:default}.haul{color:#9fd49a}
+.packl{list-style:none;margin:0;padding:0;font-size:.9rem;display:flex;flex-direction:column;gap:3px}.packl li{display:flex;justify-content:space-between;gap:8px}.packl .ph{font-family:var(--display);color:var(--lantern)}.packl .heavy{color:#e9a94b}.prompt .dim{opacity:.7;font-size:.85em;margin-left:6px}
+.hudbelt{position:absolute;right:12px;bottom:48px;display:flex;gap:6px;pointer-events:none}
 .coop h3{font-size:1.3rem;color:var(--lantern)}
 .jobpick{display:flex;flex-direction:column;gap:8px;margin:12px 0;max-height:52vh;overflow:auto}.jobpick .btn{text-align:left;display:flex;flex-direction:column;gap:2px;width:100%}
 .coop .tog{display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer}
@@ -160,6 +164,7 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
       <button class="btn primary" id="tavernBtn">Open the back room</button>
       <div class="joinrow"><input id="joinCode" maxlength="4" placeholder="CODE" autocomplete="off" aria-label="Room code"><button class="btn" id="joinBtn">Join a friend</button><span class="note" id="joinMsg"></span></div>
     </section>
+    <section class="stash" id="stash"></section>
     <p class="note" id="coopOff" hidden>Live co-op could not load its networking library. Check your connection and reload.</p>
     <div class="cards" id="cards"></div>
     <div class="boardtools">
@@ -200,13 +205,13 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
           <div class="bar stb" aria-label="Stamina"><i id="stFill"></i></div>
           <div class="vis"><span class="gem" id="gem"></span><span id="visTxt">Hidden</span></div>
         </div>
-        <div class="hudbr" id="hudAb"></div>
+        <div class="hudbr" id="hudAb"></div><div class="hudbelt" id="hudBelt"></div>
         <div class="invisov" id="invisov"></div><div class="parryov" id="parryov"></div><div class="flashov" id="flashov"></div>
         <div class="touch" id="touch" hidden>
           <div class="stick" id="stick"><i id="knob"></i></div>
           <div class="tbtns">
             <button data-t="crouch">Crouch</button><button data-t="use">Use</button><button data-t="attack">Strike</button><button data-t="block">Block</button><button data-t="dodge">Dodge</button>
-            <button data-t="1">1</button><button data-t="2">2</button><button data-t="3">3</button><button data-t="4">4</button>
+            <button data-t="1">1</button><button data-t="2">2</button><button data-t="3">3</button><button data-t="4">4</button><button data-t="belt">Belt</button>
           </div>
         </div>
         <div class="pauseov" id="pauseov">
@@ -219,8 +224,9 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
       <div class="sheet">
         <div class="panel" id="crewPanel" hidden><span class="label" id="crewLabel">Crew</span><ul class="crew" id="crew"></ul></div>
         <div class="panel"><span class="label">Contract</span><ul class="objs" id="objs"></ul></div>
+        <div class="panel"><span class="label">Belt and pack</span><ul class="packl" id="packP"></ul></div>
         <div class="panel"><span class="label">Your kit</span><ul class="abl" id="abl"></ul></div>
-        <div class="panel"><span class="label">Controls</span><p class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move, mouse looks. <kbd>Shift</kbd> run (loud), <kbd>C</kbd> or <kbd>Ctrl</kbd> crouch. Left click strikes. Hold right click or <kbd>Q</kbd> to block; raise it just before a hit to parry. <kbd>Space</kbd> dodges. Swings, blocks, dodges and running cost stamina. <kbd>E</kbd> uses what you aim at. <kbd>1</kbd>-<kbd>4</kbd> abilities. <kbd>Esc</kbd> pauses. Arrow keys also turn.</p></div>
+        <div class="panel"><span class="label">Controls</span><p class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move, mouse looks. <kbd>Shift</kbd> run (loud), <kbd>C</kbd> or <kbd>Ctrl</kbd> crouch. Left click strikes. Hold right click or <kbd>Q</kbd> to block; raise it just before a hit to parry. <kbd>Space</kbd> dodges. Swings, blocks, dodges and running cost stamina. <kbd>E</kbd> uses what you aim at. <kbd>1</kbd>-<kbd>4</kbd> abilities, <kbd>5</kbd>-<kbd>8</kbd> belt items. <kbd>Esc</kbd> pauses. Arrow keys also turn.</p></div>
         <div class="panel"><span class="label">Log</span><ul class="log" id="log"></ul></div>
       </div>
     </div>
@@ -546,8 +552,9 @@ function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.
 const SCODE={patrol:0,idle:1,sentry:2,suspicious:3,search:4,return:5,alert:6};const SNAME=Object.keys(SCODE);
 function packWorld(){const w=G.w;const bits=(a,f)=>a.map(x=>f(x)?1:0).join('');
   return {g:w.enemies.map(e=>[Math.round(e.x*100),Math.round(e.y*100),Math.round(e.ang*100),SCODE[e.state]??0,Math.max(0,Math.round(e.hp)),(e.dead?1:0)|(e.sick?2:0)|(e.atk>0?4:0)|(G.time-(e.hitT||-9)<.25?8:0)|(e.walking?16:0)|(e.stag>0?32:0),e.atk>0?Math.round((1-e.atk/(e.atkMax||.85))*9):0]),
-    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id)};}
+    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id)};}
 function applyWorld(W){const w=G.w;if(!W||!W.g)return;
+  if(W.lo&&w.loot){let ch=false;w.loot.forEach((l,i)=>{const t=W.lo[i]==='1';if(t&&!l.taken){l.taken=true;ch=true;}});if(ch)G.featDirty=true;}
   if(W.al!=null&&W.al!==G.alarm){G.alarm=W.al;G.sideDirty=true;}if(W.bc&&!w.bellCut){w.bellCut=true;G.featDirty=true;}
   (W.rf||[]).forEach((r,i)=>{const id=G.baseN+i;if(w.enemies[id])return;w.enemies.push({id,x:r[0]/100,y:r[1]/100,hp:40,max:40,dmg:20,face:[0,1],base:'patrol',state:'alert',reinf:true,ang:0,aw:1,atk:0,cool:0,walkPh:0,seat:[0,0],homeAng:0});G.foesDirty=true;});
   for(const o of w.enemies)o.runner=(W.rn||[]).includes(o.id);
@@ -580,6 +587,7 @@ function onRemote(){
 function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peerName(rr)};if(!actor.cls)return;
   if(a.t==='hit'){const e=w.enemies[a.id];if(!e||e.dead)return;G.lastActor=actor.key;actor.rr=rr;
     applyHit(e,actor.cls,a.k==='cleave'&&actor.cls==='warrior'?'cleave':'melee',{actor,bs:!!a.bs,venom:!!a.venom&&actor.cls==='thief',src:[rr.p.x,rr.p.y]});}
+  else if(a.t==='pot'){G.lastActor=actor.key;actor.rr=rr;burstAt(a.x,a.y,'pot',actor);}
   else if(a.t==='burst'&&actor.cls==='wizard'){G.lastActor=actor.key;actor.rr=rr;burstAt(a.x,a.y,'wizard',actor);}
   else if(a.t==='noise')noise(a.x,a.y,Math.min(10,a.r),Math.min(.5,a.a),Math.min(.6,a.c));
   else if(a.t==='trap'){const tr=w.traps[a.id];if(tr&&!tr.disarmed){tr.disarmed=true;tr.revealed=true;G.featDirty=true;noise(tr.x+.5,tr.y+.5,12,.6,.9);netLog(`${actor.name} set off a dart trap.`,'bad');}}
@@ -588,12 +596,12 @@ function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peer
   else if(a.t==='parry'){const e=w.enemies[a.id];if(e&&!e.dead&&Math.hypot(e.x-rr.p.x,e.y-rr.p.y)<2.5)stagger(e,e.captain?1.1:1.7);}
   else if((a.t==='repel'&&actor.cls==='wizard')||(a.t==='flash'&&actor.cls==='thief')){G.lastActor=actor.key;ccCone(rr.p.x,rr.p.y,a.ang,a.t,actor);}
 }
-function hostGone(){if(!G||G.over)return;G.over=true;if(document.pointerLockElement)document.exitPointerLock();leaveRoom();
+function hostGone(){if(!G||G.over)return;settle(true);G.over=true;if(document.pointerLockElement)document.exitPointerLock();leaveRoom();
   showModal('The host left',`<p>The host closed the job, so the run is over. Their board keeps whatever the crew got done up to their last save.</p>`);}
-function hostEnded(end){G.over=true;{const h=NET.remote.get(NET.hostPeer);NET.doneLid=h&&h.pres?h.pres.lid:null;}if(document.pointerLockElement)document.exitPointerLock();
+function hostEnded(end){G.over=true;const hl=settle(true,end.lt?Math.round((end.pay||0)/Math.max(1,(end.h||[]).length)):0);{const h=NET.remote.get(NET.hostPeer);NET.doneLid=h&&h.pres?h.pres.lid:null;}if(document.pointerLockElement)document.exitPointerLock();
   const can=!!end.s;
   showModal(end.lt?'Payday':'Job reposted',`<p>${end.lt?`The host walked out with the strongbox. The crew splits <b class="mono">${(end.pay||0).toLocaleString()} gold</b>.`:'The host led the crew out and reposted the job.'}</p>${end.h&&end.h.length?`<ul>${end.h.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls]?CLS[h.cls].name:'?'}: ${esc((h.did||[]).join('; ')||'came along')}</li>`).join('')}</ul>`:''}
-    ${can&&!end.lt?'<p><button class="btn" id="addJob">Add this job to my board</button></p>':''}`,{label:'Back to the back room',fn:()=>{if(NET.room&&NET.remote.get(NET.hostPeer))startTavern('client',G&&G.cls);else{G=null;toBoard();}}});
+    ${can&&!end.lt?'<p><button class="btn" id="addJob">Add this job to my board</button></p>':''}${hl?`<p class="note">${esc(hl)}</p>`:''}`,{label:'Back to the back room',fn:()=>{if(NET.room&&NET.remote.get(NET.hostPeer))startTavern('client',G&&G.cls);else{G=null;toBoard();}}});
   const ab=$('#addJob');if(ab)ab.onclick=()=>{const m=Object.assign({},end.m,{id:'m'+end.m.seed.toString(36)+'-'+Date.now().toString(36),state:end.s,history:(end.h||[]).map(h=>Object.assign({},h,{by:h.peer===NET.myPeer?'You':h.by})),status:'open'});board.missions.unshift(m);saveBoard(board);ab.textContent='Added';ab.disabled=true;};
 }
 function renderCrew(){const panel=$('#crewPanel');if(!G||!G.mp){panel.hidden=true;$('#roomBadge').hidden=true;return;}panel.hidden=false;
@@ -779,6 +787,54 @@ function updAlarm(dt){if(G.mode==='client'||G.tavern)return;const w=G.w;G.alarmT
   const bell=w.bell;if(bell&&!w.bellCut&&G.alarm>=1&&G.alarm<2&&!w.enemies.some(o=>o.runner&&!o.dead)){
     const cand=alerted.filter(o=>!o.captain&&!o.reinf&&!(o.stag>0)).filter(o=>Math.hypot(o.x-bell.px,o.y-bell.py)<14).sort((a,b)=>Math.hypot(a.x-bell.px,a.y-bell.py)-Math.hypot(b.x-bell.px,b.y-bell.py))[0];
     if(cand){cand.runner=true;cand.ring=0;const t=`${nameOf(cand)} breaks off and runs for the alarm bell!`;log(t,'bad');if(G.mode==='host')netLog(t,'bad');}}}
+/* ---------- inventory: stash and fence at home, a belt of consumables and a weight-limited pack on the job ---------- */
+const ITEMS={
+  draught:{name:'Healing draught',w:1,v:30,price:60,belt:true,desc:'Drink: +45 health over 3 seconds.'},
+  tonic:{name:'Bitter tonic',w:1,v:20,price:40,belt:true,desc:'Drink: full stamina and double recovery for 10 seconds.'},
+  firepot:{name:'Firepot',w:2,v:40,price:80,belt:true,desc:'Throw: bursts into flame and burns everyone nearby. Any class can use it.'},
+  purse:{name:'Coin purse',w:1,v:40},ring:{name:'Signet ring',w:0,v:70},silver:{name:'Silver plate',w:3,v:90},ledger:{name:'Ledger of debts',w:1,v:120},idol:{name:'Brass idol',w:6,v:180}};
+const BELT=4,PACKCAP={thief:20,warrior:28,wizard:16},PROFKEY='threelocks.profile.v1';
+let PROF=null;
+function loadProf(){try{PROF=JSON.parse(localStorage.getItem(PROFKEY));}catch(e){PROF=null;}
+  if(!PROF||typeof PROF!=='object')PROF={gold:200,stash:{draught:2,tonic:1,firepot:0},belt:{draught:2,tonic:1,firepot:0},haul:null};
+  for(const k of ['draught','tonic','firepot']){PROF.stash[k]=PROF.stash[k]||0;PROF.belt[k]=Math.min(PROF.belt[k]||0,PROF.stash[k]);}return PROF;}
+function saveProf(){try{localStorage.setItem(PROFKEY,JSON.stringify(PROF));}catch(e){}}
+loadProf();
+function beltTotal(){return Object.values(PROF.belt).reduce((a,b)=>a+b,0);}
+function renderStash(){const el=$('#stash');if(!el)return;const P=PROF;
+  el.innerHTML=`<div class="stashhead"><h3>Your stash</h3><span class="mono gold">${P.gold.toLocaleString()} gold</span></div>
+    ${P.haul?`<p class="note haul">${esc(P.haul)}</p>`:''}
+    <div class="stashgrid">${['draught','tonic','firepot'].map(k=>{const I=ITEMS[k];return `<div class="stitem"><b>${I.name}</b><span class="note">${I.desc}</span>
+      <span class="row"><span>In stash: <b class="mono">${P.stash[k]}</b></span><button class="btn sm" data-buy="${k}" ${P.gold<I.price?'disabled':''}>Buy ${I.price}g</button></span>
+      <span class="row"><span>On your belt: <b class="mono">${P.belt[k]}</b></span><span><button class="btn sm" data-belt="${k}" data-d="-1" ${P.belt[k]<=0?'disabled':''}>−</button> <button class="btn sm" data-belt="${k}" data-d="1" ${P.belt[k]>=P.stash[k]||beltTotal()>=BELT?'disabled':''}>+</button></span></span></div>`;}).join('')}</div>
+    <p class="note">Your belt holds ${BELT}. What you carry onto a job is at risk: die or abandon the run and it's gone. Get out by the stairs and whatever is left comes home, and the fence buys everything in your pack.</p>`;
+  el.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const k=b.dataset.buy;if(PROF.gold<ITEMS[k].price)return;PROF.gold-=ITEMS[k].price;PROF.stash[k]++;if(beltTotal()<BELT)PROF.belt[k]++;saveProf();renderStash();});
+  el.querySelectorAll('[data-belt]').forEach(b=>b.onclick=()=>{const k=b.dataset.belt,d=+b.dataset.d;const n=PROF.belt[k]+d;if(n<0||n>PROF.stash[k]||(d>0&&beltTotal()>=BELT))return;PROF.belt[k]=n;saveProf();renderStash();});}
+function packBelt(){const out=[];for(const k of ['draught','tonic','firepot'])for(let i=0;i<PROF.belt[k];i++){out.push(k);PROF.stash[k]--;}
+  for(const k in PROF.belt)PROF.belt[k]=Math.min(PROF.belt[k],PROF.stash[k]);PROF.haul=null;saveProf();
+  // the belt you take next time defaults to what you took this time, if you can still afford to fill it
+  return out;}
+function packWeight(){return G.pack.reduce((a,k)=>a+ITEMS[k].w,0);}
+function packValue(){return G.pack.reduce((a,k)=>a+ITEMS[k].v,0);}
+function settle(ok,pay){if(!G||G.tavern||G.settled)return;G.settled=true;const lines=[];
+  if(ok){const back=G.belt.filter(Boolean);for(const k of back){PROF.stash[k]++;}const v=packValue();PROF.gold+=v+(pay||0);
+    for(const k of back)if(beltTotal()<BELT&&PROF.belt[k]<PROF.stash[k])PROF.belt[k]++;
+    if(v)lines.push(`The fence paid ${v} gold for ${G.pack.length} item${G.pack.length>1?'s':''} from your pack.`);if(pay)lines.push(`Your cut of the strongbox: ${pay} gold.`);if(back.length)lines.push(`${back.length} belt item${back.length>1?'s':''} came home.`);}
+  else{const lost=G.belt.filter(Boolean).length+G.pack.length;if(lost)lines.push(`You lost ${lost} item${lost>1?'s':''} you were carrying.`);}
+  PROF.haul=lines.join(' ')||null;saveProf();return PROF.haul;}
+function placeLoot(w,seed,taken){const R=mulberry(seed^0x10071);const out=[];const occ=new Set(w.enemies.map(o=>Math.floor(o.x)+','+Math.floor(o.y)));for(const t of w.traps)occ.add(t.x+','+t.y);
+  const table={hall:[['purse',3],['silver',2],['ring',1]],barracks:[['purse',4],['ring',1]],captain:[['ledger',3],['ring',2],['silver',1]],vault:[['idol',3],['silver',2]],larder:[['silver',3],['purse',1]],pool:[['ring',2],['idol',1]]};
+  for(const c of w.cells){if(c.role==='entrance')continue;const tb=table[c.role]||table.hall;const n=c.role==='vault'?2:c.role==='hall'?(R()<.55?1:0):1+(R()<.4?1:0);
+    const spots=[];for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++){if(w.t[y][x]!==FLOOR||occ.has(x+','+y))continue;if(DIRS.some(([dx,dy])=>w.t[y+dy][x+dx]===WALL))spots.push([x,y]);}
+    for(let i=0;i<n&&spots.length;i++){const [x,y]=spots.splice(Math.floor(R()*spots.length),1)[0];occ.add(x+','+y);let tot=tb.reduce((a,b)=>a+b[1],0),r=R()*tot,k=tb[0][0];for(const [kk,wt] of tb){if((r-=wt)<0){k=kk;break;}}
+      out.push({id:out.length,x:x+.5,y:y+.5,k,taken:false});}}
+  for(const id of taken||[])if(out[id])out[id].taken=true;return out;}
+function useBelt(i){const P=G.P,k=G.belt[i];if(!k||G.over||G.down>0||G.tavern)return;
+  if(k==='draught'){P.heal=45;log('You knock back a healing draught.','good');}
+  else if(k==='tonic'){P.st=100;P.tonic=10;log('The bitter tonic burns going down. Your breath comes easy.','good');}
+  else if(k==='firepot'){breakInvis('Throwing breaks your invisibility.');const cam=R3.camera;const dir=new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion);
+    G.proj.push({kind:'fire',pot:true,pos:cam.position.clone().add(dir.clone().multiplyScalar(.5)),vel:dir.clone().multiplyScalar(10).add(new THREE.Vector3(0,2.5,0)),t:0});log('You hurl a firepot.');}
+  G.belt[i]=null;G.sideDirty=true;}
 function startRun(m,cls,opts){
   opts=opts||{};
   const w=generate(m);
@@ -795,6 +851,7 @@ function startRun(m,cls,opts){
     P:{x:w.start[0]+.5,y:w.start[1]+.5,yaw:Math.atan2(-best[0],-best[1]),pitch:0,hp:S.hp,max:S.hp,st:100,stDelay:0,blocking:false,blockAt:-9,dodge:0,dodgeCd:0,iframe:0,crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
   for(const id of (w.snuffed||[]))if(G.torches[id])G.torches[id].out=true;
   G.objs=objList(m,BIOMES[m.biome].boss);
+  G.belt=packBelt();G.pack=[];w.loot=placeLoot(w,m.seed,m.state&&m.state.lo);
   w.bell=placeBell(w,m.seed);w.bellCut=!!(m.state&&m.state.bc);G.alarm=(m.state&&m.state.al)||0;G.alarmT=0;G.alertT=0;G.calmT=0;G.waves=0;G.waveT=0;G.baseN=w.enemies.length;
   for(const r in G.objs)for(const o of G.objs[r])G.prev[o.id]=objDone(w,o.id);
   if(w.scried)for(let i=0;i<w.W*w.H;i++)G.explored.add(i);
@@ -855,7 +912,7 @@ view.addEventListener('touchmove',ev=>{ev.preventDefault();for(const t of ev.cha
   if(t.identifier===lookId&&lookLast){look((t.clientX-lookLast[0])*2,(t.clientY-lookLast[1])*2);lookLast=[t.clientX,t.clientY];}}},{passive:false});
 view.addEventListener('touchend',ev=>{for(const t of ev.changedTouches){if(t.identifier===stickId){stickId=null;if(G)G.stick=[0,0];knob.style.transform='';}if(t.identifier===lookId)lookId=null;}});
 document.querySelectorAll('.tbtns button').forEach(b=>b.addEventListener('touchstart',ev=>{ev.preventDefault();if(!G||G.paused)return;const t=b.dataset.t;
-  if(t==='attack')attack();else if(t==='block')G.blockHeld=true;else if(t==='dodge')dodge();else if(t==='use')interact();else if(t==='crouch'){G.P.crouch=!G.P.crouch;}else{const A=KIT[G.cls].abil[+t-1];if(A)useAbility(A.id);}},{passive:false}));
+  if(t==='attack')attack();else if(t==='block')G.blockHeld=true;else if(t==='dodge')dodge();else if(t==='belt'){const i=G.belt?G.belt.findIndex(Boolean):-1;if(i>=0)useBelt(i);}else if(t==='use')interact();else if(t==='crouch'){G.P.crouch=!G.P.crouch;}else{const A=KIT[G.cls].abil[+t-1];if(A)useAbility(A.id);}},{passive:false}));
 document.querySelectorAll('.tbtns button[data-t="block"]').forEach(b=>b.addEventListener('touchend',()=>{if(G)G.blockHeld=false;}));
 document.addEventListener('keydown',ev=>{
   if(!G||$('#game').hidden||ev.target.tagName==='TEXTAREA'||!$('#modal').hidden)return;
@@ -865,6 +922,7 @@ document.addEventListener('keydown',ev=>{
   if(ev.code==='KeyC'||ev.code==='ControlLeft'||ev.code==='ControlRight'){if(!ev.repeat)G.P.crouch=!G.P.crouch;}
   if(ev.code==='KeyE'||ev.code==='KeyF'){if(!ev.repeat)interact();}
   if(ev.code==='Space'&&!ev.repeat)dodge();
+  {const bi=['Digit5','Digit6','Digit7','Digit8'].indexOf(ev.code);if(bi>=0&&!ev.repeat)useBelt(bi);}
   if(ev.code==='KeyP'&&!lockMode)setPause(true,'Paused','Take a breath.');
   const A=KIT[G.cls].abil.find(a=>'Digit'+a.key===ev.code);if(A&&!ev.repeat)useAbility(A.id);
 });
@@ -889,8 +947,10 @@ function update(dt){
   const len=Math.hypot(f,s);P.sprint=!!(K.ShiftLeft||K.ShiftRight)&&f>0&&!P.crouch&&!P.blocking&&P.st>2;
   if(P.sprint&&len>.1){P.st-=13*dt;P.stDelay=.6;}
   if(P.stDelay>0)P.stDelay-=dt;else if(!P.blocking)P.st=Math.min(100,P.st+(G.cls==='warrior'?20:24)*dt);
+  if(P.heal>0){const h=Math.min(P.heal,15*dt);P.heal-=h;P.hp=Math.min(P.max,P.hp+h);}
+  if(P.tonic>0){P.tonic-=dt;P.st=Math.min(100,P.st+24*dt);}
   if(P.dodge>0){P.dodge-=dt;const k=7.5/T*dt;const mx=P.dodgeDir[0]*k,my=P.dodgeDir[1]*k;if(!blockedAt(P.x+mx,P.y,.24))P.x+=mx;if(!blockedAt(P.x,P.y+my,.24))P.y+=my;}
-  let spd=S.walk*(P.crouch?.5:P.sprint?1.75:1)*(P.blocking?.5:1)*(G.looted?.85:1);
+  let spd=S.walk*(P.crouch?.5:P.sprint?1.75:1)*(P.blocking?.5:1)*(G.looted?.85:1)*(!G.tavern&&G.pack&&packWeight()>PACKCAP[G.cls]*.7?.88:1);
   P.moving=len>.1;
   if(P.moving){const fx=-Math.sin(P.yaw),fy=-Math.cos(P.yaw),rx=Math.cos(P.yaw),ry=-Math.sin(P.yaw);const k=Math.min(1,len)/len*spd/T*dt;
     const mx=(fx*f+rx*s)*k,my=(fy*f+ry*s)*k;const r=.24;
@@ -1110,19 +1170,19 @@ function useAbility(id){
   }
   P.cd[id]=A.cd;G.sideDirty=true;
 }
-function fireBurst(x,y){G.bursts=G.bursts||[];G.bursts.push({x,y,t:0});
-  if(G.mode==='client'){sendAct({t:'burst',x:+x.toFixed(2),y:+y.toFixed(2)});return;}
-  G.lastActor='me';const n=burstAt(x,y,'wizard');if(!n)log('Your fireburst splashes across the stone.');}
+function fireBurst(x,y,pot){G.bursts=G.bursts||[];G.bursts.push({x,y,t:0});
+  if(G.mode==='client'){sendAct({t:pot?'pot':'burst',x:+x.toFixed(2),y:+y.toFixed(2)});return;}
+  G.lastActor='me';const n=burstAt(x,y,pot?'pot':'wizard');if(pot){if(!n)log('The firepot shatters and burns out.');return;}if(!n)log('Your fireburst splashes across the stone.');}
 function updProj(dt){
   for(const p of G.proj){p.t+=dt;
     if(p.kind==='pebble')p.vel.y-=9.8*dt;
     const np=p.pos.clone().addScaledVector(p.vel,dt);const tx=np.x/T,ty=np.z/T;
     if(opaqueT(tileAt(tx,ty))||[LARDER,POOL,CHEST,TABLE,WARD].includes(tileAt(tx,ty))&&np.y<1){
-      if(p.kind==='fire'){p.dead=true;fireBurst(p.pos.x/T,p.pos.z/T);}else{p.vel.x*=-.2;p.vel.z*=-.2;}continue;}
+      if(p.kind==='fire'){p.dead=true;fireBurst(p.pos.x/T,p.pos.z/T,p.pot);}else{p.vel.x*=-.2;p.vel.z*=-.2;}continue;}
     if(np.y>WALLH-.05){p.vel.y=-Math.abs(p.vel.y)*.3;np.y=WALLH-.05;}
     p.pos.copy(np);
-    if(p.kind==='fire'){for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-tx,e.y-ty)<.32&&np.y<2.1){p.dead=true;fireBurst(tx,ty);break;}}
-      if(!p.dead&&np.y<=.05){p.dead=true;fireBurst(tx,ty);}
+    if(p.kind==='fire'){for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-tx,e.y-ty)<.32&&np.y<2.1){p.dead=true;fireBurst(tx,ty,p.pot);break;}}
+      if(!p.dead&&np.y<=.05){p.dead=true;fireBurst(tx,ty,p.pot);}
       if(p.t>3)p.dead=true;}
     else if(np.y<=.05){p.dead=true;if(G.mode==='client')sendAct({t:'noise',x:+tx.toFixed(2),y:+ty.toFixed(2),r:9,a:.45,c:.6});else noise(tx,ty,9,.45,.6);log('A pebble clatters across the stone.');}
   }
@@ -1135,6 +1195,7 @@ function findFocus(){
   const px=Math.floor(P.x),py=Math.floor(P.y);
   for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if((G.tavern?[RACK,STREET,TABLE]:[DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT]).includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
   for(const tr of w.traps)if(C==='thief'&&tr.revealed&&!tr.disarmed)cands.push({kind:'trap',tr,cx:tr.x+.5,cy:tr.y+.5});
+  if(!G.tavern)for(const l of w.loot||[])if(!l.taken&&Math.hypot(l.x-P.x,l.y-P.y)<1.6&&losT(P.x,P.y,l.x,l.y))cands.push({kind:'loot',l,cx:l.x,cy:l.y});
   if(w.bell&&!w.bellCut&&!G.tavern)cands.push({kind:'bell',cx:w.bell.px,cy:w.bell.py});
   if(C==='thief'&&!G.tavern)for(const to of G.torches)if(!to.out)cands.push({kind:'torch',to,cx:to.wx,cy:to.wy});
   let best=null,bs=9;
@@ -1148,6 +1209,7 @@ function focusLabel(c){
   const w=G.w,C=G.cls;
   if(c.kind==='trap')return {act:true,text:'<b>E</b> Disarm the pressure plate'};
   if(c.kind==='torch')return {act:true,text:'<b>E</b> Snuff the torch'};
+  if(c.kind==='loot'){const I=ITEMS[c.l.k];const full=packWeight()+I.w>PACKCAP[C];return full?{act:false,text:`${I.name} (${I.w} wt). Your pack is too full.`}:{act:true,text:`<b>E</b> Take the ${I.name} <span class="dim">${I.w} wt · ${I.v}g</span>`};}
   if(c.kind==='bell')return G.alarm>=2?{act:false,text:'The alarm bell. Too late, it already rang.'}:{act:true,text:'<b>E</b> Cut the alarm bell rope'};
   switch(c.t){
     case EXIT:return {act:true,text:G.looted?'<b>E</b> Leave with the strongbox':'<b>E</b> Leave and repost the job'};
@@ -1165,7 +1227,8 @@ function interact(){
   const c=G.focus;if(!c||!c.label.act||G.over||G.down>0)return;
   if(G.tavern){tavernUse(c);return;}
   if(c.kind==='tile'&&c.t===EXIT){leave();return;}
-  const d={k:c.kind,id:c.kind==='trap'?c.tr.id:c.kind==='torch'?c.to.id:undefined,x:c.x,y:c.y};
+  const d={k:c.kind,id:c.kind==='trap'?c.tr.id:c.kind==='torch'?c.to.id:c.kind==='loot'?c.l.id:undefined,x:c.x,y:c.y};
+  if(c.kind==='loot'){c.l.taken=true;G.pack.push(c.l.k);G.featDirty=true;G.sideDirty=true;log(`You stow the ${ITEMS[c.l.k].name}.`,'good');}
   if(G.mode==='client'){sendAct(Object.assign({t:'use'},d));return;}
   doUse(d,{key:'me',cls:G.cls,name:'You'});
 }
@@ -1173,6 +1236,7 @@ function doUse(d,actor){
   const w=G.w,C=actor.cls,me=actor.key==='me',nm=actor.name;G.lastActor=actor.key;
   const say=(mine,theirs,cls)=>{if(me)log(mine,cls);else log(theirs,cls);if(G.mode==='host')netLog(theirs,cls);};
   if(d.k==='trap'){const tr=w.traps[d.id];if(!tr||tr.disarmed||C!=='thief')return;tr.disarmed=true;G.featDirty=true;say('You wedge the plate and snip the wire. Trap disarmed.',`${nm} disarmed a trap.`,'good');return;}
+  if(d.k==='loot'){const l=w.loot[d.id];if(!l)return;l.taken=true;G.featDirty=true;return;}
   if(d.k==='bell'){if(!w.bell||w.bellCut||G.alarm>=2)return;w.bellCut=true;G.featDirty=true;for(const o of w.enemies)o.runner=false;say('You cut the bell rope and lower the clapper. Nobody is ringing that tonight.',`${nm} cut the alarm bell rope.`,'good');return;}
   if(d.k==='torch'){const to=G.torches[d.id];if(!to||to.out||C!=='thief')return;to.out=true;w.snuffed=G.torches.filter(t=>t.out).map(t=>t.id);G.featDirty=true;G.lightT=0;say('You pinch the torch out. Darkness settles in.',`${nm} snuffed a torch.`,'good');return;}
   const t=w.t[d.y]&&w.t[d.y][d.x];const cx=d.x+.5,cy=d.y+.5;
@@ -1200,10 +1264,10 @@ function checkObjectives(){
 }
 function leave(){
   if(!G||G.over)return;
-  if(G.mode==='client'){G.over=true;if(document.pointerLockElement)document.exitPointerLock();leaveRoom();showModal('You slipped out',`<p>You left the job. Everything you did stays in the host's world, and they will repost it when they lead the crew out.</p>`);return;}
+  if(G.mode==='client'){G.over=true;if(document.pointerLockElement)document.exitPointerLock();leaveRoom();const hl=settle(true);showModal('You slipped out',`<p>You left the job. Everything you did stays in the host's world, and they will repost it when they lead the crew out.</p>${hl?`<p class="note">${esc(hl)}</p>`:''}`);return;}
   G.over=true;if(document.pointerLockElement)document.exitPointerLock();
   const m=board.missions.find(x=>x.id===G.m.id)||G.m;
-  m.state=snapshot(G.w);m.state.al=Math.max(0,(G.alarm||0)-1);if(G.w.bellCut)m.state.bc=1;
+  m.state=snapshot(G.w);m.state.lo=G.w.loot.filter(l=>l.taken).map(l=>l.id);m.state.al=Math.max(0,(G.alarm||0)-1);if(G.w.bellCut)m.state.bc=1;
   const entry={by:'You',cls:G.cls,did:G.did.slice(),secs:Math.round(G.time)};
   if(G.looted){entry.did.push('Carried out the strongbox');entry.outcome='complete';m.status='complete';}
   m.history.push(entry);
@@ -1212,17 +1276,18 @@ function leave(){
     NET.end={lt:G.looted?1:0,pay:m.payout,m:{seed:m.seed,biome:m.biome,roles:m.roles,cx:m.cx,title:m.title,payout:m.payout},s:G.looted?null:m.state,h:[{by:'The host',cls:G.cls,did:entry.did}].concat(crewH)};
     pushPresence(true);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G||G.over)leaveRoom();},90000);}
   saveBoard(board);
+  const crewN=1+(G.mode==='host'?[...NET.remote.values()].filter(r=>r.p).length:0);const hl=settle(true,G.looted?Math.round(m.payout/crewN):0);const hlP=hl?`<p class="note">${esc(hl)}</p>`:'';
   const st=roleStatus(m);const need=m.roles.filter(r=>!st[r]);
   const back=G.mode==='host'&&NET.room?{label:'Back to the back room',fn:()=>startTavern('host',G.cls)}:null;
-  if(G.looted)showModal('Payday',`<p>You walk out with the strongbox. The crew splits <b class="mono">${m.payout.toLocaleString()} gold</b>.</p><ul>${m.history.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls].name}: ${esc(h.did.join('; ')||'scouted')}</li>`).join('')}</ul>`,back);
+  if(G.looted)showModal('Payday',`<p>You walk out with the strongbox. The crew splits <b class="mono">${m.payout.toLocaleString()} gold</b>.</p><ul>${m.history.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls].name}: ${esc(h.did.join('; ')||'scouted')}</li>`).join('')}</ul>${hlP}`,back);
   else showModal('Reposted',`<p>${st[G.cls]?`Your part is done. The ${CLS[G.cls].name} is no longer needed on this job.`:`You left before finishing. The ${CLS[G.cls].name} role stays open.`}</p>
     <p>${need.length?'Still needed: <b>'+need.map(r=>CLS[r].name).join(', ')+'</b>. Take one of those on the board to walk into the world exactly as you left it.':'Every lock is open. Anyone can go in and carry out the strongbox.'}</p>
-    ${G.did.length?`<ul>${G.did.map(d=>`<li>${esc(d)}</li>`).join('')}</ul>`:''}`,back);
+    ${G.did.length?`<ul>${G.did.map(d=>`<li>${esc(d)}</li>`).join('')}</ul>`:''}${hlP}`,back);
 }
 function die(){
-  if(G.mp){G.down=6;G.P.hp=0;G.P.invis=0;log('You go down. Back on your feet at the stairs in a few seconds.','bad');if(G.mode==='host')netLog('A crew member went down.','bad');return;}
-  G.over=true;G.P.hp=0;if(document.pointerLockElement)document.exitPointerLock();
-  showModal('You fell',`<p>The ${CLS[G.cls].name} goes down in the dark after ${Math.round(G.time)} seconds. Nothing from this run is saved. The contract stays on the board as it was when you took it.</p>`);
+  if(G.mp){G.down=6;G.P.hp=0;G.P.invis=0;log('You go down. Back on your feet at the stairs in a few seconds.','bad');if(G.pack&&G.pack.length){log(`You lost what was in your pack (${G.pack.length} item${G.pack.length>1?'s':''}).`,'bad');G.pack=[];G.sideDirty=true;}if(G.mode==='host')netLog('A crew member went down.','bad');return;}
+  G.over=true;G.P.hp=0;if(document.pointerLockElement)document.exitPointerLock();const lost=settle(false);
+  showModal('You fell',`<p>The ${CLS[G.cls].name} goes down in the dark after ${Math.round(G.time)} seconds. Nothing from this run is saved. The contract stays on the board as it was when you took it.</p>${lost?`<p class="note">${esc(lost)}</p>`:''}`);
 }
 function showModal(title,html,back){
   $('#pauseov').hidden=true;
@@ -1230,10 +1295,10 @@ function showModal(title,html,back){
   $('#modal').hidden=false;$('#toBoard').focus();$('#toBoard').onclick=()=>{$('#modal').hidden=true;toBoard();};
   if(back){$('#toTavern').focus();$('#toTavern').onclick=()=>{$('#modal').hidden=true;back.fn();};}
 }
-function toBoard(){$('#abandon').textContent='Abandon run';if(NET.room&&!(G&&G.mode==='host'&&NET.end&&!G.tavern))leaveRoom();else if(NET.leaveTimer){clearTimeout(NET.leaveTimer);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G)leaveRoom();},4000);}G=null;$('#game').hidden=true;$('#board').hidden=false;renderBoard();window.scrollTo(0,0);}
+function toBoard(){setTimeout(renderStash,0);$('#abandon').textContent='Abandon run';if(NET.room&&!(G&&G.mode==='host'&&NET.end&&!G.tavern))leaveRoom();else if(NET.leaveTimer){clearTimeout(NET.leaveTimer);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G)leaveRoom();},4000);}G=null;$('#game').hidden=true;$('#board').hidden=false;renderBoard();window.scrollTo(0,0);}
 let abandonArmed=false;
 $('#abandon').onclick=ev=>{if(G&&G.tavern){if(document.pointerLockElement)document.exitPointerLock();toBoard();return;}if(!abandonArmed){abandonArmed=true;ev.target.textContent='Click again: lose this run';setTimeout(()=>{abandonArmed=false;ev.target.textContent='Abandon run';},2500);return;}
-  abandonArmed=false;ev.target.textContent='Abandon run';if(document.pointerLockElement)document.exitPointerLock();toBoard();};
+  abandonArmed=false;ev.target.textContent='Abandon run';settle(false);if(document.pointerLockElement)document.exitPointerLock();toBoard();};
 
 /* ---------- side panel + HUD ---------- */
 function renderSide(){
@@ -1243,10 +1308,13 @@ function renderSide(){
     for(const o of G.objs[r]){const d=objDone(w,o.id);h+=`<li class="o ${d?'done':''} ${mine?'':'other'}"><span>${d?'✓':'○'}</span><span>${o.text}</span></li>`;}}
   const left=Object.keys(w.locks).filter(r=>!w.locks[r]);
   h+=`<li class="grp" style="color:var(--lantern)"><span>Anyone</span></li><li class="o ${G.looted?'done':''}"><span>${G.looted?'✓':'○'}</span><span>${left.length?'Vault sealed: '+left.length+' lock'+(left.length>1?'s':'')+' left':G.looted?'Strongbox taken: get back to the stairs':'Vault open: take the strongbox and leave by the stairs'}</span></li>`;
-  $('#objs').innerHTML=h;
+  $('#objs').innerHTML=h;renderPack();
   $('#log').innerHTML=G.log.slice(0,14).map(l=>`<li class="${l.cls||''}">${esc(l.msg)}</li>`).join('');
   G.sideDirty=false;
 }
+function renderPack(){const el=$('#packP');if(!el)return;if(G.tavern||!G.pack){el.innerHTML=`<li class="note">Your belt and pack come with you on the job. Set your belt on the board before you head out.</li>`;return;}
+  const wt=packWeight(),cap=PACKCAP[G.cls],grp={};for(const k of G.pack)grp[k]=(grp[k]||0)+1;
+  el.innerHTML=`<li class="ph"><span>Pack</span><span class="mono ${wt>cap*.7?'heavy':''}">${wt}/${cap} wt · ${packValue()}g</span></li>`+(G.pack.length?Object.entries(grp).map(([k,n])=>`<li><span>${ITEMS[k].name}${n>1?' ×'+n:''}</span><span class="mono">${ITEMS[k].v*n}g</span></li>`).join(''):'<li class="note">Empty. Look for valuables along the walls.</li>')+(wt>cap*.7?'<li class="note">Heavy load: you move slower.</li>':'');}
 function renderHUD(){
   const P=G.P;
   {const a=$('#alarm');const lv=G.tavern?0:G.alarm||0;a.hidden=!lv;if(lv){a.textContent='Alarm: '+ALARM[lv]+(lv===3&&G.mode!=='client'&&G.waves<3?` · next wave ${Math.max(0,Math.ceil(G.waveT))}s`:'');a.dataset.lv=lv;}}
@@ -1254,6 +1322,7 @@ function renderHUD(){
   const v=G.vis;const g=Math.round(30+v*200);$('#gem').style.background=`radial-gradient(circle at 40% 35%, rgb(${g+25},${g},${Math.round(g*.6)}), rgb(${Math.round(g*.35)},${Math.round(g*.3)},${Math.round(g*.2)}))`;
   const hunting=G.w.enemies.filter(e=>!e.dead&&e.state==='alert').length,sus=G.w.enemies.filter(e=>!e.dead&&(e.state==='suspicious'||e.state==='search')).length;
   $('#visTxt').textContent=(P.invis>0?'Invisible':v<.12?'Hidden':v<.4?'In shadow':v<.7?'Visible':'Exposed')+(P.crouch?' · crouched':'')+(hunting?` · ${hunting} on alert`:sus?` · ${sus} suspicious`:'');
+  $('#hudBelt').innerHTML=G.tavern||!G.belt?'':G.belt.map((k,i)=>`<div class="ab ${k?'':'off'}"><kbd>${i+5}</kbd>${k?({draught:'Draught',tonic:'Tonic',firepot:'Firepot'})[k]:'empty'}</div>`).join('');
   $('#hudAb').innerHTML=KIT[G.cls].abil.map(A=>{const cd=P.cd[A.id]||0,spent=A.once&&P.used[A.id];return `<div class="ab ${cd>0||spent?'off':''}"><kbd>${A.key}</kbd>${A.name}${A.id==='venom'&&P.venom?' (coated)':''}${cd>0?` ${cd.toFixed(1)}`:''}${spent?' (spent)':''}<span class="cdf" style="width:${cd>0?100-cd/A.cd*100:100}%"></span></div>`;}).join('');
   const pr=$('#prompt');if(G.focus&&G.focus.label.text){pr.hidden=false;pr.innerHTML=G.focus.label.text;}else pr.hidden=true;
   $('#xhair').classList.toggle('hot',!!(G.focus&&G.focus.label.act));
@@ -1265,6 +1334,7 @@ function drawMini(){if(!G.tavern&&G.w.bell){}
   c.clearRect(0,0,cv.width,cv.height);
   for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++){if(!G.explored.has(y*w.W+x))continue;const t=w.t[y][x];if(t===WALL)continue;
     c.fillStyle=t===DOOR?'#c9952f':t===EXIT?'#e7e2d6':t===BARR?'#a07a48':t===WARD?'#9a95f5':t===CHEST?'#f1c860':t===POOL?'#3a5bd8':t===LARDER?'#7d5d3a':B.floor;c.fillRect(x*s,y*s,s+.3,s+.3);}
+  for(const l of w.loot||[]){if(l.taken||!G.explored.has(Math.floor(l.y)*w.W+Math.floor(l.x)))continue;c.fillStyle='#e7c27a';c.fillRect(l.x*s-1.5,l.y*s-1.5,3,3);}
   if(w.bell&&G.explored.has(w.bell.y*w.W+w.bell.x)){c.fillStyle=w.bellCut?'#6a5a3a':'#f1c860';c.beginPath();c.arc(w.bell.px*s,w.bell.py*s,Math.max(2,s*.4),0,7);c.fill();}
   for(const tr of w.traps)if(tr.revealed&&!tr.disarmed){c.fillStyle='#e0574a';c.fillRect(tr.x*s+s*.25,tr.y*s+s*.25,s*.5,s*.5);}
   for(const e of w.enemies){if(e.dead)continue;const seen=(losT(P.x,P.y,e.x,e.y)&&Math.hypot(e.x-P.x,e.y-P.y)<12&&(lightAt(e.x,e.y)>.1||Math.hypot(e.x-P.x,e.y-P.y)<3));
@@ -1427,6 +1497,12 @@ function syncFeatures(){
     else if(t===CHEST){addMesh(Gm.chest,Mt.gold,cx,.31,cz);addMesh(Gm.lid,Mt.woodDark,cx,.68,cz);}
     else if(t===TABLE){addMesh(Gm.table,Mt.table,cx,.88,cz);addMesh(Gm.leg,Mt.table,cx,.41,cz);addMesh(Gm.die,Mt.bone,cx-.2,.99,cz);addMesh(Gm.die,Mt.bone,cx+.25,.99,cz+.2);}
   }
+  for(const l of w.loot||[]){if(l.taken)continue;const I=ITEMS[l.k],cx=l.x*T,cz=l.y*T;
+    if(l.k==='idol'){addMesh(new THREE.ConeGeometry(.16,.5,6),Mt.gold,cx,.25,cz);}
+    else if(l.k==='silver'){const p=addMesh(new THREE.CylinderGeometry(.22,.22,.03,16),new THREE.MeshLambertMaterial({color:0xd8dce4,emissive:0x202226}),cx,.02,cz);}
+    else if(l.k==='ledger'){addMesh(new THREE.BoxGeometry(.3,.08,.4),new THREE.MeshLambertMaterial({color:0x5a2a1a}),cx,.04,cz).rotation.y=.4;}
+    else if(l.k==='ring'){const r=addMesh(new THREE.TorusGeometry(.07,.02,6,12),Mt.gold,cx,.04,cz);r.rotation.x=Math.PI/2;}
+    else{addMesh(new THREE.SphereGeometry(.15,10,8),new THREE.MeshLambertMaterial({color:0x6b4a2a}),cx,.12,cz).scale.set(1,.8,1);addMesh(R3.geo.gem,Mt.gold,cx,.26,cz).scale.setScalar(.5);}}
   if(w.bell){const b=w.bell,bx=(b.x+.5+b.dx*.42)*T,bz=(b.y+.5+b.dy*.42)*T;const arm=addMesh(new THREE.BoxGeometry(.1,.1,.7),Mt.woodDark,bx-b.dx*.3,2.5,bz-b.dy*.3);if(b.dx)arm.rotation.y=Math.PI/2;
     const bel=addMesh(new THREE.CylinderGeometry(.12,.3,.42,14,1,true),Mt.gold,bx-b.dx*.6,w.bellCut?.22:2.2,bz-b.dy*.6);bel.material=new THREE.MeshLambertMaterial({color:0xb08a3a,side:THREE.DoubleSide});
     if(!w.bellCut)addMesh(new THREE.BoxGeometry(.03,1.5,.03),new THREE.MeshLambertMaterial({color:0xc8b48a}),bx-b.dx*.6,1.3,bz-b.dy*.6);}
@@ -1480,7 +1556,7 @@ function frame(){
   if(G.sideDirty)renderSide();
 }
 
-renderBoard();
-window.__NET=NET;window.__TL={buildAvatar,startTavern,launchJob,setClass,tavernUse,openJobPicker,get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
+renderBoard();renderStash();
+window.__NET=NET;window.__TL={get PROF(){return PROF;},useBelt,settle,renderStash,buildAvatar,startTavern,launchJob,setClass,tavernUse,openJobPicker,get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
 </script>
 </body></html>

@@ -760,8 +760,8 @@ function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.
 const SCODE={patrol:0,idle:1,sentry:2,suspicious:3,search:4,return:5,alert:6};const SNAME=Object.keys(SCODE);
 function packWorld(){const w=G.w;const bits=(a,f)=>a.map(x=>f(x)?1:0).join('');
   return {g:w.enemies.map(e=>[Math.round(e.x*100),Math.round(e.y*100),Math.round(e.ang*100),SCODE[e.state]??0,Math.max(0,Math.round(e.hp)),(e.dead?1:0)|(e.sick?2:0)|(e.atk>0?4:0)|(G.time-(e.hitT||-9)<.25?8:0)|(e.walking?16:0)|(e.stag>0?32:0),e.atk>0?Math.round((1-e.atk/(e.atkMax||.85))*9):0]),
-    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,st:w.stab?1:0,bx:w.crates?w.crates.map(c=>[Math.round(c.x*20),Math.round(c.y*20),c.c?(c.c==='me'?(NET.myPeer||'h'):c.c):0,c.del?1:0]):null,cg:w.crGold||0,cr:(w.crew||[]).map(o=>w.t[o.y][o.x]),ep:(G.eproj||[]).map(p=>[Math.round(p.x*100),Math.round(p.y*100)]),lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id),dr:(w.loot||[]).filter(l=>l.drop).map(l=>[l.id,Math.round(l.x*100),Math.round(l.y*100),l.it.b,l.it.r,l.it.s])};}
-function applyWorld(W){const w=G.w;if(!W||!W.g)return;
+    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,st:w.stab?1:0,bx:w.crates?w.crates.map(c=>[Math.round(c.x*20),Math.round(c.y*20),c.c?(c.c==='me'?(NET.myPeer||'h'):c.c):0,c.del?1:0]):null,cg:w.crGold||0,zx:zxPack(),cr:(w.crew||[]).map(o=>w.t[o.y][o.x]),ep:(G.eproj||[]).map(p=>[Math.round(p.x*100),Math.round(p.y*100)]),lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id),dr:(w.loot||[]).filter(l=>l.drop).map(l=>[l.id,Math.round(l.x*100),Math.round(l.y*100),l.it.b,l.it.r,l.it.s])};}
+function applyWorld(W){const w=G.w;if(!W||!W.g)return;if(W.zx)zxApply(W.zx);
   if(W.bx&&w.crates){W.bx.forEach((v,i)=>{const c=w.crates[i];if(!c)return;c.x=v[0]/20;c.y=v[1]/20;c.c=v[2]||null;if(v[3]&&!c.del){c.del=true;G.looted=true;}});w.crGold=W.cg||0;}
   if(W.dr&&w.loot)for(const [id,x,y,b,r,sd] of W.dr){if(w.loot[id]||!GB[b])continue;w.loot[id]={id,x:x/100,y:y/100,it:{b,r,s:sd},taken:false,drop:true};G.featDirty=true;}
   if(W.lo&&w.loot){let ch=false;w.loot.forEach((l,i)=>{const t=W.lo[i]==='1';if(l&&t&&!l.taken){l.taken=true;ch=true;}});if(ch)G.featDirty=true;}
@@ -800,6 +800,7 @@ function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peer
   if(a.t==='doc'){docHostAct(rr,a,actor);return;}
   if(a.t==='rune'){runeTrip(a.x|0,a.y|0,actor);return;}
   if(a.t==='crate'){crateAct(a.op,a.id|0,actor);return;}
+  if(a.t==='zx'){zxHostAct(a,actor);return;}
   if(a.t==='hit'){const e=w.enemies[a.id];if(!e||e.dead)return;G.lastActor=actor.key;actor.rr=rr;
     const fx={};if(Array.isArray(a.fx))for(const k of a.fx)if(LEGS[k])fx[k]=1;
     applyHit(e,actor.cls,(a.k==='cleave'||a.k==='charge')&&actor.cls==='warrior'?a.k:a.k==='arrow'&&actor.cls==='thief'?'arrow':'melee',{ua:!!a.ua,actor,bs:!!a.bs,venom:!!a.venom&&actor.cls==='thief',src:[rr.p.x,rr.p.y],bj:+a.bj||0,hid:Math.min(2,+a.hid||0),ram:!!a.ram,kd:!!a.kd,boot:+a.boot||0,stag:!!a.stag,dm:Math.min(150,Math.max(0,+a.dm||0)),stg:Math.min(1.5,Math.max(0,+a.stg||0)),pw:Math.min(2.5,Math.max(.5,+a.pw||1)),bsx:!!a.bsx,fx,mk:actor.cls==='doctor'?Math.min(2,+a.mk||0):0,amp:actor.cls==='doctor'?Math.min(2,+a.amp||0):0});}
@@ -1049,6 +1050,15 @@ const ITEMS={
   keg:{name:'Powder keg',short:'Keg',price:120,desc:'Set it down: a 3 s fuse, then a blast that blows barricades apart. Very loud.'},
   hornet:{name:'Hornet jar',short:'Hornets',price:75,throw:true,desc:'Throw: an angry swarm stings and harries everyone nearby for 9 s.'},
   glow:{name:'Glowdust',short:'Glowdust',price:30,throw:true,desc:'Throw: glowing dust shows hidden traps where it lands.'}};
+/*ZXITEMS*//* ---------- hedge-magic and street tricks: portals, springcaps, the pall and fey sight, puddles and sparks, oil fires, rat stampedes ---------- */
+Object.assign(ITEMS,{
+  portal:{name:'Portal chalk',short:'Portal',price:90,desc:'Draw a circle, then a second one somewhere else: for a minute, anyone or anything that steps into one comes out of the other. Guards and thrown things too.'},
+  spring:{name:'Springcap spores',short:'Springcap',price:45,throw:true,desc:'Throw: a fat fey mushroom sprouts where it lands. Step on it to be flung up and forward, onto galleries and over traps.'},
+  pall:{name:'Jar of Pall',short:'Pall',price:80,throw:true,desc:'Throw: a huge cloud of magical darkness for 25 s. Nobody sees into it, out of it or through it. Unless they have fey sight.'},
+  fey:{name:'Fey-sight unguent',short:'Fey-sight',price:55,desc:'Smear it on your eyelids and on every crewmate close by: for 90 s you see through the Pall and better in the dark.'},
+  spark:{name:'Spark jar',short:'Spark',price:60,throw:true,desc:'Throw: a jar of bottled lightning. Lands in water and the whole puddle is live: everyone standing in it is shocked and stunned.'},
+  oil:{name:'Lamp-oil flask',short:'Oil',price:30,throw:true,desc:'Throw: a slick of oil. Any fire that touches it runs along the whole slick.'}});
+
 for(const k of ['draught','tonic','firepot','smoke'])ITEMS[k].short={draught:'Draught',tonic:'Tonic',firepot:'Firepot',smoke:'Smoke'}[k];
 const BELTMAX=6;
 const BELT=4,PROFKEY='threelocks.profile.v1';
@@ -1056,7 +1066,8 @@ let PROF=null;
 function loadProf(){try{PROF=JSON.parse(localStorage.getItem(PROFKEY));}catch(e){PROF=null;}
   if(!PROF||typeof PROF!=='object')PROF={gold:200,stash:{draught:2,tonic:1,firepot:0,smoke:0},belt:{draught:2,tonic:1,firepot:0,smoke:0},haul:null};
   PROF.stash=PROF.stash||{};PROF.belt=PROF.belt||{};
-  for(const k of Object.keys(ITEMS)){PROF.stash[k]=PROF.stash[k]||0;PROF.belt[k]=Math.min(PROF.belt[k]||0,PROF.stash[k]);}return PROF;}
+  for(const k of Object.keys(ITEMS)){PROF.stash[k]=PROF.stash[k]||0;PROF.belt[k]=Math.min(PROF.belt[k]||0,PROF.stash[k]);}
+  if(!PROF.zx1){PROF.zx1=1;const S=PROF.stash;S.portal+=1;S.spring+=2;S.pall+=1;S.fey+=1;S.spark+=1;S.oil+=1;try{localStorage.setItem(PROFKEY,JSON.stringify(PROF));}catch(e){}}return PROF;}
 function saveProf(){try{localStorage.setItem(PROFKEY,JSON.stringify(PROF));}catch(e){}}
 function beltTotal(){return Object.values(PROF.belt).reduce((a,b)=>a+b,0);}
 /* ================= gear, character stats and levels ================= */
@@ -1511,10 +1522,10 @@ function dmgFoe(e,d,actor){applyHit(e,null,'raw',{d,actor});}
 function kegBlast(h){G.bursts=G.bursts||[];G.bursts.push({x:h.x,y:h.y,t:0,col:0xffa040});const w=G.w;let walls=false;
   for(const e of w.enemies){if(e.dead)continue;const d=Math.hypot(e.x-h.x,e.y-h.y);if(d<2.4&&losT(h.x,h.y,e.x,e.y)){dmgFoe(e,Math.round(70*(1-d/3)),h.actor);if(!e.dead)stagger(e,2,true);}}
   for(let y=Math.floor(h.y)-2;y<=Math.floor(h.y)+2;y++)for(let x=Math.floor(h.x)-2;x<=Math.floor(h.x)+2;x++){if(w.t[y]&&w.t[y][x]===BARR){w.t[y][x]=FLOOR;w.cleared.push([x,y]);walls=true;}}
-  if(walls){rebuildWalls();G.featDirty=true;}noise(h.x,h.y,24,1,1);log('The powder keg goes up with a roar.','bad');if(G.mode==='host')netLog('A powder keg goes up with a roar.','bad');
+  if(walls){rebuildWalls();G.featDirty=true;}zxIgnite(h.x,h.y,2.2);noise(h.x,h.y,24,1,1);log('The powder keg goes up with a roar.','bad');if(G.mode==='host')netLog('A powder keg goes up with a roar.','bad');
   if(Math.hypot(G.P.x-h.x,G.P.y-h.y)<2.2)hurt(Math.round(40*(1-Math.hypot(G.P.x-h.x,G.P.y-h.y)/3)),'The blast catches you.');}
 /* thrown consumables land here (on the host, or solo) */
-function applyThrow(what,x,y,actor){const w=G.w;
+function applyThrow(what,x,y,actor){const w=G.w;if(zxThrow(what,x,y,actor))return;
   if(what==='caltrops'){addHaz({k:'cal',x,y,t:25,actor});}
   else if(what==='hornet'){addHaz({k:'hornet',x,y,t:9,actor});noise(x,y,8,.5,.8);}
   else if(what==='sleeppouch'){const n=sleepCone(x,y,0,1.6,7,6,false);if(actor&&actor.key==='me')log(n?`${n} foe${n>1?'s':''} drop off to sleep.`:'The sleep dust drifts over nobody.');}
@@ -1793,7 +1804,7 @@ function dropGear(e){if(G.mode==='client'||G.tavern||!G.w.loot)return;const ft=F
   G.w.loot.push({id:G.w.loot.length,x,y,it:{b:g.b,r:g.r,s:g.s},taken:false,drop:true});G.featDirty=true;
   if(g.r>=2){const t=`${nameOf(e)} drops something that glints ${RAR[g.r].n.toLowerCase()}.`;log(t,'good');if(G.mode==='host')netLog(t,'good');}}
 function foeXP(e){return e.captain?80:FT(e).heavy?30:e.reinf?6:10;}
-function useBelt(i){const P=G.P,k=G.belt[i];if(!k||G.over||G.down>0||G.tavern)return;
+function useBelt(i){const P=G.P,k=G.belt[i];if(!k||G.over||G.down>0||G.tavern)return;if(zxBelt(k,i))return;
   if(k==='draught'){P.heal=45*(G.S.fx&&G.S.fx.saint?2:1)*(SK('cureall')?2:1);log('You knock back a healing draught.','good');}
   else if(k==='tonic'){P.st=100;P.tonic=SK('cureall')?20:10;log('The bitter tonic burns going down. Your breath comes easy.','good');}
   else if(k==='firepot'){breakInvis('Throwing breaks your invisibility.');const cam=R3.camera;const dir=new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion);
@@ -1939,7 +1950,7 @@ function startRun(m,cls,opts){
     for(const h of (host&&host.pres.hits)||[])NET.lastHit=Math.max(NET.lastHit,h.n);for(const l of (host&&host.pres.lg)||[])NET.lastLog=Math.max(NET.lastLog,l[0]);
     setPause(true,'Joined',`You are the ${CLS[cls].name} in ${peerName(host)}'s crew. The world keeps moving while you are paused.`);}
   if(G.mode==='host')setPause(true,'Hosting',`Room code ${NET.code}. Friends open this same page, choose Join a friend and type the code. The world keeps moving while you are paused.`);
-  jobRunStart();idRunStart();build3D();resize3D();renderSide();renderCrew();pushPresence();window.scrollTo(0,0);
+  jobRunStart();idRunStart();zxRunStart();build3D();resize3D();renderSide();renderCrew();pushPresence();window.scrollTo(0,0);
 }
 async function startMaybeHosted(m,cls){
   if($('#hostToggle')&&$('#hostToggle').checked&&NET.lobby){let code=null;for(let i=0;i<3&&!code;i++){const c=mkCode();try{await joinRoom(c,true);code=c;}catch(e){if(String(e&&e.message)!=='taken')break;}}
@@ -2208,7 +2219,7 @@ function update(dt){
   // traps
   for(const tr of G.w.traps){if(tr.disarmed)continue;const d=Math.hypot(P.x-tr.x-.5,P.y-tr.y-.5);
     if(G.cls==='thief'&&!tr.revealed&&d<(S.trap||1.9)&&losT(P.x,P.y,tr.x+.5,tr.y+.5)){tr.revealed=true;G.featDirty=true;log('Your eye catches a pressure plate. Trap spotted.','good');if(G.mode==='client')sendAct({t:'rev',id:tr.id});}
-    if(d<.36&&G.down<=0){tr.disarmed=true;tr.revealed=true;G.featDirty=true;hurt(25,'Click. Darts hiss out of the wall.');if(G.mode==='client')sendAct({t:'trap',id:tr.id});else noise(tr.x+.5,tr.y+.5,12,.6,.9);if(G.over)return;}}
+    if(d<.36&&G.down<=0&&!P.air){tr.disarmed=true;tr.revealed=true;G.featDirty=true;hurt(25,'Click. Darts hiss out of the wall.');if(G.mode==='client')sendAct({t:'trap',id:tr.id});else noise(tr.x+.5,tr.y+.5,12,.6,.9);if(G.over)return;}}
   // light & visibility
   G.lightT-=dt;if(G.lightT<=0){G.lightT=.1;G.light=lightAt(P.x,P.y);}
   let v=G.light;if(P.crouch)v*=G.cls==='thief'?.28:.6;if(P.moving)v*=P.sprint?1.6:1.15;if(SK('stillstone')&&!P.moving&&G.light<(SK('stillstone')>1?.6:.35))v*=.25;v*=docVisMul()*idVisMul();if(P.invis>0)v=0;G.vis=Math.min(1,v*(S.stealth||1));
@@ -2220,7 +2231,7 @@ function update(dt){
     for(const e of G.w.enemies)if(!e.dead)updGuard(e,dt);updAlarm(dt);updEProj(dt);if(!G.tavern)updGates(dt);}
   if(G.over)return;
   if(G.mp){NET.sendT-=dt;if(NET.sendT<=0){NET.sendT=G.mode==='host'?.1:.066;pushPresence();}updRemoteAvatars(dt);G.crewT=(G.crewT||0)-dt;if(G.crewT<=0){G.crewT=.5;renderCrew();}}
-  updProj(dt);updHaz(dt);docUpdate(dt);idUpdate(dt);obsUpdate(dt);bankUpdate(dt);
+  updProj(dt);updHaz(dt);docUpdate(dt);idUpdate(dt);obsUpdate(dt);bankUpdate(dt);zxUpdate(dt);
   checkObjectives();
   G.focus=findFocus();if(!G.tavern)slipCheck(dt);
 }
@@ -2284,7 +2295,7 @@ function goAlert(e,quiet,src){
   if(!(e.mute>0))for(const o of G.w.enemies){if(o===e||o.dead||o.state==='alert')continue;
     if((e.group&&o.group===e.group)||Math.hypot(o.x-e.x,o.y-e.y)<=r){o.state='alert';o.aw=1;o.last=e.last.slice();o.unseen=0;o.path=null;}}
 }
-function noise(x,y,radM,amt,cap,footstep){if(footstep&&G.m&&G.m.mods&&G.m.mods.includes('rain'))radM*=.7;
+function noise(x,y,radM,amt,cap,footstep){zxNoise(x,y,radM);if(footstep&&G.m&&G.m.mods&&G.m.mods.includes('rain'))radM*=.7;
   for(const e of G.w.enemies){if(e.dead||e.state==='alert')continue;const d=Math.hypot(e.x-x,e.y-y)*T;if(d>radM)continue;
     if(amt>=1){goAlert(e,true,[x,y]);continue;}
     e.aw=Math.min(Math.max(e.aw,cap),e.aw+amt*(1-d/radM*.5));
@@ -2295,7 +2306,7 @@ function stagger(e,t,force){if(e.dead)return;if(FT(e).poise&&!force)t*=.3;e.stag
 function bark(e){e.barkT=G.time;}
 function seesPlayer(e){let best=0,who=null;for(const pl of players()){const a=seesOne(e,pl);if(a>best){best=a;who=pl;}}e.seen=who;return best;}
 function seesOne(e,P){
-  if(P.invis)return 0;
+  if(P.invis)return 0;if(zxPallBlocks(e.x,e.y,P.x,P.y))return 0;
   const dx=P.x-e.x,dy=P.y-e.y,dm=Math.hypot(dx,dy)*T;if(dm>26)return 0;
   const da=Math.abs(angDiff(Math.atan2(dy,dx),e.ang));const alert=e.state==='alert';
   if(!(da<(alert?Math.PI:.95)||dm<1.3))return 0;
@@ -2399,7 +2410,7 @@ function applyHit(e,cls,kind,o){
   if(e.hp<=0){say(kind==='fire'?`Fire takes ${lc(nameOf(e))}.`:`${who==='You'?'You cut':who+' cuts'} down ${lc(nameOf(e))}.`);kill(e,actor);}
   else{goAlert(e,true,o.src);e.hitT=G.time;}
 }
-function burstAt(x,y,cls,actor,sp,rad,fs){let n=0;fs=fs||{};let r=rad||1.35;ratFire(x,y,r);const src=actor&&actor.rr?[actor.rr.p.x,actor.rr.p.y]:undefined;
+function burstAt(x,y,cls,actor,sp,rad,fs){let n=0;fs=fs||{};let r=rad||1.35;ratFire(x,y,r);zxIgnite(x,y,r);const src=actor&&actor.rr?[actor.rr.p.x,actor.rr.p.y]:undefined;
   if(fs.wild){const n0=G.w.enemies.filter(e=>!e.dead&&Math.hypot(e.x-x,e.y-y)<r&&losT(x,y,e.x,e.y)).length;r*=1+.3*Math.min(3,n0);}
   const hits=[];for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-x,e.y-y)<r&&losT(x,y,e.x,e.y)){applyHit(e,cls,'fire',{actor,sp,src});hits.push(e);n++;if(fs.spo&&!e.dead){stagger(e,1.2,true);if(fs.spo>1)e.mute=10;}}}
   if(fs.sp)for(const e of G.w.enemies.filter(o=>!o.dead&&!hits.includes(o)&&Math.hypot(o.x-x,o.y-y)<3.2&&losT(x,y,o.x,o.y)).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y)).slice(0,fs.sp>1?5:3)){G.bursts=G.bursts||[];G.bursts.push({x:e.x,y:e.y,t:.2,col:0xffe080});applyHit(e,cls,'fire',{actor,sp:(sp||1)*.5,src});n++;}
@@ -2457,7 +2468,7 @@ function fireBurst(x,y,pot){G.bursts=G.bursts||[];G.bursts.push({x,y,t:0});
   G.lastActor='me';const n=burstAt(x,y,pot?'pot':'wizard',null,sp,em?2:1.35,fs);if(pot){if(!n)log('The firepot shatters and burns out.');return;}if(!n)log('Your fireburst splashes across the stone.');}
 function updProj(dt){
   for(const p of G.proj){p.t+=dt;
-    if(p.kind==='throw'){p.vel.y-=9.8*dt;const np=p.pos.clone().addScaledVector(p.vel,dt);const tx=np.x/T,ty=np.z/T;const wall=opaqueT(tileAt(tx,ty));if(wall||np.y<=.05){p.dead=true;throwLand(p.what,wall?p.pos.x/T:tx,wall?p.pos.z/T:ty);continue;}if(np.y>WALLH-.05){p.vel.y=-Math.abs(p.vel.y)*.3;np.y=WALLH-.05;}p.pos.copy(np);if(p.t>4)p.dead=true;continue;}
+    if(p.kind==='throw'){p.vel.y-=9.8*dt;const np=p.pos.clone().addScaledVector(p.vel,dt);const tx=np.x/T,ty=np.z/T;const wall=opaqueT(tileAt(tx,ty));if(wall||np.y<=elAt(tx,ty)+.05){p.dead=true;throwLand(p.what,wall?p.pos.x/T:tx,wall?p.pos.z/T:ty);continue;}if(np.y>WALLH-.05){p.vel.y=-Math.abs(p.vel.y)*.3;np.y=WALLH-.05;}p.pos.copy(np);if(p.t>4)p.dead=true;continue;}
     if(p.kind==='pebble')p.vel.y-=9.8*dt;if(p.kind==='arrow'){p.vel.y-=2.5*dt;const tt=tileAt(p.pos.x/T,p.pos.z/T);if(tt===PIT)p.over.add(Math.floor(p.pos.x/T)+','+Math.floor(p.pos.z/T));}
     const np=p.pos.clone().addScaledVector(p.vel,dt);const tx=np.x/T,ty=np.z/T;
     if(p.kind==='arrow'&&(opaqueT(tileAt(tx,ty))||tileAt(tx,ty)===LEDGE&&np.y<1.75||np.y<=.03)){p.dead=true;arrowLand(p,tileAt(tx,ty)===LEDGE?tx:p.pos.x/T,tileAt(tx,ty)===LEDGE?ty:p.pos.z/T);continue;}
@@ -2536,10 +2547,10 @@ obsInit();
 function elAt(x,y){const w=G&&G.w;if(!w||!w.el)return 0;const tx=Math.floor(x),ty=Math.floor(y);const r=w.el[ty];return r&&r[tx]!=null?r[tx]:0;}
 function elW(wx,wz){const w=G&&G.w;if(!w||!w.el)return 0;const x=wx/T,y=wz/T,tx=Math.floor(x),ty=Math.floor(y);if(!w.t[ty]||w.t[ty][tx]==null)return 0;
   if(w.t[ty][tx]!==WALL)return w.el[ty][tx]||0;let best=0,bd=9;for(const [dx,dy] of DIRS){const nx=tx+dx,ny=ty+dy;if(!w.t[ny]||w.t[ny][nx]==null||w.t[ny][nx]===WALL)continue;const d=Math.hypot(nx+.5-x,ny+.5-y);if(d<bd){bd=d;best=w.el[ny][nx]||0;}}return best;}
-function elevStep(dt){const P=G.P;if(!G.w||!G.w.el){P.vz=0;P.fz=0;return;}const fz=elAt(P.x,P.y);P.fz=fz;if(P.vz==null)P.vz=fz;
+function elevStep(dt){const P=G.P;if(P.air&&zxAir(dt))return;if(!G.w||!G.w.el){P.vz=0;P.fz=0;return;}const fz=elAt(P.x,P.y);P.fz=fz;if(P.vz==null)P.vz=fz;
   if(fz>P.vz)P.vz=Math.min(fz,P.vz+dt*7);else if(fz<P.vz){if(P.fallFrom==null)P.fallFrom=P.vz;P.vz=Math.max(fz,P.vz-dt*(4+ (P.fallFrom-P.vz)*6));}
   if(P.fallFrom!=null&&P.vz<=fz+.001){const h=P.fallFrom-fz;P.fallFrom=null;if(h>1.6&&!G.tavern){log(h>3?'You drop down hard.':'You drop down.');if(G.mode!=='client')noise(P.x,P.y,h>3?9:6,.5,.7);if(h>3.4&&!SK('featherlight')&&!bgIs('secondstorey'))hurt(Math.round((h-3.4)*8+4),'The fall jars every bone.');}}}
-function elevBlocked(x,y){const w=G.w;if(!w||!w.el)return false;return elAt(x,y)>(G.P.fz||0)+.8;}
+function elevBlocked(x,y){const w=G.w;if(!w||!w.el)return false;return elAt(x,y)>Math.max(G.P.fz||0,G.P.air?G.P.vz:-99)+.8;}
 function elevLos(x0,y0,x1,y1,f,z0,z1){return elAt(x0+(x1-x0)*f,y0+(y1-y0)*f)>z0+(z1-z0)*f;}
 /* render: keep every object at the height of the floor under it */
 function elevPass(){const w=G&&G.w;if(!w||!w.el||G.tavern)return;const fix=o=>{const ud=o.userData;if(ud.noEl)return;const e=elW(o.position.x,o.position.z);
@@ -2623,9 +2634,188 @@ function bankObjLine(){const w=G.w;if(!w.crates)return null;const n=w.crates.fil
   return `<li class="o ${n?'done':''}"><span>${n?'✓':'○'}</span><span>${left.length?'Vault sealed: '+left.length+' lock'+(left.length>1?'s':'')+' left. ':''}Crates at the getaway: ${n} of ${w.crates.length} (${w.crGold||0}g)</span></li>`;}
 function jobPay(m){return G&&G.w&&G.w.crates?(G.w.crGold||0):m.payout;}
 
+/*ZXFUNCS*/
+
+const ZXC={spring:0xd84a3a,pall:0x101018,spark:0x9ad8ff,oil:0x3a2a10};
+function zxKey(x,y){return Math.floor(y)*G.w.W+Math.floor(x);}
+function zxWet(x,y){const w=G.w;if(!w.wet)return 0;const k=zxKey(x,y);return w.wet[k]||0;}/* 1 water, 2 oil */
+function zxRunStart(){const w=G.w,m=G.m||{};w.zx=[];w.zxId=1;w.wet={};w.nests=[];w.oilGone=[];G.zxSeen={};G.fey=0;G.portalA=null;G.zcd=0;G.zxHurt={};G.zxDirty=true;
+  if(G.tavern)return;const R=mulberry(((m.seed||7)^0x2a7e51)>>>0),W=w.W,H=w.H;
+  const elv=(x,y)=>w.el&&w.el[y]?w.el[y][x]||0:0;
+  const ok=(x,y)=>x>0&&y>0&&x<W-1&&y<H-1&&w.t[y][x]===FLOOR&&!w.wet[y*W+x];
+  if(w.mat)for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(w.mat[y]&&w.mat[y][x]===3&&walkT(w.t[y][x]))w.wet[y*W+x]=1;
+  const floors=[];for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)if(ok(x,y))floors.push([x,y]);if(!floors.length)return;
+  const sx=w.start?w.start[0]:0,sy=w.start?w.start[1]:0;
+  const blob=(kind,n0,n1)=>{for(let tries=0;tries<20;tries++){const [x,y]=floors[Math.floor(R()*floors.length)];if(!ok(x,y)||Math.hypot(x-sx,y-sy)<4)continue;
+      const e0=elv(x,y),want=n0+Math.floor(R()*(n1-n0+1)),got=[[x,y]];w.wet[y*W+x]=kind;
+      for(let i=0;i<want*4&&got.length<want;i++){const [bx,by]=got[Math.floor(R()*got.length)],[dx,dy]=DIRS[Math.floor(R()*4)],nx=bx+dx,ny=by+dy;if(ok(nx,ny)&&Math.abs(elv(nx,ny)-e0)<.1){w.wet[ny*W+nx]=kind;got.push([nx,ny]);}}return;}};
+  const big=W*H>1600?1.5:1;for(let i=0;i<Math.round((5+R()*5)*big);i++)blob(1,2,7);for(let i=0;i<Math.round((2+R()*2)*big);i++)blob(2,3,8);
+  // rat nests: corners and dead ends away from the start
+  const walls=(x,y)=>DIRS.filter(([dx,dy])=>!walkT(w.t[y+dy][x+dx])).length;
+  const cand=floors.filter(([x,y])=>walls(x,y)>=2&&Math.hypot(x-sx,y-sy)>9&&!w.wet[y*W+x]);
+  const nN=(G.m.biome==='lair'||G.m.biome==='crypt'||m.type==='bank'?3:2)+(R()<.4?1:0);
+  for(let i=0;i<nN&&cand.length;i++){const j=Math.floor(R()*cand.length),[x,y]=cand.splice(j,1)[0];if(w.nests.some(n=>Math.hypot(n.x-x,n.y-y)<8))continue;w.nests.push({x:x+.5,y:y+.5,gone:false});}}
+function zxAdd(o){const w=G.w;o.id=w.zxId++;w.zx.push(o);G.zxDirty=true;return o;}
+/* host-side packing */
+function zxPack(){const w=G.w;if(!w.zx)return null;return [w.zx.map(o=>{const a=[o.id,o.k,Math.round(o.x*100),Math.round(o.y*100),Math.round(o.t*10)];
+    if(o.k==='portal')a.push(Math.round(o.bx*100),Math.round(o.by*100));else if(o.k==='pall')a.push(o.r);else if(o.k==='shock'||o.k==='fire')a.push(o.tl);return a;}),
+  w.nests.map(n=>n.gone?1:0).join(''),w.oilGone.slice(),(w.wetAdd||[]).slice()];}
+function zxApply(Z){const w=G.w;if(!Z||!w.zx)return;const [L,ng,og,wa]=Z;const keep={};
+  for(const a of L){keep[a[0]]=1;let o=w.zx.find(q=>q.id===a[0]);const x=a[2]/100,y=a[3]/100;
+    if(!o){o={id:a[0],k:a[1],x,y,t:a[4]/10,age:0};w.zx.push(o);G.zxDirty=true;}else{o.tx=x;o.ty=y;o.t=a[4]/10;}
+    if(o.k==='portal'){o.bx=a[5]/100;o.by=a[6]/100;}else if(o.k==='pall')o.r=a[5];else if(o.k==='shock'||o.k==='fire')o.tl=a[5];}
+  const n0=w.zx.length;w.zx=w.zx.filter(o=>keep[o.id]);if(w.zx.length!==n0)G.zxDirty=true;
+  if(ng)w.nests.forEach((n,i)=>{if(ng[i]==='1'&&!n.gone){n.gone=true;G.zxDirty=true;}});
+  if(og&&og.length!==w.oilGone.length){w.oilGone=og.slice();for(const k of og)delete w.wet[k];G.wetDirty=true;}
+  if(wa&&wa.length!==(w.wetAdd||[]).length){w.wetAdd=wa.slice();for(const [k,v] of wa)if(!w.oilGone.includes(k))w.wet[k]=v;G.wetDirty=true;}}
+/* belt items that aren't thrown */
+function zxBelt(k,i){const P=G.P;
+  if(k==='portal'){const here=[+P.x.toFixed(2),+P.y.toFixed(2)];
+    if(!G.portalA){G.portalA=here;G.bursts=G.bursts||[];G.bursts.push({x:P.x,y:P.y,t:0,col:0x6ab0ff});log('You chalk the first circle on the floor. Use the chalk again somewhere else to open the portal.');return true;}
+    if(Math.hypot(here[0]-G.portalA[0],here[1]-G.portalA[1])<2.2){toast('Too close to the first circle. Walk further away.');return true;}
+    const a={t:'zx',k:'portal',x:G.portalA[0],y:G.portalA[1],bx:here[0],by:here[1]};G.portalA=null;G.zcd=1.2;
+    if(G.mode==='client')sendAct(a);else zxHostAct(a,{key:'me',name:'You'});log('The second circle flares. The portal is open for a minute.','good');G.belt[i]=null;G.sideDirty=true;return true;}
+  if(k==='fey'){const a={t:'zx',k:'fey',x:+P.x.toFixed(2),y:+P.y.toFixed(2)};G.fey=90;G.zxDirty=true;if(G.mode==='client')sendAct(a);else zxHostAct(a,{key:'me',name:'You'});
+    log('The unguent stings, then the dark goes silver-green. Crewmates close by get a dab too.','good');G.belt[i]=null;G.sideDirty=true;return true;}
+  return false;}
+function zxHostAct(a,actor){const w=G.w;if(!w.zx)return;
+  if(a.k==='portal'){const n=w.zx.filter(o=>o.k==='portal');if(n.length>=3){n[0].t=0;}zxAdd({k:'portal',x:+a.x,y:+a.y,bx:+a.bx,by:+a.by,t:60,age:0});if(actor.key!=='me'){log(`${actor.name} opens a portal.`);if(G.mode==='host')netLog(`${actor.name} opened a portal.`);}}
+  else if(a.k==='fey')zxAdd({k:'fey',x:+a.x,y:+a.y,t:2,age:0});
+  else if(a.k==='kick'){const n=w.nests[a.i|0];if(n&&!n.gone)zxStampede(n,actor);}}
+/* thrown things land (host or solo) */
+function zxThrow(what,x,y,actor){const w=G.w;if(!w.zx)return false;const me=actor&&actor.key==='me';
+  if(what==='spring'){zxAdd({k:'spring',x,y,t:90,age:0});if(me)log('A fat red springcap pops up where the spores land.');return true;}
+  if(what==='pall'){zxAdd({k:'pall',x,y,r:3.2,t:25,age:0});noise(x,y,5,.2,.4);if(me)log('The jar bursts into a wall of black. Nobody is seeing through that.','good');return true;}
+  if(what==='oil'){const W=w.W,add=w.wetAdd=w.wetAdd||[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(Math.abs(dx)+Math.abs(dy)>1&&Math.random()<.5)continue;const tx=Math.floor(x)+dx,ty=Math.floor(y)+dy;
+      if(!w.t[ty]||!walkT(w.t[ty][tx])||w.wet[ty*W+tx]===1)continue;w.wet[ty*W+tx]=2;const oi=w.oilGone.indexOf(ty*W+tx);if(oi>=0)w.oilGone.splice(oi,1);add.push([ty*W+tx,2]);}
+    G.wetDirty=true;if(me)log('The flask smashes. Oil spreads across the floor.');return true;}
+  if(what==='spark'){zxSpark(x,y,actor);return true;}
+  return false;}
+function zxFlood(x,y,kind,max){const w=G.w,W=w.W,k0=zxKey(x,y);let s=null;
+  if(w.wet[k0]===kind)s=k0;else for(const [dx,dy] of [[0,0],...DIRS,[1,1],[-1,1],[1,-1],[-1,-1]]){const k=zxKey(x+dx*.6,y+dy*.6);if(w.wet[k]===kind){s=k;break;}}
+  if(s==null)return [];const seen=new Set([s]),q=[s];
+  for(let i=0;i<q.length&&q.length<max;i++){const c=q[i],cx=c%W,cy=(c/W)|0;for(const [dx,dy] of DIRS){const nk=(cy+dy)*W+cx+dx;if(!seen.has(nk)&&w.wet[nk]===kind){seen.add(nk);q.push(nk);}}}return q;}
+function zxSpark(x,y,actor){const w=G.w,W=w.W,me=actor&&actor.key==='me';const tl=zxFlood(x,y,1,140);G.bursts=G.bursts||[];G.bursts.push({x,y,t:0,col:0x9ad8ff});
+  if(!tl.length){let n=0;for(const e of w.enemies){if(e.dead||Math.hypot(e.x-x,e.y-y)>1.1)continue;dmgFoe(e,8,actor);if(!e.dead)stagger(e,1.2,true);n++;}noise(x,y,8,.4,.7);if(me)log(n?'The jar cracks with a snap. Too dry to spread.':'The spark jar crackles on dry stone and fizzles. Find water.');return;}
+  const set=new Set(tl);let n=0;for(const e of w.enemies){if(e.dead||!set.has(zxKey(e.x,e.y)))continue;dmgFoe(e,18,actor);if(!e.dead){stagger(e,3,true);e.aw=Math.max(e.aw||0,.6);}n++;}
+  zxAdd({k:'shock',x,y,t:1.4,tl,age:0});noise(x,y,12,.6,.9);
+  if(me)log(n?`Lightning races across the water. ${n} foe${n>1?'s':''} jolted stiff.`:'Lightning races across the water. Nobody was standing in it.','good');
+  else if(actor){log(`${actor.name}'s spark jar lights up the water.`);}}
+/* fire meets oil and rats (host) */
+function zxIgnite(x,y,r){const w=G.w;if(!w.zx||G.mode==='client')return;
+  for(const n of w.nests)if(!n.gone&&Math.hypot(n.x-x,n.y-y)<r+1.2)zxStampede(n,null,'fire');
+  let s=null;for(let dy=-Math.ceil(r);dy<=Math.ceil(r);dy++)for(let dx=-Math.ceil(r);dx<=Math.ceil(r);dx++){if(Math.hypot(dx,dy)>r+.5)continue;if(zxWet(x+dx,y+dy)===2){s=[x+dx,y+dy];break;}}if(!s)return;
+  const tl=zxFlood(s[0],s[1],2,200);if(!tl.length)return;const W=w.W,sk=zxKey(s[0],s[1]);
+  const fire=zxAdd({k:'fire',x:s[0],y:s[1],t:9,age:0,tl:tl.map(k=>[k,+((Math.hypot(k%W-sk%W,((k/W)|0)-((sk/W)|0)))*.12).toFixed(2)])});
+  for(const k of tl){delete w.wet[k];w.oilGone.push(k);}G.wetDirty=true;noise(x,y,10,.5,.8);log('The oil catches. Fire races along the slick.','bad');if(G.mode==='host')netLog('Oil catches fire and the flames run along the slick.','bad');return fire;}
+function zxStampede(n,actor,why){const w=G.w;if(n.gone)return;n.gone=true;G.zxDirty=true;
+  const live=w.enemies.filter(e=>!e.dead);let best=null,bs=-1;for(const e of live){const c=live.filter(o=>Math.hypot(o.x-e.x,o.y-e.y)<4).length-Math.hypot(e.x-n.x,e.y-n.y)*.04;if(c>bs){bs=c;best=e;}}
+  const path=best?pathTo(n,best.x,best.y):null;zxAdd({k:'rats',x:n.x,y:n.y,t:16,age:0,path:path||[],tick:0});noise(n.x,n.y,9,.5,.8);
+  const msg=why==='fire'?'Fire in the rat nest! A squealing flood of rats pours out.':'The rat nest boils over. A squealing flood of rats pours out.';
+  if(actor&&actor.key!=='me')log(`${actor.name} kicks a rat nest. A squealing flood of rats pours out.`,'bad');else log(msg,'bad');if(G.mode==='host')netLog('A rat nest boils over. A flood of rats pours out.','bad');}
+function zxNoise(x,y,radM){const w=G.w;if(!w||!w.nests||G.mode==='client'||radM<11)return;for(const n of w.nests)if(!n.gone&&Math.hypot(n.x-x,n.y-y)*T<radM*.45)zxStampede(n,null,'noise');}
+/* focus: kick a nest */
+function zxFocus(){const w=G.w,P=G.P;if(!w.nests)return null;for(let i=0;i<w.nests.length;i++){const n=w.nests[i];if(n.gone||Math.hypot(n.x-P.x,n.y-P.y)>1.2)continue;
+    return {kind:'nest',i,cx:n.x,cy:n.y,label:{act:true,text:'<b>E</b> Kick the rat nest <span class="dim">(they run for the nearest crowd)</span>'}};}return null;}
+function zxInteract(c){if(c.kind!=='nest')return false;const a={t:'zx',k:'kick',i:c.i};if(G.mode==='client')sendAct(a);else zxHostAct(a,{key:'me',name:'You'});return true;}
+/* simulation: the host moves the world, every peer handles its own body */
+function zxUpdate(dt){const w=G.w;if(!w||!w.zx||G.tavern)return;const sim=G.mode!=='client',P=G.P;
+  for(const o of w.zx){o.age=(o.age||0)+dt;if(sim){o.t-=dt;if(o.t<=0)o.dead=true;}
+    if(o.tx!=null){o.x+=(o.tx-o.x)*Math.min(1,dt*8);o.y+=(o.ty-o.y)*Math.min(1,dt*8);}}
+  if(sim){for(const o of w.zx){if(o.dead)continue;
+      if(o.k==='portal'){const ends=[[o.x,o.y,o.bx,o.by],[o.bx,o.by,o.x,o.y]];
+        for(const e of w.enemies){if(e.dead)continue;if((e.zcd||0)>0){e.zcd-=dt;continue;}for(const [ax,ay,bx,by] of ends)if(Math.hypot(e.x-ax,e.y-ay)<.45){e.x=bx+(e.x-ax)*.3;e.y=by+(e.y-ay)*.3;e.path=null;e.zcd=2;stagger(e,1,true);if(e.state!=='alert'){e.state='suspicious';e.inv=[e.x,e.y];e.timer=1.5;e.look=0;}break;}}
+        for(const c of w.crates||[]){if(c.c||c.del)continue;if((c.zcd||0)>0){c.zcd-=dt;continue;}for(const [ax,ay,bx,by] of ends)if(Math.hypot(c.x-ax,c.y-ay)<.5){c.x=bx+.6;c.y=by;if(!walkT(tileAt(c.x,c.y)))c.x=bx;c.zcd=2;break;}}}
+      else if(o.k==='spring'){for(const e of w.enemies){if(e.dead||(e.zcd||0)>0||Math.hypot(e.x-o.x,e.y-o.y)>.45)continue;e.zcd=2.5;o.boing=G.time;
+          const fx=Math.cos(e.ang),fy=Math.sin(e.ang);let d=0;for(let s=.2;s<=2.2;s+=.2){if(blockedFoe(e.x+fx*s,e.y+fy*s))break;d=s;}e.x+=fx*d;e.y+=fy*d;e.path=null;stagger(e,2.2,true);dmgFoe(e,4);
+          log(`${nameOf(e)} steps on the springcap and goes flying.`,'good');}
+        for(const e of w.enemies)if(e.zcd>0&&Math.hypot(e.x-o.x,e.y-o.y)>.8)e.zcd-=dt;}
+      else if(o.k==='rats'){o.tick-=dt;if(o.path&&o.path.length){const [px,py]=o.path[0],dx=px-o.x,dy=py-o.y,d=Math.hypot(dx,dy);if(d<.15)o.path.shift();else{const s=Math.min(d,3.4*dt);o.x+=dx/d*s;o.y+=dy/d*s;}}
+        else{const live=w.enemies.filter(e=>!e.dead&&Math.hypot(e.x-o.x,e.y-o.y)<14&&Math.hypot(e.x-o.x,e.y-o.y)>1.5);const tg=live[Math.floor(Math.random()*live.length)];o.path=tg?pathTo(o,tg.x,tg.y)||[]:[];if(!tg){const fl=[];for(let i=0;i<20;i++){const x=Math.floor(o.x+Math.random()*12-6),y=Math.floor(o.y+Math.random()*12-6);if(w.t[y]&&walkT(w.t[y][x])){fl.push([x+.5,y+.5]);break;}}if(fl.length)o.path=pathTo(o,fl[0][0],fl[0][1])||[];}}
+        if(o.tick<=0){o.tick=.35;for(const e of w.enemies){if(e.dead||Math.hypot(e.x-o.x,e.y-o.y)>1.5)continue;if((e.ratT||0)>G.time)continue;e.ratT=G.time+1.4;stagger(e,1.6,true);dmgFoe(e,3);if(!e.dead){e.path=null;e.aw=Math.max(e.aw||0,.5);}}
+          if(Math.random()<.35)noise(o.x,o.y,7,.25,.5);}}
+      else if(o.k==='fire'){const W=w.W;o.tick=(o.tick||0)-dt;if(o.tick<=0){o.tick=.5;const burning=new Set(o.tl.filter(([k,d])=>o.age>d&&o.age<d+8).map(q=>q[0]));
+          for(const e of w.enemies){if(e.dead)continue;if(burning.has(zxKey(e.x,e.y))){dmgFoe(e,6);if(!e.dead&&!e.stag)stagger(e,.4,true);}}
+          for(const n of w.nests)if(!n.gone&&burning.has(zxKey(n.x,n.y)))zxStampede(n,null,'fire');}}}
+    const n0=w.zx.length;w.zx=w.zx.filter(o=>!o.dead);if(n0!==w.zx.length)G.zxDirty=true;}
+  // my own body
+  if(G.fey>0){G.fey-=dt;if(G.fey<=0){G.fey=0;G.zxDirty=true;log('The fey sight fades. The dark is just dark again.');}}
+  let inAny=false;
+  for(const o of w.zx){
+    if(o.k==='fey'&&!G.zxSeen[o.id]){G.zxSeen[o.id]=1;if(Math.hypot(o.x-P.x,o.y-P.y)<3.2&&G.fey<80){if(G.fey<=0)log('A crewmate dabs fey-sight unguent on your eyelids. The dark goes silver-green.','good');G.fey=90;G.zxDirty=true;}}
+    if(G.down>0)continue;
+    if(o.k==='portal'){for(const [ax,ay,bx,by] of [[o.x,o.y,o.bx,o.by],[o.bx,o.by,o.x,o.y]]){if(Math.hypot(P.x-ax,P.y-ay)<.42){inAny=true;if(G.zcd<=0){const [fx,fy]=fwd();let nx=bx+fx*.55,ny=by+fy*.55;if(blockedAt(nx,ny,.24)){nx=bx;ny=by;}
+          P.x=nx;P.y=ny;P.vz=elAt(nx,ny);P.fallFrom=null;P.air=null;G.zcd=1;G.bursts=G.bursts||[];G.bursts.push({x:bx,y:by,t:0,col:0xffa040});if(!G.zxPortalSaid){G.zxPortalSaid=1;log('You step through the circle and out of the other one. Your stomach takes a moment to follow.');}}}}}
+    else if(o.k==='spring'&&!P.air&&Math.hypot(P.x-o.x,P.y-o.y)<.42&&(G.springCd||0)<=0){const [fx,fy]=fwd();P.air={v:12.8};P.push=[fx*4.2,fy*4.2];G.springCd=1;o.boing=G.time;P.fallFrom=null;log('Boing.');}
+    else if(o.k==='shock'&&!G.zxHurt['s'+o.id]){G.zxHurt['s'+o.id]=1;if(!P.air&&(o.tl||[]).includes(zxKey(P.x,P.y))){hurt(12,'The water goes live under your boots. Every muscle locks.');}}
+    else if(o.k==='fire'&&!P.air){const k=zxKey(P.x,P.y),e=(o.tl||[]).find(q=>q[0]===k);if(e&&o.age>e[1]&&o.age<e[1]+8&&(G.zxHurt.fire||0)<G.time){G.zxHurt.fire=G.time+.6;hurt(5,'You are standing in burning oil.');}}
+    else if(o.k==='rats'&&Math.hypot(P.x-o.x,P.y-o.y)<1.3&&(G.zxHurt.rats||0)<G.time){G.zxHurt.rats=G.time+.8;hurt(3,'Rats swarm over your boots, biting.');}}
+  if(!inAny&&G.zcd>0)G.zcd-=dt;if(G.springCd>0&&!P.air)G.springCd-=dt;
+  // projectiles through portals
+  for(const p of G.proj||[]){if((p.zcd||0)>0){p.zcd-=dt;continue;}for(const o of w.zx){if(o.k!=='portal')continue;const x=p.pos.x/T,y=p.pos.z/T;
+      for(const [ax,ay,bx,by] of [[o.x,o.y,o.bx,o.by],[o.bx,o.by,o.x,o.y]])if(Math.hypot(x-ax,y-ay)<.5&&p.pos.y-elAt(ax,ay)<2.2){p.pos.x+=(bx-ax)*T;p.pos.z+=(by-ay)*T;p.pos.y+=elAt(bx,by)-elAt(ax,ay);p.zcd=.6;break;}}}}
+function blockedFoe(x,y){const t=tileAt(x,y);if(!walkT(t))return true;return false;}
+/* the springcap's flight: called from elevStep */
+function zxAir(dt){const P=G.P;if(!P.air)return false;const fz=elAt(P.x,P.y);P.air.v-=19*dt;P.vz+=P.air.v*dt;
+  const cl=G.w.ceil&&G.w.ceil[Math.floor(P.y)]?G.w.ceil[Math.floor(P.y)][Math.floor(P.x)]:-99;if(cl!=null&&cl>-50&&P.vz>cl-1.9){P.vz=cl-1.9;P.air.v=Math.min(P.air.v,0);}
+  if(P.push){const mx=P.push[0]*dt/T,my=P.push[1]*dt/T;if(!blockedAt(P.x+mx,P.y,.24))P.x+=mx;if(!blockedAt(P.x,P.y+my,.24))P.y+=my;P.push[0]*=Math.pow(.6,dt);P.push[1]*=Math.pow(.6,dt);}
+  const f2=elAt(P.x,P.y);P.fz=f2;if(P.air.v<0&&P.vz<=f2){const h=(P.air.top||P.vz)-f2;P.vz=f2;P.air=null;P.push=null;if(G.mode!=='client')noise(P.x,P.y,5,.3,.5);if(h>5.5&&!SK('featherlight')&&!bgIs('secondstorey'))hurt(Math.round((h-5.5)*6+2),'You land badly.');}
+  else if(P.air)P.air.top=Math.max(P.air.top||0,P.vz);return true;}
+/* vision: nobody sees into, out of, or through the Pall */
+function zxPallBlocks(x0,y0,x1,y1){const w=G.w;if(!w||!w.zx)return false;for(const o of w.zx){if(o.k!=='pall')continue;const r=o.r*Math.min(1,(o.age||0)*3+.2)*(o.t<3?o.t/3:1);
+    const dx=x1-x0,dy=y1-y0,l2=dx*dx+dy*dy||1e-6;let u=((o.x-x0)*dx+(o.y-y0)*dy)/l2;u=Math.max(0,Math.min(1,u));if(Math.hypot(x0+dx*u-o.x,y0+dy*u-o.y)<r)return true;}return false;}
+/* ---------- drawing ---------- */
+function zxMat(c,o){return new THREE.MeshBasicMaterial(Object.assign({color:c,transparent:true,depthWrite:false},o||{}));}
+function zxBuildWet(){const w=G.w;if(R3.zxWet){R3.zxWet.parent&&R3.zxWet.parent.remove(R3.zxWet);R3.zxWet.traverse(o=>{if(o.geometry)o.geometry.dispose();});}G.wetDirty=false;
+  const g=new THREE.Group();g.userData.noEl=true;R3.zxWet=g;if(!w.wet)return;const W=w.W;const list={1:[],2:[]};
+  for(const k in w.wet){const v=w.wet[k],x=k%W,y=(k/W)|0;if(v===1&&w.mat&&w.mat[y]&&w.mat[y][x]===3)continue;list[v].push([x,y]);}
+  const geo=new THREE.PlaneGeometry(T*.98,T*.98);geo.rotateX(-Math.PI/2);
+  for(const v of [1,2]){const L=list[v];if(!L.length)continue;const m=new THREE.MeshStandardMaterial({color:v===1?0x1c3040:0x18120a,roughness:v===1?.08:.15,metalness:v===1?.5:.7,transparent:true,opacity:v===1?.72:.85,depthWrite:false});
+    const im=new THREE.InstancedMesh(geo,m,L.length);im.userData.noEl=true;const d=new THREE.Object3D();L.forEach(([x,y],i)=>{d.position.set((x+.5)*T,elAt(x+.5,y+.5)+.012+(v===2?.004:0),(y+.5)*T);d.updateMatrix();im.setMatrixAt(i,d.matrix);});g.add(im);}}
+function zxNestMesh(n){const g=new THREE.Group();g.userData.noEl=true;const straw=new THREE.MeshLambertMaterial({color:0x5a4a2a}),dark=new THREE.MeshLambertMaterial({color:0x2a2420});
+  const m=new THREE.Mesh(new THREE.SphereGeometry(.42,10,6),straw);m.scale.set(1,.42,1);g.add(m);for(let i=0;i<5;i++){const r=new THREE.Mesh(new THREE.BoxGeometry(.12,.07,.2),dark);const a=i*1.3;r.position.set(Math.cos(a)*.38,.08,Math.sin(a)*.38);r.rotation.y=-a;g.add(r);}
+  g.position.set(n.x*T,elAt(n.x,n.y),n.y*T);return g;}
+function zxMesh(o){const g=new THREE.Group();g.userData.noEl=true;g.userData.k=o.k;
+  if(o.k==='portal'){for(const [x,y,c] of [[o.x,o.y,0x6ab0ff],[o.bx,o.by,0xffa040]]){const e=new THREE.Group();const ring=new THREE.Mesh(new THREE.TorusGeometry(.62,.07,8,28),zxMat(c,{opacity:.95,blending:THREE.AdditiveBlending}));
+      const disk=new THREE.Mesh(new THREE.CircleGeometry(.6,28),zxMat(c,{opacity:.28,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));const floor=new THREE.Mesh(new THREE.RingGeometry(.5,.62,28),zxMat(c,{opacity:.6,side:THREE.DoubleSide}));floor.rotation.x=-Math.PI/2;floor.position.y=-.92;
+      e.add(ring,disk,floor);e.position.set(x*T,elAt(x,y)+.95,y*T);e.userData.spin=1;g.add(e);}}
+  else if(o.k==='spring'){const stem=new THREE.Mesh(new THREE.CylinderGeometry(.09,.13,.32,8),new THREE.MeshLambertMaterial({color:0xe8dcc0}));stem.position.y=.16;
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(.34,14,8,0,Math.PI*2,0,Math.PI/2),new THREE.MeshLambertMaterial({color:0xd84a3a,emissive:0x401010}));cap.position.y=.3;cap.scale.y=.7;
+    for(let i=0;i<6;i++){const d=new THREE.Mesh(new THREE.SphereGeometry(.045,6,4),new THREE.MeshBasicMaterial({color:0xfff4e0}));const a=i*1.05,r=i%2?.2:.12;d.position.set(Math.cos(a)*r,.2+(i%2?0:.04),Math.sin(a)*r);cap.add(d);}
+    g.add(stem,cap);g.userData.cap=cap;g.position.set(o.x*T,elAt(o.x,o.y),o.y*T);}
+  else if(o.k==='pall'){const s=new THREE.Mesh(new THREE.SphereGeometry(o.r*T,20,14),zxMat(0x07070c,{opacity:.94,side:THREE.DoubleSide}));const s2=new THREE.Mesh(new THREE.SphereGeometry(o.r*T*.82,16,10),zxMat(0x000000,{opacity:.6,side:THREE.BackSide}));
+    g.add(s,s2);g.userData.sph=[s,s2];g.position.set(o.x*T,elAt(o.x,o.y)+.6,o.y*T);}
+  else if(o.k==='shock'||o.k==='fire'){const W=G.w.W,geo=o.k==='shock'?new THREE.PlaneGeometry(T,T):new THREE.ConeGeometry(.3,.9,7,1,true);if(o.k==='shock')geo.rotateX(-Math.PI/2);
+    const mat=zxMat(o.k==='shock'?0x9ad8ff:0xc84a10,{opacity:o.k==='shock'?.7:.55,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}),mat2=zxMat(0xffd060,{opacity:.6,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
+    for(const q of o.tl||[]){const k=o.k==='fire'?q[0]:q,x=k%W,y=(k/W)|0;const m=new THREE.Group();const n=o.k==='fire'?3:1;
+      for(let i=0;i<n;i++){const f=new THREE.Mesh(geo,mat);if(o.k==='fire'){f.position.set((Math.random()-.5)*1.1,.45,(Math.random()-.5)*1.1);const c=new THREE.Mesh(geo,mat2);c.scale.set(.5,.6,.5);c.position.y=-.15;f.add(c);}m.add(f);}
+      m.position.set((x+.5)*T,elAt(x+.5,y+.5)+(o.k==='shock'?.05:0),(y+.5)*T);m.userData.d=o.k==='fire'?q[1]:0;m.userData.ph=Math.random()*6;g.add(m);}g.userData.mat=mat;}
+  else if(o.k==='rats'){const mat=new THREE.MeshLambertMaterial({color:0x5a4a40}),geo=new THREE.SphereGeometry(.07,7,5),tg=new THREE.CylinderGeometry(.008,.014,.2,4);tg.rotateX(Math.PI/2);for(let i=0;i<40;i++){const r=new THREE.Mesh(geo,mat);r.scale.set(.8,.6,1.6);const tl=new THREE.Mesh(tg,mat);tl.position.z=-.11;tl.scale.set(1.25,1.6,.62);r.add(tl);r.userData.ox=(Math.random()-.5)*2.2;r.userData.oz=(Math.random()-.5)*2.2;r.userData.ph=Math.random()*6;g.add(r);}g.position.set(o.x*T,elAt(o.x,o.y),o.y*T);}
+  return g;}
+function zxRender(dt){const w=G.w;if(!w||!w.zx||G.tavern||!R3.scene)return;
+  if(!R3.zxG||R3.zxBuiltFor!==w){if(R3.zxG&&R3.zxG.parent)R3.zxG.parent.remove(R3.zxG);R3.zxG=new THREE.Group();R3.zxG.userData.noEl=true;R3.zxMeshes={};R3.zxBuiltFor=w;R3.zxNests=w.nests.map(n=>{const m=zxNestMesh(n);R3.zxG.add(m);return m;});G.wetDirty=true;R3.plBase=null;}
+  if(R3.zxG.parent!==R3.scene)R3.scene.add(R3.zxG);
+  if(G.wetDirty||!R3.zxWet){zxBuildWet();}if(R3.zxWet.parent!==R3.scene)R3.scene.add(R3.zxWet);
+  w.nests.forEach((n,i)=>{if(R3.zxNests[i])R3.zxNests[i].visible=!n.gone;});
+  const live={};for(const o of w.zx){live[o.id]=1;let g=R3.zxMeshes[o.id];if(!g){g=R3.zxMeshes[o.id]=zxMesh(o);R3.zxG.add(g);}
+    const t=G.time;
+    if(o.k==='portal'){g.children.forEach((e,i)=>{e.rotation.y+=dt*(i?-1.6:1.6);const s=o.t<3?Math.max(.05,o.t/3):Math.min(1,(o.age||0)*3);e.scale.setScalar(s);});}
+    else if(o.k==='spring'){const b=o.boing&&G.time-o.boing<.5?(G.time-o.boing)/.5:1;g.userData.cap.scale.set(1+.25*Math.sin(b*Math.PI)*(1-b),.7*(1-.4*Math.sin(b*Math.PI*2)*(1-b)),1+.25*Math.sin(b*Math.PI)*(1-b));const P=G.P;if(Math.hypot(P.x-o.x,P.y-o.y)<.6&&P.air&&!o.boing)o.boing=G.time;}
+    else if(o.k==='pall'){const s=Math.min(1,(o.age||0)*3+.2)*(o.t<3?Math.max(.01,o.t/3):1);g.scale.setScalar(s);const fey=G.fey>0;g.userData.sph[0].material.opacity=fey?.18:.94;g.userData.sph[0].material.color.set(fey?0x1a3a28:0x07070c);g.userData.sph[1].material.opacity=fey?0:.6;g.rotation.y+=dt*.1;}
+    else if(o.k==='shock'){g.userData.mat.opacity=(Math.random()*.6+.3)*Math.min(1,o.t);}
+    else if(o.k==='fire'){g.children.forEach(m=>{const a=(o.age||0)-m.userData.d;const on=a>0&&a<8;m.visible=on;if(on){const f=Math.min(1,a*3)*(a>7?8-a:1);m.scale.set(f,f*(1+.3*Math.sin(t*14+m.userData.ph)),f);}});}
+    else if(o.k==='rats'){g.position.set(o.x*T,elAt(o.x,o.y),o.y*T);g.children.forEach(r=>{const u=r.userData;u.ph+=dt*9;r.position.set(u.ox+Math.sin(u.ph)*.25,.035+Math.abs(Math.sin(u.ph*2))*.04,u.oz+Math.cos(u.ph*1.3)*.25);r.rotation.y=u.ph;});const s=o.t<2?o.t/2:Math.min(1,(o.age||0)*2);g.scale.set(s,1,s);}}
+  for(const id in R3.zxMeshes)if(!live[id]){const g=R3.zxMeshes[id];R3.zxG.remove(g);g.traverse(q=>{if(q.geometry)q.geometry.dispose();});delete R3.zxMeshes[id];}
+  // fey sight brightens the dark around you
+  if(R3.plight){if(R3.plBase==null)R3.plBase=[R3.plight.intensity,R3.plight.distance];const fey=G.fey>0;R3.plight.intensity=fey?Math.max(R3.plBase[0],1.1):R3.plBase[0];R3.plight.distance=fey?Math.max(R3.plBase[1],11):R3.plBase[1];if(fey)R3.plight.color.set(0xb8ffd0);}
+  {let ov=$('#pallov');if(!ov){ov=document.createElement('div');ov.id='pallov';ov.style.cssText='position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s;z-index:1';$('#viewwrap').appendChild(ov);}}
+  {const P=G.P;let inside=false;for(const o of w.zx)if(o.k==='pall'&&Math.hypot(P.x-o.x,P.y-o.y)<o.r*.95)inside=true;const ov=$('#pallov');if(ov)ov.style.opacity=inside?(G.fey>0?'.15':'.82'):'0';if(ov)ov.style.background=G.fey>0?'#0a2016':'#000';}
+  if(G.zxDirty){G.zxDirty=false;G.sideDirty=true;}}
+
 /* ---------- interaction ---------- */
 function findFocus(){
   {const bf=G.tavern?null:bankFocus();if(bf)return bf;}
+  {const zf=G.tavern?null:zxFocus();if(zf)return zf;}
   const P=G.P,w=G.w,C=G.cls,[fx,fy]=fwd(),fa=Math.atan2(fy,fx),cands=[];
   const px=Math.floor(P.x),py=Math.floor(P.y);
   for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if((G.tavern?[RACK,STREET,TABLE,VENDOR,GAMBLER]:[DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT,PIT,LEDGE,GATE,GATEUP,PATIENT,MIASMA,SLAB,WINCH,IRONDOOR,RATS,LOCKDOOR,HATCH,ESCAPE,...(C==='wizard'?[RUNE]:[])]).includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
@@ -2686,7 +2876,7 @@ function interact(){
   if(c.kind==='coffer'){cofferUse(c.l);return;}
   if(c.kind==='tile'&&c.t===PATIENT){const P=G.P;P.chan={t:0,dur:G.S.stab||4,label:'Stabilising the informant',hold:SK('steady')>1,done:()=>{const d={k:'tile',x:c.x,y:c.y};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}};return;}
   if(c.kind==='tile'&&c.t===MIASMA&&SK('purge')){const ts=[];for(let y=c.y-4;y<=c.y+4;y++)for(let x=c.x-4;x<=c.x+4;x++)if(G.w.t[y]&&G.w.t[y][x]===MIASMA&&Math.hypot(x-G.P.x+.5,y-G.P.y+.5)<4.5)ts.push([x,y]);for(const [x,y] of ts){const d={k:'tile',x,y,pg:SK('purge')};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}return;}
-  if(bankInteract(c))return;
+  if(bankInteract(c))return;if(zxInteract(c))return;
   if(obsInteract(c))return;
   if(c.kind==='pocket'){pickPocket(c.e);return;}
   const d={k:c.kind,id:c.kind==='trap'?c.tr.id:c.kind==='torch'?c.to.id:c.kind==='loot'?c.l.id:undefined,x:c.x,y:c.y,rw:c.kind==='trap'?SK('rewire'):0,pz:SK('poisoner')>1?1:0,sd:G.cls==='doctor'?SK('sleepdraught'):0,pg:G.cls==='doctor'?SK('purge'):0,bq:bgIs('bouncer')?1:0};
@@ -3061,7 +3251,7 @@ function frame(){
   if(G.bursts)G.bursts=G.bursts.filter(b=>!b.done);
   // projectiles
   for(const p of G.proj){if(!p.mesh){if(p.kind==='arrow'){p.mesh=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.6),p.at==='water'?new THREE.MeshBasicMaterial({color:0x6aa8ff}):p.at==='rope'?new THREE.MeshLambertMaterial({color:0xc8b48a}):R3.mat.wood);}else p.mesh=new THREE.Mesh(p.kind==='fire'?R3.geo.fire:R3.geo.pebble,p.kind==='fire'?R3.mat.fire:R3.mat.pebble);R3.scene.add(p.mesh);}p.mesh.position.copy(p.pos);if(p.kind==='arrow')p.mesh.lookAt(p.pos.clone().add(p.vel));}
-  elevPass();R3.renderer.render(R3.scene,c);
+  zxRender(dt);elevPass();R3.renderer.render(R3.scene,c);
   G.hudT-=dt;if(G.hudT<=0){G.hudT=.08;renderHUD();}
   G.miniT-=dt;if(G.miniT<=0){G.miniT=.2;drawMini();}
   if(G.sideDirty)renderSide();

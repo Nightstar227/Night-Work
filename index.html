@@ -207,6 +207,27 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
 .skn{display:flex;justify-content:space-between;font-weight:700}.skn i{font-style:normal;color:var(--lantern);letter-spacing:2px}.skb,.sku{color:var(--muted)}.skb.on,.sku.on{color:var(--text)}.sku{font-size:.8rem}.skc{font-size:.75rem;color:var(--lantern)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .skulls{color:var(--lantern);display:inline-flex;gap:1px;vertical-align:-1px}.mtags{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 6px}.mtag{font-size:.74rem;padding:2px 7px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--slate2)}.jgoal{margin:2px 0 4px}.card .roles{grid-template-columns:repeat(2,1fr)}
+
+/*FULLWIN*/
+body:has(#game:not([hidden])){overflow:hidden}
+#game:not([hidden]){position:fixed;inset:0;z-index:10;background:#020203;display:block}
+#game .run{display:block;position:absolute;inset:0}
+#game .view3d{position:absolute;inset:0;border:0;border-radius:0}
+#game #view{width:100%;height:100%}
+#game .topbar{position:absolute;left:10px;top:10px;z-index:6;margin:0;gap:8px;flex-wrap:wrap;align-items:center;max-width:calc(100% - 210px)}
+#game .topbar h2{margin:0;font-size:1.05rem;text-shadow:0 1px 3px #000;padding:0 4px}
+#game .topbar .btn{padding:5px 11px;font-size:.84rem;background:rgba(10,11,15,.72);backdrop-filter:blur(3px)}
+#game .topbar .badge{background:rgba(10,11,15,.72)}
+#game .toasts{top:58px}
+#game .alarm{top:56px}
+#game .sheet{position:absolute;right:10px;top:136px;z-index:5;width:min(270px,42vw);max-height:calc(100% - 136px - 110px);overflow:auto;gap:8px;pointer-events:auto;scrollbar-width:thin}
+#game .sheet .panel{background:rgba(10,11,15,.74);backdrop-filter:blur(3px);padding:8px 10px;font-size:.84rem}
+#game .sheet:not(.open) .panel:not(.pin){display:none}
+#game .sheet:not(.open) #objs li.other,#game .sheet:not(.open) #objs li.grp:has(+ li.other){display:none}
+#game .sheet.open{width:min(360px,60vw)}
+#game .sheet .jtog{all:unset;cursor:pointer;align-self:flex-end;font-size:.74rem;color:var(--muted);background:rgba(10,11,15,.74);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+#game .sheet .jtog:hover{color:var(--text);border-color:var(--lantern)}
+@media (max-width:700px){#game .sheet{top:auto;bottom:150px;max-height:35%}#game .topbar{max-width:calc(100% - 20px);top:136px}#game .toasts{top:180px}}
 </style>
 </head><body>
 <div id="app">
@@ -257,6 +278,7 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
       <h2 id="gTitle"></h2>
       <span class="badge mono" id="roomBadge" hidden title="Click to copy"></span>
       <span class="badge" id="gClass"></span>
+      <button class="btn" id="jrnBtn" title="Contract, bag, kit, controls and log">Journal <kbd>J</kbd></button>
     </div>
     <div class="run">
       <div class="view3d" id="viewwrap">
@@ -287,9 +309,9 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
         </div>
         <div class="nogl" id="nogl" hidden>3D could not start in this browser.</div>
       </div>
-      <div class="sheet">
-        <div class="panel" id="crewPanel" hidden><span class="label" id="crewLabel">Crew</span><ul class="crew" id="crew"></ul></div>
-        <div class="panel"><span class="label">Contract</span><ul class="objs" id="objs"></ul></div>
+      <div class="sheet" id="sheet"><button class="jtog" id="jrnTog">More <kbd>J</kbd></button>
+        <div class="panel pin" id="crewPanel" hidden><span class="label" id="crewLabel">Crew</span><ul class="crew" id="crew"></ul></div>
+        <div class="panel pin"><span class="label">Contract</span><ul class="objs" id="objs"></ul></div>
         <div class="panel"><span class="label">Bag</span><ul class="packl" id="packP"></ul></div>
         <div class="panel"><span class="label">Your kit</span><ul class="abl" id="abl"></ul></div>
         <div class="panel"><span class="label">Controls</span><p class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move, mouse looks. <kbd>Shift</kbd> run (loud), <kbd>C</kbd> or <kbd>Ctrl</kbd> crouch. Left click strikes. Hold right click or <kbd>Q</kbd> to block; raise it just before a hit to parry. <kbd>Space</kbd> is your class move (Thief rolls, Warrior charges, Wizard blinks). <kbd>R</kbd> switches arrows. Swings, blocks, dodges and running cost stamina. <kbd>E</kbd> uses what you aim at. <kbd>1</kbd>-<kbd>4</kbd> abilities, <kbd>5</kbd>-<kbd>8</kbd> belt items. <kbd>I</kbd> or <kbd>Tab</kbd> opens your gear, bag and skills. <kbd>G</kbd> and <kbd>T</kbd> fire skill powers once you learn them; <kbd>9</kbd> and <kbd>0</kbd> are extra belt slots. <kbd>Esc</kbd> pauses. Arrow keys also turn.</p></div>
@@ -1440,7 +1462,7 @@ function skillStats(S,cls,c){const k=Object.assign({},c.sk||{});S.sk=k;const L=i
   const tl=S.tool||{};S.pick=cls==='thief'?Math.min(3,(tl.tier||0)+L('masterkey')):0;S.ward=cls==='wizard'?Math.min(3,(tl.tier||0)+L('higherseals')):0;
   S.smash=cls==='warrior'?Math.min(3,(tl.tier||0)+L('heavyhands')):0;S.pry=cls==='warrior'?((tl.pry||0)||(L('prybar')?2:0)):0;S.pryT=6/(L('prybar')>1?4:L('prybar')?2:1);
   S.horn=cls==='warrior'?(L('warhornsk')?7.5:(tl.horn||0)):0;if(tl.horn&&L('warhornsk'))S.horn=Math.max(7.5,tl.horn+1.5);
-  S.chanMul=(1+(L('steadypicks')?.25:0))*(1+L('quickhands')*.2+(L('quickhands')>1?.1:0))*(1+L('unpick')*.2+(L('unpick')>1?.1:0))*S.pickSpd;
+  S.chanMul=(1+(L('steadypicks')?.25:0))*(1+L('quickhands')*.2+(L('quickhands')>1?.1:0))*(1+L('unpick')*.2+(L('unpick')>1?.1:0))*S.pickSpd/*BGHOOK*/*(c.id&&c.id.made&&c.id.bg==='locksmith'?1.3:1);if(cls==='thief'&&c.id&&c.id.made&&c.id.bg==='locksmith')S.pick=Math.min(3,S.pick+1);
   S.beltCap=BELT+(L('flaskbelt')?2:0);
   return S;}
 function SK(id){return (G&&G.S&&G.S.sk&&G.S.sk[id])||0;}
@@ -1522,7 +1544,7 @@ function canPick(e){if(G.cls!=='thief'||e.dead||e.picked||e.undead)return false;
   const unaware=['idle','patrol','sentry','return'].includes(e.state)||(SK('lightfingers')>1&&(e.state==='suspicious'||e.state==='search'));if(!unaware)return false;
   if(G.S.fx.sixfingers)return true;return Math.abs(angDiff(Math.atan2(P.y-e.y,P.x-e.x),e.ang))>1.9;}
 function pickPocket(e){e.picked=true;const R=Math.random();const gr=bgIs('gutter');const bk=R<(gr?.15:.08)?'gems':R<(gr?.45:.3)?'signet':'purse';const it=makeItem(bk,0,1);
-  if(!bagAdd(G.cls,it)){toast('No room in your bag.');e.picked=false;return;}gainXP(8);log(`You lift a ${GB[bk].n.toLowerCase()} off ${lc(nameOf(e))}.`,'good');G.sideDirty=true;
+  if(!bagAdd(G.cls,it)){toast('No room in your bag.');e.picked=false;return;}gainXP(8);log(`You lift a ${GB[bk].n.toLowerCase()} off ${lc(nameOf(e))}.`,'good');G.sideDirty=true;if(bgIs('cutpurse')&&Math.random()<.5){if(bagAdd(G.cls,makeItem('purse',0,1)))log('And a second purse, tucked deeper.','good');}
   if(!SK('lightfingers')){if(G.mode==='client')sendAct({t:'pick',id:e.id});else{e.aw=Math.min(.95,e.aw+.45);if(e.aw>=.3&&e.state!=='suspicious'){e.state='suspicious';e.inv=[G.P.x,G.P.y];e.timer=.8;e.look=0;e.path=null;}}}}
 /* ---------- skills screen ---------- */
 function skillsHTML(){const cls=INV.cls,c=PROF.chars[cls],T=SKILLS[cls];const free=skPoints(cls)-skSpent(cls);
@@ -1624,7 +1646,7 @@ function docAbility(id){const P=G.P,S=G.S;
     const f={mi:SK('miasma'),sm:SK('smudge'),hs:SK('holysmoke'),fu:SK('fumigate')};
     if(G.mode==='client')sendAct({t:'doc',k:'censer',x:+P.x.toFixed(2),y:+P.y.toFixed(2),r:+r.toFixed(2),th:thick?1:0,f});else docCenser(P.x,P.y,r,thick,f,{key:'me'});
     log(thick?'You stoke the censer. Thick, choking smoke rolls out around you.':'You let the censer burn low. A thin grey haze settles around you.');return true;}
-  if(id==='tend'){let H=30*(S.heal||1)*(SK('surgery')?1.5:1)*(S.fx&&S.fx.mercy?1.5:1);H=Math.round(H);P.hp=Math.min(P.max,P.hp+H+(SK('splint')>1?20:0));if(SK('splint'))P.st=Math.min(100,P.st+40);
+  if(id==='tend'){let H=30*(S.heal||1)*(bgIs('orderly')?1.2:1)*(SK('surgery')?1.5:1)*(S.fx&&S.fx.mercy?1.5:1);H=Math.round(H);P.hp=Math.min(P.max,P.hp+H+(SK('splint')>1?20:0));if(SK('splint'))P.st=Math.min(100,P.st+40);
     G.docPulse={n:(G.docPulse?G.docPulse.n:0)+1,a:H,st:SK('splint')?40:0,hx:SK('splint')>1?20:0,cu:SK('cureall')>1?1:0};
     if(SK('diagnose')){const r=SK('diagnose')>1?20:12;G.glimpse=6;G.divineAt=[P.x,P.y];const px=Math.floor(P.x),py=Math.floor(P.y);for(let y=py-r;y<=py+r;y++)for(let x=px-r;x<=px+r;x++)if(x>=0&&y>=0&&x<G.w.W&&y<G.w.H)G.explored.add(y*G.w.W+x);G.featDirty=true;}
     const n=[...NET.remote.values()].filter(rr=>rr.p&&rr.p.x!=null&&!rr.p.dn&&Math.hypot(rr.p.x-P.x,rr.p.y-P.y)<4.5).length;
@@ -1944,14 +1966,22 @@ const BGS={
   gutter:{n:'Gutter rat',a:{agi:1},item:'Spare lockpicks',perk:'Pickpockets turn up better loot.',d:'You learned to run before you learned to read.'},
   dockhand:{n:'Dockhand',a:{str:1},item:'Crowbar (a pry bar)',perk:'Carrying the strongbox doesn\'t slow you.',d:'Ten years of hauling crates for coin.'},
   watchman:{n:'Disgraced watchman',a:{vit:1},item:'Old watch badge (sells well)',perk:'Guard ranks at a glance: the captain\'s room is marked on your map.',d:'Thrown off the watch. You know how guards think.'},
-  apprentice:{n:'Failed apprentice',a:{int:1},item:'A Fine charm',perk:'You know a ward on sight: wards and warded coffers are marked on your map.',d:'Three years with a hedge-wizard, then the fire.'},
-  resurrection:{n:'Resurrection man',a:{per:1},item:'Shovel and shuttered lantern (2 divining stubs)',perk:'The restless dead are slower to notice you.',d:'You dug up the fresh ones and sold them to surgeons.'},
-  pitfighter:{n:'Pit fighter',a:{str:1},item:'Knuckle-dusters',perk:'Parry window 15% wider.',d:'Bare knuckles in the cellar rings under the Fen Road.'},
   cardsharp:{n:'Card sharp',a:{per:1},item:'Marked deck and 50 extra gold',perk:'The gambler gives you 10% off.',d:'Every table in the Low Quarter has thrown you out at least once.'},
-  deserter:{n:'Deserter',a:{vit:1},item:'Battered shield (a buckler)',perk:'Blocking costs 15% less stamina.',d:'You walked away from the Duke\'s war with your boots and your life.'},
-  barber:{n:'Barber\'s boy',a:{int:1},item:'Two bandages',perk:'Bandages heal 25% more.',d:'Shaves, teeth and the odd leg, all in one chair.'},
-  smuggler:{n:'Smuggler',a:{agi:1},item:'False-bottom pouch',perk:'A second sewn-in pocket: one more item kept if you fall.',d:'Contraband up the river, past every toll and customs man.'}};
-Object.assign(GB,{knuckles:{n:'Knuckle-dusters',slot:'hands',w:1,h:1,arm:1,v:20,ic:'glove',d:'Brass. Makes a point.'},deck:{n:'Marked deck',val:true,w:1,h:1,v:30,ic:'book'}});
+  smuggler:{n:'Smuggler',a:{agi:1},item:'False-bottom pouch',perk:'A second sewn-in pocket: one more item kept if you fall.',d:'Contraband up the river, past every toll and customs man.'},
+  secondstorey:{cls:'thief',n:'Second-storey man',a:{agi:1},item:'Two extra rope arrows on every job',perk:'You climb 30% faster and land drops without a scratch.',d:'Gutters, drainpipes and open shutters. You never once used a front door.'},
+  locksmith:{cls:'thief',n:'Locksmith\'s boy',a:{per:1},item:'Spare lockpicks',perk:'You pick locks 30% faster and can open coffers one tier tougher.',d:'Seven years cutting keys for a man who sold copies to the wrong people.'},
+  cutpurse:{cls:'thief',n:'Cutpurse',a:{agi:1},item:'A purse you lifted on the way here',perk:'Half the pockets you pick hold a second purse.',d:'Market days, hangings and holy days. Wherever a crowd stands still.'},
+  pitfighter:{cls:'warrior',n:'Pit fighter',a:{str:1},item:'Knuckle-dusters',perk:'Parry window 15% wider.',d:'Bare knuckles in the cellar rings under the Fen Road.'},
+  deserter:{cls:'warrior',n:'Deserter',a:{vit:1},item:'Battered shield (a buckler)',perk:'Blocking costs 15% less stamina.',d:'You walked away from the Duke\'s war with your boots and your life.'},
+  bouncer:{cls:'warrior',n:'Tavern bouncer',a:{str:1},item:'Blackthorn club',perk:'Kicked doors and smashed barricades make 40% less noise.',d:'You threw drunks out of the Sow and Lantern for six years. Quietly, mostly.'},
+  apprentice:{cls:'wizard',n:'Failed apprentice',a:{int:1},item:'A Fine charm',perk:'You know a ward on sight: wards and warded coffers are marked on your map.',d:'Three years with a hedge-wizard, then the fire.'},
+  conjurer:{cls:'wizard',n:'Back-alley conjurer',a:{per:1},item:'A mana draught',perk:'Your abilities recharge 10% faster.',d:'Cups, balls and the odd real spark, for coppers on the Bridge of Saints.'},
+  forger:{cls:'wizard',n:'Forger',a:{int:1},item:'Forged deeds (a valuable)',perk:'The fence pays you 8% more: your paperwork makes hot goods look clean.',d:'Wills, writs and guild seals. Your best work hangs in the Countinghouse.'},
+  resurrection:{cls:'doctor',n:'Resurrection man',a:{per:1},item:'Shovel and shuttered lantern (2 divining stubs)',perk:'The restless dead are slower to notice you.',d:'You dug up the fresh ones and sold them to surgeons.'},
+  barber:{cls:'doctor',n:'Barber\'s boy',a:{int:1},item:'Two bandages',perk:'Bandages heal 25% more.',d:'Shaves, teeth and the odd leg, all in one chair.'},
+  orderly:{cls:'doctor',n:'Pest-house orderly',a:{vit:1},item:'A bitter tonic',perk:'Your Tend heals 20% more.',d:'You carried the dead out of the pest-houses through the whole of the Grey Summer.'}};
+function bgFor(cls){return Object.keys(BGS).filter(k=>!BGS[k].cls||BGS[k].cls===cls);}
+Object.assign(GB,{knuckles:{n:'Knuckle-dusters',slot:'hands',w:1,h:1,arm:1,v:20,ic:'glove',d:'Brass. Makes a point.'},deck:{n:'Marked deck',val:true,w:1,h:1,v:30,ic:'book'},blackthorn:{n:'Blackthorn club',slot:'main',cls:['warrior'],w:1,h:2,dmg:20,spd:.6,reach:1.1,stag:.5,v:25,ic:'club',d:'Quick, and every hit knocks them off balance.'}});
 const SEXES=['Male','Female'];
 const SKINS=['#f1d2b6','#d9b896','#c18e66','#9a6a45','#6e4a30','#4a3122'],ORCSKINS=['#9aa677','#7d8a5c','#8a9488','#66705a','#a39a7a','#5a6250'],GOBSKINS=['#7f9a4a','#6a8a3a','#8aa060','#5a7a3a','#9a9a5a','#4f6a34'];
 const HAIRC=['#1c1714','#4a2a14','#7a4a22','#b98a4a','#d9c49a','#8a8a8a','#e8e4dc','#8a2f1c'];
@@ -1970,7 +2000,7 @@ function idMods(){return {str:0,vit:0,agi:0,int:0,per:0};}
 function idOfC(c){return c&&c.id&&c.id.v===2?c.id:null;}
 function identStats(S,cls,c){const id=c.id;if(!id)return;migId(id,cls);const r=id.race,bg=id.bg;S.race=r;S.bg=bg;S.eyeK=(RACES[r]||RACES.human).eye;
   if(r==='dwarf')S.walk*=.97;else if(r==='halfling')S.noise=Math.max(.35,S.noise*.9);else if(r==='halforc')S.hp=Math.round(S.hp*1.08);else if(r==='goblin')S.fence=+(S.fence-.05).toFixed(3);
-  if(bg==='deserter')S.blkCost*=.85;if(bg==='pitfighter')S.parry*=1.15;}
+  if(bg==='deserter')S.blkCost*=.85;if(bg==='pitfighter')S.parry*=1.15;if(bg==='forger')S.fence=+(S.fence*1.08).toFixed(3);}
 function bagRows(cls){const c=PROF.chars[cls];return c&&c.id&&c.id.race==='halfling'?-1:0;}
 /* what race and background do on a job */
 function idVisMul(){const c=PROF.chars[G.cls],id=c&&c.id;let m=1;const b=G.w&&G.w.biome;if(G.m&&G.m.mods){if(G.m.mods.includes('fog'))m*=.85;if(G.m.mods.includes('payday'))m*=.85;}
@@ -1978,6 +2008,7 @@ function idVisMul(){const c=PROF.chars[G.cls],id=c&&c.id;let m=1;const b=G.w&&G.
 function idRunStart(){const c=PROF.chars[G.cls],id=c&&c.id;if(!id||!id.made||G.tavern)return;const w=G.w;
   if(id.bg==='watchman')for(const cl of w.cells)if(cl.role==='captain')for(let y=cl.y0;y<=cl.y1;y++)for(let x=cl.x0;x<=cl.x1;x++)G.explored.add(y*w.W+x);
   if(id.bg==='apprentice'){for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++)if(w.t[y][x]===WARD)G.explored.add(y*w.W+x);for(const l of w.loot||[])if(l&&l.cf&&l.cf.kind==='ward')G.explored.add(Math.floor(l.y)*w.W+Math.floor(l.x));}
+  if(id.bg==='secondstorey'&&G.cls==='thief'&&G.P.arrows)G.P.arrows.rope=(G.P.arrows.rope||0)+2;
   if(id.race==='goblin'&&R3.plight){R3.plight.intensity*=1.7;R3.plight.distance*=1.5;}}
 function idUpdate(dt){const c=PROF.chars[G.cls],id=c&&c.id;if(!id||!id.made||G.tavern||id.race!=='dwarf')return;G.stoneT=(G.stoneT||0)-dt;if(G.stoneT>0)return;G.stoneT=.5;const P=G.P;
   for(const l of G.w.loot||[])if(l&&!l.taken&&Math.hypot(l.x-P.x,l.y-P.y)<5){const k=Math.floor(l.y)*G.w.W+Math.floor(l.x);if(!G.explored.has(k)){G.explored.add(k);G.miniT=0;}}}
@@ -2032,7 +2063,7 @@ function renderCreator(){const el=$('#crebox'),d=CR.d,cls=CR.cls,c=PROF.chars[cl
     <section><h4>2. Sex and body <span class="note">cosmetic only</span></h4><div class="lk"><span class="label">Sex</span>${chips('sex',SEXES,d.sex,lock)}<span class="label">Build</span>${chips('build',BUILDS,d.lk.build)}<span class="label">Height</span>${chips('ht',HEIGHTS,d.lk.ht==null?1:d.lk.ht)}<span class="label">Age</span>${chips('age',AGES,d.lk.age==null?1:d.lk.age)}</div></section>
     <section><h4>3. Race</h4><div class="opts">${Object.entries(RACES).map(([k,r])=>`<button class="opt ${k===d.race?'on':''}" data-race="${k}" ${lock?'disabled':''}><b>${r.n} <span class="note">${r.sub}</span></b><span class="note">${r.d}</span><span class="mods">${r.pick?'+1 to any two':modTxt(r.a)} · ${r.perk}</span><span class="drw">${r.draw}</span></button>`).join('')}</div>
       ${R.pick?`<div class="lk" style="margin-top:8px"><span class="label">Your +1s</span><div class="chips">${Object.keys(ATTRN).map(k=>`<button class="chip ${(d.hpick||[]).includes(k)?'on':''}" data-hp="${k}" ${lock?'disabled':''}>${ATTRN[k]}</button>`).join('')}</div></div>`:''}</section>
-    <section><h4>4. Background</h4><div class="opts">${Object.entries(BGS).map(([k,b])=>`<button class="opt ${k===d.bg?'on':''}" data-bg="${k}" ${lock?'disabled':''}><b>${b.n}</b><span class="note">${b.d}</span><span class="mods">${modTxt(b.a)} · starts with ${b.item}</span><span class="note">${b.perk}</span></button>`).join('')}</div></section>
+    <section><h4>4. Background</h4>${[['Anyone',bgFor(cls).filter(k=>!BGS[k].cls)],[CLS[cls].name+' only',bgFor(cls).filter(k=>BGS[k].cls)]].map(([lab,ks])=>`<p class="label" style="margin:8px 0 4px">${lab}</p><div class="opts">${ks.map(k=>[k,BGS[k]]).map(([k,b])=>`<button class="opt ${k===d.bg?'on':''}" data-bg="${k}" ${lock?'disabled':''}><b>${b.n}</b><span class="note">${b.d}</span><span class="mods">${modTxt(b.a)} · starts with ${b.item}</span><span class="note">${b.perk}</span></button>`).join('')}</div>`).join('')}</section>
     <section><h4>5. Starting stats <span class="note">${statLock?'locked after your first job':left+' of 10 points left'}</span></h4>
       <div class="pts">${Object.keys(ATTRN).map(k=>{const p=(d.pts||{})[k]||0,bon=A[k]-5-p;return `<div class="pt ${PRIM[cls].includes(k)?'pri':''}"><span>${ATTRN[k]}</span><span class="mono note">5 + ${p}${bon?' '+sgn(bon):''}</span>
         <span class="row"><button class="btn sm" data-pt="${k}" data-d="-1" ${statLock||p<=0?'disabled':''}>−</button><b class="mono">${A[k]}</b><button class="btn sm" data-pt="${k}" data-d="1" ${statLock||p>=4||left<=0?'disabled':''}>+</button></span></div>`;}).join('')}</div>
@@ -2067,7 +2098,9 @@ function bgKit(cls,bg){const add=it=>{if(!bagAdd(cls,it))stashAdd(it);},R=()=>Ma
   if(bg==='gutter')add(makeItem('bentwire',0,1));else if(bg==='dockhand')add(makeItem('prybar',0,1));else if(bg==='watchman')add(makeItem('signet',0,1));
   else if(bg==='apprentice')add(makeItem(['copperring','goldring','bonering'][Math.floor(Math.random()*3)],1,R()));else if(bg==='resurrection')PROF.stash.stub=(PROF.stash.stub||0)+2;
   else if(bg==='pitfighter'){const it=makeItem('knuckles',0,1);add(it);}else if(bg==='cardsharp'){add(makeItem('deck',0,1));PROF.gold+=50;}else if(bg==='deserter')add(makeItem('buckler',0,1));
-  else if(bg==='barber')PROF.stash.bandage=(PROF.stash.bandage||0)+2;}
+  else if(bg==='barber')PROF.stash.bandage=(PROF.stash.bandage||0)+2;
+  else if(bg==='locksmith')add(makeItem('bentwire',0,1));else if(bg==='cutpurse')add(makeItem('purse',0,1));else if(bg==='bouncer')add(makeItem('blackthorn',0,1));
+  else if(bg==='forger')add(makeItem('deeds',0,1));else if(bg==='conjurer')PROF.stash.mana=(PROF.stash.mana||0)+1;else if(bg==='orderly')PROF.stash.tonic=(PROF.stash.tonic||0)+1;}
 function makeCharacter(){const cls=CR.cls,d=CR.d;let c=PROF.chars[cls];const retire=c.id&&c.id.made;let lost=0;
   if(retire){for(const s in c.eq){if(c.eq[s]&&!stashAdd(c.eq[s]))lost++;}for(const e of c.bag){if(!stashAdd(e.it))lost++;}PROF.chars[cls]=c=newChar(cls);}
   c.id={v:2,nm:(d.nm||'').trim()||randName(d.sex),al:(d.al||'').trim(),sex:d.sex,race:d.race,hpick:(d.hpick||[]).slice(0,2),bg:d.bg,pts:Object.assign({},d.pts),lk:Object.assign({},d.lk),made:1};
@@ -2123,6 +2156,7 @@ document.addEventListener('keydown',ev=>{
   G.keys[ev.code]=true;
   if(['KeyW','KeyA','KeyS','KeyD','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ControlLeft'].includes(ev.code))ev.preventDefault();
   if((ev.code==='KeyI'||ev.code==='Tab')&&!ev.repeat&&!G.over){ev.preventDefault();G.keys={};openInv(G.tavern?'tavern':'run');return;}
+  if(ev.code==='KeyJ'&&!ev.repeat){toggleJournal();return;}
   if(G.paused)return;
   if(ev.code==='KeyC'||ev.code==='ControlLeft'||ev.code==='ControlRight'){if(!ev.repeat)G.P.crouch=!G.P.crouch;}
   if(ev.code==='KeyE'||ev.code==='KeyF'){if(!ev.repeat)interact();}
@@ -2134,12 +2168,14 @@ document.addEventListener('keydown',ev=>{
   const A=KIT[G.cls].abil.find(a=>'Digit'+a.key===ev.code);if(A&&!ev.repeat)useAbility(A.id);
 });
 document.addEventListener('keyup',ev=>{if(G)G.keys[ev.code]=false;});
+function toggleJournal(f){const sh=$('#sheet');if(!sh)return;const o=sh.classList.toggle('open',f);$('#jrnTog').innerHTML=o?'Less <kbd>J</kbd>':'More <kbd>J</kbd>';}
+$('#jrnBtn').onclick=()=>toggleJournal();$('#jrnTog').onclick=()=>toggleJournal();
 window.addEventListener('blur',()=>{if(G){G.keys={};G.blockHeld=false;if(!G.over&&!G.paused&&!lockMode)setPause(true,'Paused','Take a breath.');}});
 
 /* ---------- simulation ---------- */
 function update(dt){
   const P=G.P,S=G.S;G.time+=dt;
-  {const cm=G.S.fx&&G.S.fx.shroud&&G.light<.15?2:1;for(const id in P.cd)if(P.cd[id]>0)P.cd[id]=Math.max(0,P.cd[id]-dt*cm);}if(P.unstop>0)P.unstop-=dt;if(P.bandage>0)P.bandage-=dt;
+  {const cm=(G.S.fx&&G.S.fx.shroud&&G.light<.15?2:1)*(bgIs('conjurer')?1.1:1);for(const id in P.cd)if(P.cd[id]>0)P.cd[id]=Math.max(0,P.cd[id]-dt*cm);}if(P.unstop>0)P.unstop-=dt;if(P.bandage>0)P.bandage-=dt;
   if(P.invis>0){P.invis-=dt;if(P.invis<=0){P.invis=0;log('You shimmer back into view.');}}
   if(G.glimpse>0)G.glimpse-=dt;
   if(P.swing>0)P.swing-=dt;
@@ -2502,7 +2538,7 @@ function elW(wx,wz){const w=G&&G.w;if(!w||!w.el)return 0;const x=wx/T,y=wz/T,tx=
   if(w.t[ty][tx]!==WALL)return w.el[ty][tx]||0;let best=0,bd=9;for(const [dx,dy] of DIRS){const nx=tx+dx,ny=ty+dy;if(!w.t[ny]||w.t[ny][nx]==null||w.t[ny][nx]===WALL)continue;const d=Math.hypot(nx+.5-x,ny+.5-y);if(d<bd){bd=d;best=w.el[ny][nx]||0;}}return best;}
 function elevStep(dt){const P=G.P;if(!G.w||!G.w.el){P.vz=0;P.fz=0;return;}const fz=elAt(P.x,P.y);P.fz=fz;if(P.vz==null)P.vz=fz;
   if(fz>P.vz)P.vz=Math.min(fz,P.vz+dt*7);else if(fz<P.vz){if(P.fallFrom==null)P.fallFrom=P.vz;P.vz=Math.max(fz,P.vz-dt*(4+ (P.fallFrom-P.vz)*6));}
-  if(P.fallFrom!=null&&P.vz<=fz+.001){const h=P.fallFrom-fz;P.fallFrom=null;if(h>1.6&&!G.tavern){log(h>3?'You drop down hard.':'You drop down.');if(G.mode!=='client')noise(P.x,P.y,h>3?9:6,.5,.7);if(h>3.4&&!SK('featherlight'))hurt(Math.round((h-3.4)*8+4),'The fall jars every bone.');}}}
+  if(P.fallFrom!=null&&P.vz<=fz+.001){const h=P.fallFrom-fz;P.fallFrom=null;if(h>1.6&&!G.tavern){log(h>3?'You drop down hard.':'You drop down.');if(G.mode!=='client')noise(P.x,P.y,h>3?9:6,.5,.7);if(h>3.4&&!SK('featherlight')&&!bgIs('secondstorey'))hurt(Math.round((h-3.4)*8+4),'The fall jars every bone.');}}}
 function elevBlocked(x,y){const w=G.w;if(!w||!w.el)return false;return elAt(x,y)>(G.P.fz||0)+.8;}
 function elevLos(x0,y0,x1,y1,f,z0,z1){return elAt(x0+(x1-x0)*f,y0+(y1-y0)*f)>z0+(z1-z0)*f;}
 /* render: keep every object at the height of the floor under it */
@@ -2553,11 +2589,11 @@ function bankInteract(c){const P=G.P;
   if(c.kind==='crate'){crateDo('pick',c.cr.id);return true;}
   if(c.kind!=='tile')return false;
   if(c.t===HATCH){const d=hatchDest(c.x,c.y);if(!d)return true;P.chan={t:0,dur:1.2,label:'Climbing',done:()=>{P.x=d[0];P.y=d[1];P.vz=elAt(d[0],d[1]);P.fallFrom=null;log(elAt(d[0],d[1])<-1?'You drop into the sewer. It stinks.':'You climb out.');}};return true;}
-  if(c.t===LOCKDOOR&&G.cls==='thief'){P.chan={t:0,dur:3*(G.S.pick||1),label:'Picking the lock',done:()=>{const d={k:'tile',x:c.x,y:c.y};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}};return true;}
+  if(c.t===LOCKDOOR&&G.cls==='thief'){P.chan={t:0,dur:3/(G.S.chanMul||1),label:'Picking the lock',done:()=>{const d={k:'tile',x:c.x,y:c.y};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}};return true;}
   return false;}
 function bankUse(t,d,C,say,nm){const w=G.w,cx=d.x+.5,cy=d.y+.5;
   if(t===LOCKDOOR){if(C!=='thief'&&C!=='warrior')return;w.t[d.y][d.x]=FLOOR;w.cleared.push([d.x,d.y]);G.featDirty=true;
-    if(C==='warrior'){noise(cx,cy,16,1,1);say('You put your boot through the door. It bangs open.',`${nm} kicked a door in.`);}else say('The lock gives with a soft click.',`${nm} picked a lock.`,'good');}}
+    if(C==='warrior'){noise(cx,cy,16*(d.bq?.6:1),1,1);say('You put your boot through the door. It bangs open.',`${nm} kicked a door in.`);}else say('The lock gives with a soft click.',`${nm} picked a lock.`,'good');}}
 /* crates: host decides; clients ask */
 function crateDo(op,id){if(G.mode==='client'){sendAct({t:'crate',op,id});return;}crateAct(op,id,{key:'me',name:'You',cls:G.cls});}
 function crateAct(op,id,actor){const w=G.w,c=w.crates&&w.crates[id];if(!c||c.del)return;
@@ -2646,14 +2682,14 @@ function interact(){
   if(c.kind==='tile'&&c.t===EXIT){leave();return;}
   if(c.kind==='tile'&&c.t===LEDGE){const o=crewAt(c.x,c.y);const ci=crossInfo(o);
     if(!ci.onTop){const dest=[ci.top[0],ci.top[1]];if(warriorNear(c.x,c.y)){G.P.x=dest[0];G.P.y=dest[1];log('A leg up and over you go.','good');return;}if(G.cls==='warrior'&&SK('boost')>1){G.P.climb={t:4,dest,msg:'You heave yourself up over the ledge.'};log('You find a grip and start hauling yourself up.');return;}
-    if(G.cls==='thief'){G.P.climb={t:1.8*(G.S.climb||1),dest,msg:'You haul yourself over the ledge.'};log('You find handholds and start climbing.');return;}return;}}
+    if(G.cls==='thief'){G.P.climb={t:1.8*(G.S.climb||1)*(bgIs('secondstorey')?.7:1),dest,msg:'You haul yourself over the ledge.'};log('You find handholds and start climbing.');return;}return;}}
   if(c.kind==='coffer'){cofferUse(c.l);return;}
   if(c.kind==='tile'&&c.t===PATIENT){const P=G.P;P.chan={t:0,dur:G.S.stab||4,label:'Stabilising the informant',hold:SK('steady')>1,done:()=>{const d={k:'tile',x:c.x,y:c.y};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}};return;}
   if(c.kind==='tile'&&c.t===MIASMA&&SK('purge')){const ts=[];for(let y=c.y-4;y<=c.y+4;y++)for(let x=c.x-4;x<=c.x+4;x++)if(G.w.t[y]&&G.w.t[y][x]===MIASMA&&Math.hypot(x-G.P.x+.5,y-G.P.y+.5)<4.5)ts.push([x,y]);for(const [x,y] of ts){const d={k:'tile',x,y,pg:SK('purge')};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}return;}
   if(bankInteract(c))return;
   if(obsInteract(c))return;
   if(c.kind==='pocket'){pickPocket(c.e);return;}
-  const d={k:c.kind,id:c.kind==='trap'?c.tr.id:c.kind==='torch'?c.to.id:c.kind==='loot'?c.l.id:undefined,x:c.x,y:c.y,rw:c.kind==='trap'?SK('rewire'):0,pz:SK('poisoner')>1?1:0,sd:G.cls==='doctor'?SK('sleepdraught'):0,pg:G.cls==='doctor'?SK('purge'):0};
+  const d={k:c.kind,id:c.kind==='trap'?c.tr.id:c.kind==='torch'?c.to.id:c.kind==='loot'?c.l.id:undefined,x:c.x,y:c.y,rw:c.kind==='trap'?SK('rewire'):0,pz:SK('poisoner')>1?1:0,sd:G.cls==='doctor'?SK('sleepdraught'):0,pg:G.cls==='doctor'?SK('purge'):0,bq:bgIs('bouncer')?1:0};
   if(c.kind==='tile'&&c.t===WARD&&G.cls!=='wizard'){const i=G.belt.indexOf('wardspike');if(i<0)return;G.belt[i]=null;d.spike=1;G.sideDirty=true;}
   if(c.kind==='tile'&&c.t===LARDER&&G.cls!=='thief'){const i=G.belt.indexOf('nightcap');if(i<0)return;G.belt[i]=null;d.nc=1;G.sideDirty=true;}
   if(c.kind==='loot'){const it=lootItem(c.l);if(!bagAdd(G.cls,it))return;c.l.taken=true;if(!GB[it.b].val)G.gearFound++;G.featDirty=true;G.sideDirty=true;log(`You stow the ${itemName(it)}.`,'good');}
@@ -2675,11 +2711,11 @@ function doUse(d,actor){
     case LOCKDOOR:bankUse(t,d,C,say,nm);return;
     case DOOR:{if(!(C in w.locks)||w.locks[C])return;w.locks[C]=true;
       if(C==='thief')say('You ease the needles back and turn the tumblers. One lock down.',`${nm} picked the needle-trapped lock.`,'good');
-      if(C==='warrior'){say('You wrench the crossbar out of its brackets. The clang echoes.',`${nm} wrenched out the iron crossbar.`,'good');noise(cx,cy,16,1,1);}
+      if(C==='warrior'){say('You wrench the crossbar out of its brackets. The clang echoes.',`${nm} wrenched out the iron crossbar.`,'good');noise(cx,cy,16*(d.bq?.6:1),1,1);}
       if(C==='wizard')say('You speak the counter-sign and the rune seal gutters out.',`${nm} dispelled the rune seal.`,'good');
       if(C==='doctor')say('You hold the censer to the rotten wax seal until it crisps and flakes away. One lock down.',`${nm} burned away the plague seal.`,'good');
       G.featDirty=true;return;}
-    case BARR:if(C!=='warrior')return;w.t[d.y][d.x]=FLOOR;w.cleared.push([d.x,d.y]);noise(cx,cy,15,1,1);say('You shoulder the barricade apart. Splinters everywhere.',`${nm} smashed a barricade.`);G.featDirty=true;rebuildWalls();return;
+    case BARR:if(C!=='warrior')return;w.t[d.y][d.x]=FLOOR;w.cleared.push([d.x,d.y]);noise(cx,cy,15*(d.bq?.6:1),1,1);say('You shoulder the barricade apart. Splinters everywhere.',`${nm} smashed a barricade.`);G.featDirty=true;rebuildWalls();return;
     case WARD:if(C!=='wizard'&&!d.spike)return;if(d.spike)noise(cx,cy,12,1,1);w.t[d.y][d.x]=FLOOR;w.cleared.push([d.x,d.y]);say('You unpick the ward thread by thread. It fades.',`${nm} dispelled a ward.`);G.featDirty=true;return;
     case PATIENT:if(C!=='doctor'||w.stab)return;w.stab=true;w.traps.forEach(tr=>tr.revealed=true);say('You pack the wound and get some laudanum down them. Between gasps, they tell you where every trap is.',`${nm} stabilised the informant. Every trap is marked.`,'good');G.featDirty=true;return;
     case MIASMA:if(C!=='doctor')return;w.t[d.y][d.x]=FLOOR;w.cleared.push([d.x,d.y]);if(d.pg>1)for(const tr of w.traps)if(Math.hypot(tr.x-d.x,tr.y-d.y)<5)tr.revealed=true;say('You burn sulphur and vinegar until the miasma thins to nothing.',`${nm} purged a plague miasma.`,'good');G.featDirty=true;return;
@@ -2810,8 +2846,8 @@ function init3D(){
   }catch(e){console.warn(e);R3.ok=false;$('#nogl').hidden=false;}
   return R3.ok;
 }
-function resize3D(){if(!init3D())return;const wrap=$('#viewwrap');const w=wrap.clientWidth;const h=Math.round(Math.min(w*.6,window.innerHeight*.74,720));
-  R3.renderer.setSize(w,h,false);$('#view').style.height=h+'px';R3.camera.aspect=w/h;R3.camera.updateProjectionMatrix();}
+function resize3D(){if(!init3D())return;const wrap=$('#viewwrap');/*FULLWIN*/const w=Math.max(1,wrap.clientWidth||window.innerWidth);const h=Math.max(1,wrap.clientHeight||window.innerHeight);
+  R3.renderer.setSize(w,h,false);$('#view').style.height='100%';R3.camera.aspect=w/h;R3.camera.updateProjectionMatrix();}
 window.addEventListener('resize',()=>{if(G)resize3D();});
 function canvasTex(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'));return new THREE.CanvasTexture(c);}
 function shade(hex,amt){const n=parseInt(hex.slice(1),16);const f=v=>Math.max(0,Math.min(255,Math.round(v*(1+amt))));return `rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`;}

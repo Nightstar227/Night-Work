@@ -806,7 +806,7 @@ function onRemote(){
   if(!G)return;if(G.tavern){tavernRemote();return;}
   if(G.mode==='client'){const host=NET.remote.get(NET.hostPeer);if(!host||!host.pres)return;const hp=host.pres;
     if(hp.w)applyWorld(hp.w);
-    for(const h of hp.hits||[]){if(h.n>NET.lastHit&&h.to===NET.myPeer){NET.lastHit=h.n;const ee=G.w.enemies[h.id];if(G.down<=0&&hurt(h.d,`${h.m} hits you.`,ee?{x:ee.x,y:ee.y,heavy:!!h.hv,proj:h.pj}:null)==='parry')sendAct({t:'parry',id:h.id,fg:G.S.fx&&G.S.fx.fang?1:0});}}
+    for(const h of hp.hits||[]){if(h.n>NET.lastHit&&h.to===NET.myPeer){NET.lastHit=h.n;if(h.heave){trickLaunch(h.heave[0],h.heave[1],h.m);continue;}const ee=G.w.enemies[h.id];if(G.down<=0&&hurt(h.d,`${h.m} hits you.`,ee?{x:ee.x,y:ee.y,heavy:!!h.hv,proj:h.pj}:null)==='parry')sendAct({t:'parry',id:h.id,fg:G.S.fx&&G.S.fx.fang?1:0});}}
     if(hp.hits&&hp.hits.length&&NET.lastHit===0)NET.lastHit=Math.max(0,...hp.hits.filter(h=>h.to!==NET.myPeer).map(h=>0));
     for(const l of hp.lg||[]){if(l[0]>NET.lastLog){if(NET.lastLog>0||G.time>1)log(l[1],l[2]||undefined);NET.lastLog=l[0];}}
     if(hp.end&&!G.over)hostEnded(hp.end);}
@@ -815,7 +815,7 @@ function onRemote(){
 function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peerName(rr)};if(!actor.cls)return;
   if(a.t==='doc'){docHostAct(rr,a,actor);return;}
   if(a.t==='rune'){runeTrip(a.x|0,a.y|0,actor);return;}
-  if(a.t==='crate'){crateAct(a.op,a.id|0,actor);return;}
+  if(a.t==='crate'){crateAct(a.op,a.id|0,actor,a);return;}
   if(a.t==='zx'){zxHostAct(a,actor);return;}
   if(a.t==='civ'){const e=w.enemies[a.id|0];if(e&&e.civ)civHush(e,actor);return;}
   if(a.t==='hit'){const e=w.enemies[a.id];if(!e||e.dead)return;G.lastActor=actor.key;actor.rr=rr;
@@ -2193,6 +2193,7 @@ document.addEventListener('keydown',ev=>{
   if(ev.code==='KeyR'&&!ev.repeat)cycleArrow();
   {const bi=['Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'].indexOf(ev.code);if(bi>=0&&!ev.repeat)useBelt(bi);}
   if(['KeyG','KeyT','KeyV','KeyB'].includes(ev.code)&&!ev.repeat)usePower(ev.code.slice(3));
+  if(ev.code==='KeyX'&&!ev.repeat&&KIT[G.cls].abil.some(a=>a.id==='trick'))useAbility('trick');
   if(ev.code==='KeyP'&&!lockMode)setPause(true,'Paused','Take a breath.');
   const A=KIT[G.cls].abil.find(a=>'Digit'+a.key===ev.code);if(A&&!ev.repeat)useAbility(A.id);
 });
@@ -2209,7 +2210,7 @@ function update(dt){
   if(G.glimpse>0)G.glimpse-=dt;
   if(P.swing>0)P.swing-=dt;
   if(G.down>0){G.down-=dt;if(G.down<=0){G.down=0;if(G.downHere){P.x=G.downHere[0];P.y=G.downHere[1];P.hp=Math.ceil(P.max*G.downHp);G.downHere=null;log('A crewmate hauls you back to your feet.','good');}else{P.x=G.w.start[0]+.5;P.y=G.w.start[1]+.5;P.hp=Math.ceil(P.max/2);log('You stagger back to your feet at the stairs.');}setPause(G.paused);}}
-  const inputOn=!G.paused&&!INV.open&&G.down<=0&&!P.climb&&!(P.charge>0);const K=inputOn?G.keys:{};if(!inputOn)G.stick=G.paused?[0,0]:G.stick;
+  const inputOn=!G.paused&&!INV.open&&G.down<=0&&!P.climb&&!(P.charge>0)&&!P.zip;const K=inputOn?G.keys:{};if(!inputOn)G.stick=G.paused?[0,0]:G.stick;
   // movement
   if(K.ArrowLeft)P.yaw+=2.2*dt;if(K.ArrowRight)P.yaw-=2.2*dt;
   let f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0),s=(K.KeyD?1:0)-(K.KeyA?1:0);
@@ -2472,6 +2473,7 @@ function useAbility(id){
       if(G.mode==='client'){sendAct({t:id,ang:+ang.toFixed(3),bh:SK('breakhex')?1:0});log(id==='repel'?'You hurl the hex.':'You fling a fistful of flash powder.');}
       else{const n=ccCone(P.x,P.y,ang,id,{key:'me',bh:SK('breakhex')?1:0});log(id==='repel'?(n?`The hex throws back ${n} foe${n>1?'s':''}.`:'The hex stirs only dust.'):(n?`Flash! ${n} foe${n>1?'s are':' is'} blinded.`:'The powder flares at nothing.'),n?'good':undefined);}break;}
     case 'censer':case 'tend':case 'pfire':case 'salts':if(docAbility(id)===false)return;break;
+    case 'trick':{const r=useTrick();if(r===false)return;if(r==='free'){G.sideDirty=true;return;}break;}
     case 'venom':P.venom=true;P.venomN=SK('poisoner')?2:1;log('You coat your blade. Your next strike is poisoned.','good');break;
     case 'second':P.hp=Math.min(P.max,P.hp+60);P.used[id]=true;log('You grit your teeth and catch your breath. +60 health.','good');break;
     case 'invis':P.invis=(G.S.invis||8)+(G.S.fx&&G.S.fx.ghost?4:0);log('You fold the light around yourself.');for(const e of G.w.enemies)if(!e.dead&&e.state==='alert')e.unseen=Math.max(e.unseen,2);break;
@@ -2567,7 +2569,7 @@ obsInit();
 function elAt(x,y){const w=G&&G.w;if(!w||!w.el)return 0;const tx=Math.floor(x),ty=Math.floor(y);const r=w.el[ty];return r&&r[tx]!=null?r[tx]:0;}
 function elW(wx,wz){const w=G&&G.w;if(!w||!w.el)return 0;const x=wx/T,y=wz/T,tx=Math.floor(x),ty=Math.floor(y);if(!w.t[ty]||w.t[ty][tx]==null)return 0;
   if(w.t[ty][tx]!==WALL)return w.el[ty][tx]||0;let best=0,bd=9;for(const [dx,dy] of DIRS){const nx=tx+dx,ny=ty+dy;if(!w.t[ny]||w.t[ny][nx]==null||w.t[ny][nx]===WALL)continue;const d=Math.hypot(nx+.5-x,ny+.5-y);if(d<bd){bd=d;best=w.el[ny][nx]||0;}}return best;}
-function elevStep(dt){const P=G.P;if(P.air&&zxAir(dt))return;if(!G.w||!G.w.el){P.vz=0;P.fz=0;return;}const fz=elAt(P.x,P.y);P.fz=fz;if(P.vz==null)P.vz=fz;
+function elevStep(dt){const P=G.P;if(P.zip&&trickZipStep(dt))return;if(P.air&&zxAir(dt))return;if(!G.w||!G.w.el){P.vz=0;P.fz=0;return;}const fz=elAt(P.x,P.y);P.fz=fz;if(P.vz==null)P.vz=fz;
   if(fz>P.vz)P.vz=Math.min(fz,P.vz+dt*7);else if(fz<P.vz){if(P.fallFrom==null)P.fallFrom=P.vz;P.vz=Math.max(fz,P.vz-dt*(4+ (P.fallFrom-P.vz)*6));}
   if(P.fallFrom!=null&&P.vz<=fz+.001){const h=P.fallFrom-fz;P.fallFrom=null;if(h>1.6&&!G.tavern){log(h>3?'You drop down hard.':'You drop down.');if(G.mode!=='client')noise(P.x,P.y,h>3?9:6,.5,.7);if(h>3.4&&!SK('featherlight')&&!bgIs('secondstorey'))hurt(Math.round((h-3.4)*8+4),'The fall jars every bone.');}}}
 function elevBlocked(x,y){const w=G.w;if(!w||!w.el)return false;return elAt(x,y)>Math.max(G.P.fz||0,G.P.air?G.P.vz:-99)+.8;}
@@ -2627,11 +2629,12 @@ function bankUse(t,d,C,say,nm){const w=G.w,cx=d.x+.5,cy=d.y+.5;
     if(C==='warrior'){noise(cx,cy,16*(d.bq?.6:1),1,1);say('You put your boot through the door. It bangs open.',`${nm} kicked a door in.`);}else say('The lock gives with a soft click.',`${nm} picked a lock.`,'good');}}
 /* crates: host decides; clients ask */
 function crateDo(op,id){if(G.mode==='client'){sendAct({t:'crate',op,id});return;}crateAct(op,id,{key:'me',name:'You',cls:G.cls});}
-function crateAct(op,id,actor){const w=G.w,c=w.crates&&w.crates[id];if(!c||c.del)return;
+function crateAct(op,id,actor,a){const w=G.w,c=w.crates&&w.crates[id];if(!c||c.del)return;
   const pos=actor.key==='me'?G.P:(NET.remote.get(actor.key)||{}).p;if(!pos)return;
   const say=(mine,theirs,cls)=>{if(actor.key==='me')log(mine,cls);else log(theirs,cls);if(G.mode==='host')netLog(theirs,cls);};
   if(op==='pick'){if(c.c||w.crates.some(o=>o.c===actor.key&&!o.del)||Math.hypot(c.x-pos.x,c.y-pos.y)>1.8)return;c.c=actor.key;say(`You heave up a ${c.vault?'vault crate':'deposit crate'} (${c.v}g). Slow going. Get it to a getaway: the van in the alley or the cart down the street.`,`${actor.name} picked up a crate.`);}
   else if(op==='drop'){if(c.c!==actor.key)return;c.c=null;c.x=pos.x;c.y=pos.y;}
+  else if(op==='toss'){if(c.c!==actor.key)return;const fx=+(a&&a.fx)||0,fy=+(a&&a.fy)||0,z0=elAt(pos.x,pos.y);let d=0;for(let s=.2;s<=3;s+=.2){const x=pos.x+fx*s,y=pos.y+fy*s;if(!walkT(tileAt(x,y))||elAt(x,y)>z0+.8)break;d=s;}c.c=null;c.x=pos.x+fx*d;c.y=pos.y+fy*d;noise(c.x,c.y,8,.4,.7);G.bursts=G.bursts||[];G.bursts.push({x:c.x,y:c.y,t:0,col:0xa08060});say(`You heave the crate ${d>2?'three paces':'a few feet'}. It lands with a crunch.`,`${actor.name} hurled a crate.`);}
   else if(op==='deliver'){if(c.c!==actor.key||!nearEscape(pos.x,pos.y))return;c.c=null;c.del=true;w.crGold=(w.crGold||0)+c.v;G.looted=true;G.featDirty=true;
     say(`Crate loaded: ${c.v} gold on the getaway. ${w.crates.filter(o=>o.del).length} of ${w.crates.length} out.`,`${actor.name} loaded a crate onto the getaway (+${c.v}g).`,'good');}
   G.sideDirty=true;}
@@ -2678,12 +2681,12 @@ function zxRunStart(){const w=G.w,m=G.m||{};w.zx=[];w.zxId=1;w.wet={};w.nests=[]
 function zxAdd(o){const w=G.w;o.id=w.zxId++;w.zx.push(o);G.zxDirty=true;return o;}
 /* host-side packing */
 function zxPack(){const w=G.w;if(!w.zx)return null;return [w.zx.map(o=>{const a=[o.id,o.k,Math.round(o.x*100),Math.round(o.y*100),Math.round(o.t*10)];
-    if(o.k==='portal')a.push(Math.round(o.bx*100),Math.round(o.by*100));else if(o.k==='pall')a.push(o.r);else if(o.k==='shock'||o.k==='fire')a.push(o.tl);return a;}),
+    if(o.k==='portal'||o.k==='line')a.push(Math.round(o.bx*100),Math.round(o.by*100));else if(o.k==='pall'||o.k==='feycloud')a.push(o.r);else if(o.k==='shock'||o.k==='fire')a.push(o.tl);return a;}),
   w.nests.map(n=>n.gone?1:0).join(''),w.oilGone.slice(),(w.wetAdd||[]).slice()];}
 function zxApply(Z){const w=G.w;if(!Z||!w.zx)return;const [L,ng,og,wa]=Z;const keep={};
   for(const a of L){keep[a[0]]=1;let o=w.zx.find(q=>q.id===a[0]);const x=a[2]/100,y=a[3]/100;
     if(!o){o={id:a[0],k:a[1],x,y,t:a[4]/10,age:0};w.zx.push(o);G.zxDirty=true;}else{o.tx=x;o.ty=y;o.t=a[4]/10;}
-    if(o.k==='portal'){o.bx=a[5]/100;o.by=a[6]/100;}else if(o.k==='pall')o.r=a[5];else if(o.k==='shock'||o.k==='fire')o.tl=a[5];}
+    if(o.k==='portal'||o.k==='line'){o.bx=a[5]/100;o.by=a[6]/100;}else if(o.k==='pall'||o.k==='feycloud')o.r=a[5];else if(o.k==='shock'||o.k==='fire')o.tl=a[5];}
   const n0=w.zx.length;w.zx=w.zx.filter(o=>keep[o.id]);if(w.zx.length!==n0)G.zxDirty=true;
   if(ng)w.nests.forEach((n,i)=>{if(ng[i]==='1'&&!n.gone){n.gone=true;G.zxDirty=true;}});
   if(og&&og.length!==w.oilGone.length){w.oilGone=og.slice();for(const k of og)delete w.wet[k];G.wetDirty=true;}
@@ -2698,7 +2701,7 @@ function zxBelt(k,i){const P=G.P;
   if(k==='fey'){const a={t:'zx',k:'fey',x:+P.x.toFixed(2),y:+P.y.toFixed(2)};G.fey=90;G.zxDirty=true;if(G.mode==='client')sendAct(a);else zxHostAct(a,{key:'me',name:'You'});
     log('The unguent stings, then the dark goes silver-green. Crewmates close by get a dab too.','good');G.belt[i]=null;G.sideDirty=true;return true;}
   return false;}
-function zxHostAct(a,actor){const w=G.w;if(!w.zx)return;
+function zxHostAct(a,actor){const w=G.w;if(!w.zx)return;if(trickHostAct(a,actor))return;
   if(a.k==='portal'){const n=w.zx.filter(o=>o.k==='portal');if(n.length>=3){n[0].t=0;}zxAdd({k:'portal',x:+a.x,y:+a.y,bx:+a.bx,by:+a.by,t:60,age:0});if(actor.key!=='me'){log(`${actor.name} opens a portal.`);if(G.mode==='host')netLog(`${actor.name} opened a portal.`);}}
   else if(a.k==='fey')zxAdd({k:'fey',x:+a.x,y:+a.y,t:2,age:0});
   else if(a.k==='kick'){const n=w.nests[a.i|0];if(n&&!n.gone)zxStampede(n,actor);}}
@@ -2735,9 +2738,9 @@ function zxStampede(n,actor,why){const w=G.w;if(n.gone)return;n.gone=true;G.zxDi
   if(actor&&actor.key!=='me')log(`${actor.name} kicks a rat nest. A squealing flood of rats pours out.`,'bad');else log(msg,'bad');if(G.mode==='host')netLog('A rat nest boils over. A flood of rats pours out.','bad');}
 function zxNoise(x,y,radM){const w=G.w;if(!w||!w.nests||G.mode==='client'||radM<11)return;for(const n of w.nests)if(!n.gone&&Math.hypot(n.x-x,n.y-y)*T<radM*.45)zxStampede(n,null,'noise');}
 /* focus: kick a nest */
-function zxFocus(){const w=G.w,P=G.P;if(!w.nests)return null;for(let i=0;i<w.nests.length;i++){const n=w.nests[i];if(n.gone||Math.hypot(n.x-P.x,n.y-P.y)>1.2)continue;
+function zxFocus(){const w=G.w,P=G.P;{const tf=trickFocus();if(tf)return tf;}if(!w.nests)return null;for(let i=0;i<w.nests.length;i++){const n=w.nests[i];if(n.gone||Math.hypot(n.x-P.x,n.y-P.y)>1.2)continue;
     return {kind:'nest',i,cx:n.x,cy:n.y,label:{act:true,text:'<b>E</b> Kick the rat nest <span class="dim">(they run for the nearest crowd)</span>'}};}return null;}
-function zxInteract(c){if(c.kind!=='nest')return false;const a={t:'zx',k:'kick',i:c.i};if(G.mode==='client')sendAct(a);else zxHostAct(a,{key:'me',name:'You'});return true;}
+function zxInteract(c){if(c.kind==='line'){trickRide(c);return true;}if(c.kind!=='nest')return false;const a={t:'zx',k:'kick',i:c.i};if(G.mode==='client')sendAct(a);else zxHostAct(a,{key:'me',name:'You'});return true;}
 /* simulation: the host moves the world, every peer handles its own body */
 function zxUpdate(dt){const w=G.w;if(!w||!w.zx||G.tavern)return;const sim=G.mode!=='client',P=G.P;
   for(const o of w.zx){o.age=(o.age||0)+dt;if(sim){o.t-=dt;if(o.t<=0)o.dead=true;}
@@ -2771,6 +2774,7 @@ function zxUpdate(dt){const w=G.w;if(!w||!w.zx||G.tavern)return;const sim=G.mode
     else if(o.k==='fire'&&!P.air){const k=zxKey(P.x,P.y),e=(o.tl||[]).find(q=>q[0]===k);if(e&&o.age>e[1]&&o.age<e[1]+8&&(G.zxHurt.fire||0)<G.time){G.zxHurt.fire=G.time+.6;hurt(5,'You are standing in burning oil.');}}
     else if(o.k==='rats'&&Math.hypot(P.x-o.x,P.y-o.y)<1.3&&(G.zxHurt.rats||0)<G.time){G.zxHurt.rats=G.time+.8;hurt(3,'Rats swarm over your boots, biting.');}}
   if(!inAny&&G.zcd>0)G.zcd-=dt;if(G.springCd>0&&!P.air)G.springCd-=dt;
+  trickBody(dt);
   // projectiles through portals
   for(const p of G.proj||[]){if((p.zcd||0)>0){p.zcd-=dt;continue;}for(const o of w.zx){if(o.k!=='portal')continue;const x=p.pos.x/T,y=p.pos.z/T;
       for(const [ax,ay,bx,by] of [[o.x,o.y,o.bx,o.by],[o.bx,o.by,o.x,o.y]])if(Math.hypot(x-ax,y-ay)<.5&&p.pos.y-elAt(ax,ay)<2.2){p.pos.x+=(bx-ax)*T;p.pos.z+=(by-ay)*T;p.pos.y+=elAt(bx,by)-elAt(ax,ay);p.zcd=.6;break;}}}}
@@ -2811,6 +2815,7 @@ function zxMesh(o){const g=new THREE.Group();g.userData.noEl=true;g.userData.k=o
       for(let i=0;i<n;i++){const f=new THREE.Mesh(geo,mat);if(o.k==='fire'){f.position.set((Math.random()-.5)*1.1,.45,(Math.random()-.5)*1.1);const c=new THREE.Mesh(geo,mat2);c.scale.set(.5,.6,.5);c.position.y=-.15;f.add(c);}m.add(f);}
       m.position.set((x+.5)*T,elAt(x+.5,y+.5)+(o.k==='shock'?.05:0),(y+.5)*T);m.userData.d=o.k==='fire'?q[1]:0;m.userData.ph=Math.random()*6;g.add(m);}g.userData.mat=mat;}
   else if(o.k==='rats'){const mat=new THREE.MeshLambertMaterial({color:0x5a4a40}),geo=new THREE.SphereGeometry(.07,7,5),tg=new THREE.CylinderGeometry(.008,.014,.2,4);tg.rotateX(Math.PI/2);for(let i=0;i<40;i++){const r=new THREE.Mesh(geo,mat);r.scale.set(.8,.6,1.6);const tl=new THREE.Mesh(tg,mat);tl.position.z=-.11;tl.scale.set(1.25,1.6,.62);r.add(tl);r.userData.ox=(Math.random()-.5)*2.2;r.userData.oz=(Math.random()-.5)*2.2;r.userData.ph=Math.random()*6;g.add(r);}g.position.set(o.x*T,elAt(o.x,o.y),o.y*T);}
+  else trickMesh(o,g);
   return g;}
 function zxRender(dt){const w=G.w;if(!w||!w.zx||G.tavern||!R3.scene)return;
   if(!R3.zxG||R3.zxBuiltFor!==w){if(R3.zxG&&R3.zxG.parent)R3.zxG.parent.remove(R3.zxG);R3.zxG=new THREE.Group();R3.zxG.userData.noEl=true;R3.zxMeshes={};R3.zxBuiltFor=w;R3.zxNests=w.nests.map(n=>{const m=zxNestMesh(n);R3.zxG.add(m);return m;});G.wetDirty=true;R3.plBase=null;}
@@ -2824,6 +2829,7 @@ function zxRender(dt){const w=G.w;if(!w||!w.zx||G.tavern||!R3.scene)return;
     else if(o.k==='pall'){const s=Math.min(1,(o.age||0)*3+.2)*(o.t<3?Math.max(.01,o.t/3):1);g.scale.setScalar(s);const fey=G.fey>0;g.userData.sph[0].material.opacity=fey?.18:.94;g.userData.sph[0].material.color.set(fey?0x1a3a28:0x07070c);g.userData.sph[1].material.opacity=fey?0:.6;g.rotation.y+=dt*.1;}
     else if(o.k==='shock'){g.userData.mat.opacity=(Math.random()*.6+.3)*Math.min(1,o.t);}
     else if(o.k==='fire'){g.children.forEach(m=>{const a=(o.age||0)-m.userData.d;const on=a>0&&a<8;m.visible=on;if(on){const f=Math.min(1,a*3)*(a>7?8-a:1);m.scale.set(f,f*(1+.3*Math.sin(t*14+m.userData.ph)),f);}});}
+    else if(o.k==='feycloud'||o.k==='line')trickAnim(o,g,dt);
     else if(o.k==='rats'){g.position.set(o.x*T,elAt(o.x,o.y),o.y*T);g.children.forEach(r=>{const u=r.userData;u.ph+=dt*9;r.position.set(u.ox+Math.sin(u.ph)*.25,.035+Math.abs(Math.sin(u.ph*2))*.04,u.oz+Math.cos(u.ph*1.3)*.25);r.rotation.y=u.ph;});const s=o.t<2?o.t/2:Math.min(1,(o.age||0)*2);g.scale.set(s,1,s);}}
   for(const id in R3.zxMeshes)if(!live[id]){const g=R3.zxMeshes[id];R3.zxG.remove(g);g.traverse(q=>{if(q.geometry)q.geometry.dispose();});delete R3.zxMeshes[id];}
   // fey sight brightens the dark around you
@@ -2990,7 +2996,7 @@ function feelFrame(dt){if(!G||!G.P)return;const P=G.P,c=R3.camera,w=G.w,F=G.feel
   for(const p of G.proj||[])if(!p._snd){p._snd=1;sfx(p.kind==='arrow'?'bow':p.kind==='fire'?'whoosh':p.kind==='pebble'?'whoosh':'whoosh',null,null,p.kind==='arrow'?1:.6);p._wasArrow=p.kind==='arrow';}
   for(const p of F.lastProj||[])if(p.dead&&!p._end){p._end=1;const x=p.pos.x/T,y=p.pos.z/T;if(p.kind==='arrow')sfx('thunk',x,y);else if(p.kind==='pebble')sfx('tick',x,y,1.6);}
   F.lastProj=(G.proj||[]).slice();
-  if(w.zx)for(const o of w.zx)if(!F.zx.has(o.id)){F.zx.add(o.id);const nm={portal:'portal',spring:'pop',pall:'pall',shock:'zap',fire:'ignite',rats:'squeak',fey:'hum'}[o.k];if(nm)sfx(nm,o.x,o.y);if(o.k==='pall')feelShake(.15);}
+  if(w.zx)for(const o of w.zx)if(!F.zx.has(o.id)){F.zx.add(o.id);const nm={portal:'portal',spring:'pop',pall:'pall',shock:'zap',fire:'ignite',rats:'squeak',fey:'hum',feycloud:'hiss',line:'whoosh'}[o.k];if(nm)sfx(nm,o.x,o.y);if(o.k==='pall')feelShake(.15);}
   if(w.zx)for(const o of w.zx)if(o.k==='rats'){o._sq=(o._sq||0)-dt;if(o._sq<=0){o._sq=.08+Math.random()*.15;sfx('squeak',o.x+(Math.random()-.5)*1.5,o.y+(Math.random()-.5)*1.5);}}
   {const n=(G.torches||[]).filter(q=>q.out).length;if(n>F.torches&&G.time>.5){const q=G.torches.find(q=>q.out&&!q._snd);if(q){q._snd=1;sfx('hiss',q.lx,q.ly);}}F.torches=n;}
   {const n=(w.cleared||[]).length;if(n>F.cleared){const [x,y]=w.cleared[n-1];sfx('bang',x+.5,y+.5);feelShake(Math.hypot(x+.5-P.x,y+.5-P.y)<4?.35:.1);}F.cleared=n;}
@@ -3050,6 +3056,97 @@ function updCiv(e,dt){e.walking=false;if(e.stag>0){e.stag-=dt;if(e.stag<=0&&e.st
 function civFocus(){const P=G.P,[fx,fy]=fwd(),fa=Math.atan2(fy,fx);for(const e of G.w.enemies){if(!e.civ||e.dead||e.cowerT>0||(G.cls==='thief'&&canPick(e)))continue;const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>1.4||Math.abs(angDiff(Math.atan2(dy,dx),fa))>.8)continue;
     return {kind:'civ',e,cx:e.x,cy:e.y,label:{act:true,text:`<b>E</b> Hush ${lc(nameOf(e))} <span class="dim">(they keep quiet)</span>`}};}return null;}
 function civInteract(c){if(c.kind!=='civ')return false;if(G.mode==='client')sendAct({t:'civ',id:c.e.id});else civHush(c.e,{key:'me'});return true;}
+
+/*TRICKIN*/
+/* ---------- class tricks (X): every class gets its own built-in version of the zany kit ----------
+   Wizard: Rift (two-point portal). Warrior: Heave (throw a crewmate, a crate or a foe).
+   Plague Doctor: Fey censer (green mist that grants fey-sight and soothes). Thief: Grapnel (zip-line to where you look; crew can ride it). */
+const TRICKS={wizard:{name:'Rift',cd:45},warrior:{name:'Heave',cd:8},doctor:{name:'Fey censer',cd:60},thief:{name:'Grapnel',cd:12}};
+for(const c in TRICKS)if(KIT[c]&&!KIT[c].abil.some(a=>a.id==='trick'))KIT[c].abil.push({id:'trick',key:'X',name:TRICKS[c].name,cd:TRICKS[c].cd});
+function trickSend(a){a.t='zx';if(G.mode==='client')sendAct(a);else trickHostAct(a,{key:'me',name:'You',cls:G.cls});}
+/* returns false when nothing happened (no cooldown), 'free' when it worked but shouldn't start the cooldown */
+function useTrick(){const P=G.P;if(G.tavern){toast('Save that for the job.');return false;}if(!G.w||!G.w.zx)return false;if(P.zip){return false;}
+  const [fx,fy]=fwd();
+  if(G.cls==='wizard'){const here=[+P.x.toFixed(2),+P.y.toFixed(2)];
+    if(!G.riftA){G.riftA=here;G.bursts=G.bursts||[];G.bursts.push({x:P.x,y:P.y,t:0,col:0xb08aff});sfx('blink',P.x,P.y);log('You pinch a fold in the air and leave it hanging here. Press X again somewhere else to open the rift.');return 'free';}
+    if(Math.hypot(here[0]-G.riftA[0],here[1]-G.riftA[1])<2.2){toast('Too close to the fold. Walk further away.');return false;}
+    trickSend({k:'rift',x:G.riftA[0],y:G.riftA[1],bx:here[0],by:here[1]});G.riftA=null;G.zcd=1.2;log('You tear the fold open. A rift joins the two spots for 30 seconds.','good');return true;}
+  if(G.cls==='doctor'){trickSend({k:'feycloud',x:+P.x.toFixed(2),y:+P.y.toFixed(2)});sfx('hiss',P.x,P.y);log('You swing the censer wide. Green mist rolls out: anyone standing in it sees in the dark and breathes easier.','good');return true;}
+  if(G.cls==='warrior'){
+    // 1: a crewmate in front of you
+    const pl=players().filter(p=>p.key!=='me'&&Math.hypot(p.x-P.x,p.y-P.y)<1.7&&Math.abs(angDiff(Math.atan2(p.y-P.y,p.x-P.x),Math.atan2(fy,fx)))<.9).sort((a,b)=>Math.hypot(a.x-P.x,a.y-P.y)-Math.hypot(b.x-P.x,b.y-P.y))[0];
+    if(pl){trickSend({k:'heave',to:pl.key,fx:+fx.toFixed(3),fy:+fy.toFixed(3)});P.swing=.6;G.swingStart=G.time;sfx('swingheavy',P.x,P.y);log(`You cup your hands and fling ${pl.rr?peerName(pl.rr):'your crewmate'} skyward.`,'good');return true;}
+    // 2: the crate in your arms
+    const cr=myCrate();if(cr){const a={t:'crate',op:'toss',id:cr.id,fx:+fx.toFixed(3),fy:+fy.toFixed(3)};if(G.mode==='client')sendAct(a);else crateAct('toss',cr.id,{key:'me',name:'You',cls:G.cls},a);P.swing=.6;G.swingStart=G.time;sfx('swingheavy',P.x,P.y);return true;}
+    // 3: a foe in front of you
+    const e=G.w.enemies.filter(e=>!e.dead&&inArc(e,1.5,.8)).sort((a,b)=>Math.hypot(a.x-P.x,a.y-P.y)-Math.hypot(b.x-P.x,b.y-P.y))[0];
+    if(e){trickSend({k:'heave',id:e.id,fx:+fx.toFixed(3),fy:+fy.toFixed(3)});P.swing=.6;G.swingStart=G.time;sfx('swingheavy',P.x,P.y);return true;}
+    toast('Nothing to heave. Stand close to a crewmate, a foe, or carry a crate.');return false;}
+  if(G.cls==='thief'){const hit=trickRay();if(!hit){toast('Nothing for the hook to bite on within 9 paces.');return false;}
+    if(Math.hypot(hit[0]-P.x,hit[1]-P.y)<1.5){toast('Too close. Aim further away.');return false;}
+    const a=[P.x,P.y,P.vz||elAt(P.x,P.y)];trickZip(a,hit);trickSend({k:'line',x:+a[0].toFixed(2),y:+a[1].toFixed(2),bx:+hit[0].toFixed(2),by:+hit[1].toFixed(2)});
+    sfx('bow',P.x,P.y);if(G.mode!=='client')noise(P.x,P.y,3,.15,.3);log(G.trickLineSaid?'Hook, line, zip.':'The grapnel bites. You ride the line across. It stays up a while: crewmates can ride it with E.','good');G.trickLineSaid=1;return true;}
+  return false;}
+/* the grapnel: walk a ray out of the eye until it meets a floor, the face of a ledge, or a wall */
+function trickRay(){const w=G.w,cam=R3.camera,dir=new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion),p=cam.position.clone();const st=.08,max=9*T;let prev=p.clone();
+  const ok=(x,y)=>{for(const [ox,oy] of [[-.24,-.24],[.24,-.24],[-.24,.24],[.24,.24]])if(!walkT(tileAt(x+ox,y+oy)))return false;return true;};
+  for(let s=0;s<max;s+=st){prev.copy(p);p.addScaledVector(dir,st);const x=p.x/T,y=p.z/T,t=tileAt(x,y);
+    if(!walkT(t)){// wall: drop to the floor just short of it
+      let bx=prev.x/T,by=prev.z/T;bx-=dir.x/T*.25*T/Math.max(.2,Math.hypot(dir.x,dir.z));by-=dir.z/T*.25*T/Math.max(.2,Math.hypot(dir.x,dir.z));if(!ok(bx,by)){bx=Math.floor(prev.x/T)+.5;by=Math.floor(prev.z/T)+.5;}
+      if(!ok(bx,by))return null;return [bx,by,elAt(bx,by)];}
+    const cl=w.ceil&&w.ceil[Math.floor(y)]?w.ceil[Math.floor(y)][Math.floor(x)]:null;if(cl!=null&&cl>-50&&p.y>cl)return null;
+    const fl=elAt(x,y);if(p.y<=fl+.02){let tx=x,ty=y;if(!ok(tx,ty)){tx=Math.floor(x)+.5;ty=Math.floor(y)+.5;}if(!ok(tx,ty))return null;return [tx,ty,elAt(tx,ty)];}}
+  return null;}
+function trickZip(a,b){const P=G.P;const d=Math.hypot(b[0]-a[0],b[1]-a[1]);P.air=null;P.push=null;P.fallFrom=null;P.zip={a:a.slice(),b:b.slice(),t:0,dur:Math.max(.35,d/9+Math.abs(b[2]-a[2])*.04)};sfx('whoosh',P.x,P.y);}
+/* called from elevStep: the zip carries you along the line */
+function trickZipStep(dt){const P=G.P,z=P.zip;if(!z)return false;z.t+=dt;const f=Math.min(1,z.t/z.dur),e=f<.5?2*f*f:1-Math.pow(-2*f+2,2)/2;
+  P.x=z.a[0]+(z.b[0]-z.a[0])*e;P.y=z.a[1]+(z.b[1]-z.a[1])*e;P.vz=z.a[2]+(z.b[2]-z.a[2])*e+Math.sin(e*Math.PI)*.35;P.fz=elAt(P.x,P.y);
+  if(f>=1){P.zip=null;P.x=z.b[0];P.y=z.b[1];P.vz=Math.max(elAt(P.x,P.y),z.b[2]);P.fz=elAt(P.x,P.y);P.fallFrom=P.vz>P.fz+.05?P.vz:null;sfx('land',P.x,P.y);}return true;}
+/* riding a thief's line */
+function trickFocus(){const w=G.w,P=G.P;if(!w||!w.zx||P.zip)return null;for(const o of w.zx){if(o.k!=='line')continue;
+    for(const [ax,ay,bx,by] of [[o.x,o.y,o.bx,o.by],[o.bx,o.by,o.x,o.y]]){if(Math.hypot(P.x-ax,P.y-ay)>1.1||Math.abs((P.vz||0)-elAt(ax,ay))>1)continue;
+      return {kind:'line',a:[ax,ay],b:[bx,by],cx:ax,cy:ay,label:{act:true,text:'<b>E</b> Ride the line <span class="dim">(zip to the other end)</span>'}};}}return null;}
+function trickRide(c){const P=G.P;trickZip([P.x,P.y,P.vz||elAt(P.x,P.y)],[c.b[0],c.b[1],elAt(c.b[0],c.b[1])]);if(!G.trickRideSaid){G.trickRideSaid=1;log('You hook an arm over the line and kick off.');}}
+/* host (or solo): the world side of every trick */
+function trickHostAct(a,actor){const w=G.w;if(!w||!w.zx)return false;const me=actor.key==='me';
+  if(a.k==='rift'){const n=w.zx.filter(o=>o.k==='portal');if(n.length>=3)n[0].t=0;zxAdd({k:'portal',x:+a.x,y:+a.y,bx:+a.bx,by:+a.by,t:30,age:0,rift:1});if(!me){log(`${actor.name} tears open a rift.`);}if(G.mode==='host')netLog(`${me?'The host':actor.name} tore open a rift.`);return true;}
+  if(a.k==='feycloud'){zxAdd({k:'feycloud',x:+a.x,y:+a.y,r:3.2,t:10,age:0});if(!me)log(`${actor.name} swings a censer of green mist.`);return true;}
+  if(a.k==='line'){const n=w.zx.filter(o=>o.k==='line');if(n.length>=3)n[0].t=0;zxAdd({k:'line',x:+a.x,y:+a.y,bx:+a.bx,by:+a.by,t:45,age:0});if(!me)log(`${actor.name} fires a grapnel line.`);return true;}
+  if(a.k==='heave'){const fx=+a.fx||0,fy=+a.fy||0;
+    if(a.to!=null){// a crewmate goes up
+      const tgt=a.to===NET.myPeer?'me':a.to;
+      if(tgt==='me'){trickLaunch(fx,fy,actor.name);}
+      else{NET.hitsOut.push({n:++NET.hitSeq,to:tgt,d:0,m:actor.name,heave:[fx,fy]});if(NET.hitsOut.length>8)NET.hitsOut.shift();}
+      return true;}
+    const e=w.enemies[a.id|0];if(!e||e.dead)return true;
+    if(e.civ){e.quietKO=true;e.ko=true;log(me?`You pick up ${lc(nameOf(e))} and throw them into the wall. Out cold.`:`${actor.name} throws ${lc(nameOf(e))} into the wall.`,'good');kill(e,actor);return true;}
+    const heavy=e.captain||FT(e).heavy||e.boss;const reach=heavy?1:2.6;let d=0;for(let s=.2;s<=reach;s+=.2){if(blockedFoe(e.x+fx*s,e.y+fy*s))break;d=s;}
+    e.x+=fx*d;e.y+=fy*d;e.path=null;const slam=d<reach-.3;
+    dmgFoe(e,slam?14:10,actor);if(!e.dead){stagger(e,heavy?1.2:(slam?3:2.5),true);if(e.state!=='alert')goAlert(e,false,[e.x-fx*2,e.y-fy*2]);}
+    noise(e.x,e.y,9,.5,.8);G.bursts=G.bursts||[];G.bursts.push({x:e.x,y:e.y,t:0,col:0xd8c8a0});
+    const nm=lc(nameOf(e));log(me?(heavy?`You shove ${nm}. They barely budge.`:slam?`You hurl ${nm} into the wall.`:`You heave ${nm} across the floor.`):`${actor.name} hurls ${nm}.`,'good');
+    if(G.mode==='host'&&!me)netLog(`${actor.name} hurled ${nm}.`,'good');return true;}
+  return false;}
+/* being thrown by a warrior */
+function trickLaunch(fx,fy,who){const P=G.P;if(G.down>0||P.zip)return;P.air={v:12.8};P.push=[fx*3.6,fy*3.6];P.fallFrom=null;sfx('whoosh',P.x,P.y);log(`${who||'The warrior'} grabs you by the belt and throws. Up you go.`,'good');}
+/* my own body, every frame */
+function trickBody(dt){const w=G.w,P=G.P;if(!w||!w.zx)return;
+  for(const o of w.zx){if(o.k!=='feycloud')continue;if(Math.hypot(P.x-o.x,P.y-o.y)>o.r||G.down>0)continue;
+    if(G.fey<55){if(G.fey<=0)log('The green mist stings your eyes, then the dark goes silver-green.','good');G.fey=60;G.zxDirty=true;}
+    if(P.hp<P.max){G.feyHeal=(G.feyHeal||0)+2*dt;if(G.feyHeal>=1){G.feyHeal-=1;P.hp=Math.min(P.max,P.hp+1);}}}}
+/* drawing */
+function trickMesh(o,g){
+  if(o.k==='feycloud'){const mat=zxMat(0x6adf9a,{opacity:.22,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});const geo=new THREE.SphereGeometry(.9,10,7);
+    for(let i=0;i<14;i++){const m=new THREE.Mesh(geo,mat);const a=i*2.4,r=(i%3+.6)*o.r*T*.22;m.userData.ox=Math.cos(a)*r;m.userData.oz=Math.sin(a)*r;m.userData.ph=i*.9;m.scale.setScalar(.9+(i%4)*.25);g.add(m);}
+    g.userData.mat=mat;g.position.set(o.x*T,elAt(o.x,o.y)+.4,o.y*T);}
+  else if(o.k==='line'){const z0=elAt(o.x,o.y)+1.25,z1=elAt(o.bx,o.by)+.25;const A=new THREE.Vector3(o.x*T,z0,o.y*T),B=new THREE.Vector3(o.bx*T,z1,o.by*T);
+    const len=A.distanceTo(B);const rope=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,len,5),new THREE.MeshLambertMaterial({color:0x9a7a4a}));rope.position.copy(A).add(B).multiplyScalar(.5);
+    rope.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize());g.add(rope);
+    const hook=new THREE.Mesh(new THREE.TorusGeometry(.12,.025,5,10,Math.PI*1.4),new THREE.MeshLambertMaterial({color:0x5a5a60}));hook.position.copy(B);hook.rotation.x=Math.PI/2;g.add(hook);
+    const peg=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,1.3,6),new THREE.MeshLambertMaterial({color:0x4a3a2a}));peg.position.set(A.x,z0-.62,A.z);g.add(peg);}}
+function trickAnim(o,g,dt){
+  if(o.k==='feycloud'){const s=Math.min(1,(o.age||0)*2.5)*(o.t<2?Math.max(.02,o.t/2):1);g.children.forEach(m=>{const u=m.userData;u.ph+=dt*.7;m.position.set(u.ox*s+Math.sin(u.ph)*.3,Math.sin(u.ph*1.3)*.2+.3,u.oz*s+Math.cos(u.ph)*.3);});g.userData.mat.opacity=.22*s;}
+  else if(o.k==='line'){g.visible=!(o.t<1&&Math.floor(G.time*8)%2);}}
 
 /* ---------- interaction ---------- */
 function findFocus(){

@@ -228,10 +228,26 @@ body:has(#game:not([hidden])){overflow:hidden}
 #game .sheet .jtog{all:unset;cursor:pointer;align-self:flex-end;font-size:.74rem;color:var(--muted);background:rgba(10,11,15,.74);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
 #game .sheet .jtog:hover{color:var(--text);border-color:var(--lantern)}
 @media (max-width:700px){#game .sheet{top:auto;bottom:150px;max-height:35%}#game .topbar{max-width:calc(100% - 20px);top:136px}#game .toasts{top:180px}}
+#title{position:fixed;inset:0;z-index:65;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:radial-gradient(ellipse at 50% 40%,rgba(10,10,14,.35),rgba(4,4,7,.92) 75%);overflow:auto}
+#title[hidden]{display:none}
+#title .tbox{max-width:620px;width:100%;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center}
+#title h1{font-family:var(--display);font-weight:400;font-size:clamp(3rem,10vw,6.2rem);line-height:.95;margin:0;color:var(--lantern);letter-spacing:.04em;text-shadow:0 0 28px rgba(233,169,75,.35),0 3px 0 #000}
+#title .tag{margin:0;color:var(--text);font-size:1.08rem;max-width:34em;text-shadow:0 1px 3px #000}
+#title .tbtnrow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+#title .big{font-size:1.1rem;padding:12px 26px}
+#title .coop{background:rgba(10,11,15,.8);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0;text-align:left;width:100%}
+#title .hint{color:var(--muted);font-size:.86rem;margin:0}
+#board.ledger{position:fixed;inset:0;z-index:40;overflow:auto;background:rgba(8,9,12,.96);padding:18px max(16px,env(safe-area-inset-left,0px)) 40px;max-width:none}
+#board.ledger>*{max-width:1300px;margin-left:auto;margin-right:auto}
+#board:not(.ledger) #ledgerClose{display:none}
+#soloTavern{display:none!important}
+body:has(#title:not([hidden])) #viewwrap>*:not(#view),body:has(#title:not([hidden])) #game .topbar,body:has(#title:not([hidden])) #game .sheet{visibility:hidden}
+#ledgerClose{position:sticky;top:0;z-index:2;display:block;margin:0 auto 10px}
 </style>
 </head><body>
 <div id="app">
-  <section id="board">
+  <div id="title" hidden><div class="tbox"><h1>Night Work</h1><p class="tag">A crew of specialists. One job a night. Get out with more than you brought.</p><div class="tbtnrow"><button class="btn primary big" id="tPlay">Enter the back room</button><button class="btn big" id="tBoard">Job board and characters</button></div><div id="tCoop" style="width:100%"></div><p class="hint">Click the view to look around. WASD moves, E uses, I opens your bag, J the journal, L the job board, M toggles sound.</p></div></div>
+  <section id="board"><button class="btn primary" id="ledgerClose">Back to the room <kbd>Esc</kbd></button>
     <div class="masthead">
       <div>
         <h1>Night Work</h1>
@@ -278,7 +294,7 @@ body:has(#game:not([hidden])){overflow:hidden}
       <h2 id="gTitle"></h2>
       <span class="badge mono" id="roomBadge" hidden title="Click to copy"></span>
       <span class="badge" id="gClass"></span>
-      <button class="btn" id="jrnBtn" title="Contract, bag, kit, controls and log">Journal <kbd>J</kbd></button><button class="btn" id="sndBtn" title="Toggle sound (M)">Sound on</button>
+      <button class="btn" id="jrnBtn" title="Contract, bag, kit, controls and log">Journal <kbd>J</kbd></button><button class="btn" id="sndBtn" title="Toggle sound (M)">Sound on</button><button class="btn" id="ledBtn" title="Job board, stash and characters (L)">Job board <kbd>L</kbd></button>
     </div>
     <div class="run">
       <div class="view3d" id="viewwrap">
@@ -903,7 +919,7 @@ function startTavern(mode,cls){
     paused:true,glimpse:0,divineAt:null,keys:{},light:0,vis:0,sideDirty:true,featDirty:true,hudT:0,expT:0,miniT:0,lightT:0,focus:null,stick:[0,0],
     P:{x:w.start[0]+.5+(Math.random()-.5),y:w.start[1]+.5+Math.random()*.8,yaw:0,pitch:0,hp:S.hp,max:S.hp,st:100,stDelay:0,blocking:false,blockAt:-9,dodge:0,dodgeCd:0,iframe:0,arrows:{broad:8,water:3,rope:2},arrowSel:'broad',crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE}};
   for(let i=0;i<w.W*w.H;i++)G.explored.add(i);
-  $('#board').hidden=true;$('#game').hidden=false;$('#gTitle').textContent='The back room';$('#abandon').textContent='Leave the tavern';
+  $('#board').hidden=true;$('#board').classList.remove('ledger');$('#game').hidden=false;$('#gTitle').textContent='The back room';$('#abandon').textContent=mode==='solo'?'Main menu':'Leave the back room';if(mode!=='solo'&&$('#title'))$('#title').hidden=true;
   tavernBadge();$('#toasts').innerHTML='';
   const host=NET.remote.get(NET.hostPeer);
   if(mode==='solo'){log('You take a seat in the back room. The vendor and the gambler are at their counters. Pick a job at the table and walk out the door.');
@@ -1909,7 +1925,7 @@ function jobRunStart(){const m=G.m,w=G.w,mods=m.mods||[];
   if(mods.length)log('Tonight: '+mods.map(k=>MODS[k]?MODS[k].n.toLowerCase():k).join(', ')+'.');
   if((w.crewN||1)>1)log(`A crew of ${w.crewN}: more patrols, and more loot lying about.`);}
 function startRun(m,cls,opts){
-  opts=opts||{};
+  opts=opts||{};if(typeof openLedger==='function'){openLedger(false);showTitle(false);}if(!opts.mode||opts.mode==='solo')opts.fromTav=true;
   /*JOBSIN*/if(!(m.state&&m.state.crew)){if(opts.mode==='host')m.crew=Math.min(4,1+[...NET.remote.values()].filter(r=>r.p&&r.p.c).length);else if(opts.mode!=='client')m.crew=1;}
   const w=generate(m);retype(w,m);if(w.bank)w.crew=[];else crewRoutes(w,m);
   {const k=(m.sk||m.cx||1)-1;if(k>0)for(const e of w.enemies){e.max=Math.round((e.max||e.hp)*(1+.12*k));e.hp=e.max;e.dmg=Math.round(e.dmg*(1+.08*k));}}
@@ -3134,13 +3150,13 @@ function die(){
 }
 function showModal(title,html,back){
   $('#pauseov').hidden=true;
-  $('#modalBox').innerHTML=`<h2>${title}</h2>${html}<div>${back?`<button class="btn primary" id="toTavern">${back.label}</button> `:''}<button class="btn ${back?'':'primary'}" id="toBoard">Back to the board</button></div>`;
-  $('#modal').hidden=false;$('#toBoard').focus();$('#toBoard').onclick=()=>{$('#modal').hidden=true;toBoard();};
+  $('#modalBox').innerHTML=`<h2>${title}</h2>${html}<div>${back?`<button class="btn primary" id="toTavern">${back.label}</button> `:''}<button class="btn ${back?'':'primary'}" id="toBoard">${back?'Job board':'Back to the back room'}</button></div>`;
+  $('#modal').hidden=false;$('#toBoard').focus();$('#toBoard').onclick=()=>{$('#modal').hidden=true;toBoard('ledger');};
   if(back){$('#toTavern').focus();$('#toTavern').onclick=()=>{$('#modal').hidden=true;back.fn();};}
 }
-function toBoard(){auAmbStop();setTimeout(renderStash,0);$('#abandon').textContent='Abandon run';if(NET.room&&!(G&&G.mode==='host'&&NET.end&&!G.tavern))leaveRoom();else if(NET.leaveTimer){clearTimeout(NET.leaveTimer);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G)leaveRoom();},4000);}G=null;$('#game').hidden=true;$('#board').hidden=false;renderBoard();window.scrollTo(0,0);}
+function toBoard(how){auAmbStop();setTimeout(renderStash,0);$('#abandon').textContent='Abandon run';if(NET.room&&!(G&&G.mode==='host'&&NET.end&&!G.tavern))leaveRoom();else if(NET.leaveTimer){clearTimeout(NET.leaveTimer);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G)leaveRoom();},4000);}G=null;startTavern('solo');if(how==='menu')showTitle(true);else if(how==='ledger')openLedger(true);}
 let abandonArmed=false;
-$('#abandon').onclick=ev=>{if(G&&G.tavern){if(document.pointerLockElement)document.exitPointerLock();toBoard();return;}if(!abandonArmed){abandonArmed=true;ev.target.textContent='Click again: lose this run';setTimeout(()=>{abandonArmed=false;ev.target.textContent='Abandon run';},2500);return;}
+$('#abandon').onclick=ev=>{if(G&&G.tavern){if(document.pointerLockElement)document.exitPointerLock();if(G.mode==='solo'){showTitle(true);return;}toBoard('menu');return;}if(!abandonArmed){abandonArmed=true;ev.target.textContent='Click again: lose this run';setTimeout(()=>{abandonArmed=false;ev.target.textContent='Abandon run';},2500);return;}
   abandonArmed=false;ev.target.textContent='Abandon run';settle(false);if(document.pointerLockElement)document.exitPointerLock();toBoard();};
 
 /* ---------- side panel + HUD ---------- */
@@ -3434,6 +3450,25 @@ function frame(){
 }
 
 renderBoard();renderStash();
+/*HUBIN*/
+/* ---------- the hub: a title screen inside the game, and the job board as a ledger in the back room ---------- */
+function showTitle(on){const t=$('#title');if(!t)return;t.hidden=!on;if(on){if(document.pointerLockElement)document.exitPointerLock();openLedger(false);}}
+function ledgerOpen(){const b=$('#board');return b&&!b.hidden&&b.classList.contains('ledger');}
+function openLedger(on){const b=$('#board');if(!b)return;if(on&&!(G&&G.tavern))return;b.classList.toggle('ledger',!!on);b.hidden=!on;
+  if(on){if(document.pointerLockElement)document.exitPointerLock();renderBoard();renderStash();b.scrollTop=0;if(G&&G.mode==='solo'&&!G.paused)setPause(true,'The back room','Click to get back to it.');}}
+{const t=$('#tCoop');if(t){const c=$('#coop'),o=$('#coopOff');if(c)t.appendChild(c);if(o)t.appendChild(o);}
+  {const tb=$('#tavernBtn');if(tb)tb.textContent='Host a crew';}const h=$('#board h1');if(h)h.textContent='The job board';const st=$('#soloTavern');if(st)st.hidden=true;}
+$('#tPlay').onclick=()=>{showTitle(false);if(!G||!G.tavern||G.mode!=='solo')startTavern('solo');sfx('ui');};
+$('#tBoard').onclick=()=>{showTitle(false);if(!G||!G.tavern)startTavern('solo');openLedger(true);sfx('ui');};
+$('#ledgerClose').onclick=()=>{openLedger(false);sfx('ui');};
+$('#ledBtn').onclick=()=>openLedger(!ledgerOpen());
+document.addEventListener('keydown',ev=>{if(ev.target&&(ev.target.tagName==='INPUT'||ev.target.tagName==='TEXTAREA'))return;
+  if(ledgerOpen()&&(ev.code==='Escape'||ev.code==='KeyL')){ev.preventDefault();openLedger(false);return;}
+  if(ev.code==='KeyL'&&G&&G.tavern&&!INV.open&&$('#title').hidden&&!ev.repeat){openLedger(true);}},true);
+function hubTick(){const lb=$('#ledBtn');if(lb)lb.hidden=!(G&&G.tavern);}
+setInterval(hubTick,400);
+
+startTavern('solo');showTitle(true);
 window.__NET=NET;window.__TL={myCrate,crateAct,crateDo,bankUpdate,hatchDest,generate,elAt,elW,elevPass,losT,blockedAt,pathTo,placeLoot,jobRunStart,makeMission,runeTrip,obsUse,obsUpdate,winchAt,floodTiles,ratFire,findFocus,docAbility,docPower,docCenser,docEvac,docUpdate,applyHit,doUse,CR,openCreator,closeCreator,makeCharacter,RACES,BGS,buildAvatar,packLook,unpackLook,SKILLS,SKBYID,skLearn,skCan,skPoints,skSpent,usePower,applyThrow,cofferUse,cofferNeeds,pickPocket,canPick,updHaz,meleeDmg,get ITEMS(){return ITEMS;},INV,openInv,closeInv,calcStats,makeItem,bagAdd,moveItem,gamble,invAction,GB,LEGS,RAR,lootItem,dropGear,awardXP,get CELL(){return CELL;},moveAbility,cycleArrow,crewAt,get PROF(){return PROF;},useBelt,settle,renderStash,buildAvatar,startTavern,launchJob,setClass,tavernUse,openJobPicker,get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
 </script>
 </body></html>

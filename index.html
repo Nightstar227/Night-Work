@@ -1213,7 +1213,12 @@ function openInv(ctx,shop){ensureChars();INV.ctx=ctx;INV.shop=shop||null;INV.sel
   if(G){G.keys={};G.blockHeld=false;}if(document.pointerLockElement)document.exitPointerLock();
   INV.open=true;$('#invov').hidden=false;renderInv();}
 function closeInv(){INV.open=false;$('#invov').hidden=true;$('#invtip').hidden=true;saveProf();if(G){applyGear();G.sideDirty=true;relock();}else renderStash();}
-function relock(){if(!G||G.over||G.paused||touchMode||!lockMode||document.pointerLockElement||$('#game').hidden)return;G.relock=true;try{const r=$('#view').requestPointerLock();if(r&&r.catch)r.catch(()=>{G.relock=false;});}catch(e){G.relock=false;}}
+/*LOCKIN*/let LOCKOK=false,LOCKFAIL=0,LOCKERRT=0;
+function tryLock(){const v=$('#view');if(!v.requestPointerLock){lockMode=false;setPause(false);return;}G.relock=true;let r;try{r=v.requestPointerLock();}catch(e){lockFail();return;}if(r&&r.catch)r.catch(()=>lockFail());}
+function lockFail(){const t=performance.now();if(t-LOCKERRT<150)return;LOCKERRT=t;if(G)G.relock=false;LOCKFAIL++;
+  if(LOCKFAIL>=4&&!LOCKOK){lockMode=false;if(G){setPause(false);toast('This browser won\'t lock the mouse here. Hold the left button and drag to look around.');}return;}
+  if(G&&G.paused)$('#pauseText').textContent='The browser needs a second after Esc. Click again to take back the mouse.';}
+function relock(){if(!G||G.over||G.paused||touchMode||!lockMode||document.pointerLockElement||$('#game').hidden)return;tryLock();}
 function applyGear(){if(!G)return;const r=G.P.hp/G.P.max;G.S=runStats(G.cls);G.P.max=G.S.hp;G.P.hp=Math.max(1,Math.round(r*G.S.hp));if(R3.ok)build3D();}
 /* references: {src:'bag'|'stash'|'eq'|'shop', key} */
 function refList(src){return src==='bag'?PROF.chars[INV.cls].bag:src==='stash'?PROF.stashG:null;}
@@ -2020,10 +2025,14 @@ let lockMode=true,dragging=null;
 $('#touch').hidden=!touchMode;
 const view=$('#viewwrap');
 $('#pauseov').addEventListener('click',ev=>{ev.stopPropagation();if(!G||G.over)return;
-  if(!touchMode&&lockMode){try{const r=$('#view').requestPointerLock();if(r&&r.catch)r.catch(()=>{lockMode=false;setPause(false);});}catch(e){lockMode=false;}}
-  if(touchMode||!lockMode)setPause(false);});
-/*MENUFIX*/document.addEventListener('pointerlockchange',()=>{if(!G)return;if(document.pointerLockElement){G.relock=false;setPause(false);}else if(!INV.open&&!G.over&&$('#modal').hidden&&!$('#game').hidden){setPause(true,'Paused','The guards wait for you. Nobody else does.');}});
-document.addEventListener('pointerlockerror',()=>{if(G&&G.relock){G.relock=false;return;}lockMode=false;if(G)setPause(false);});
+  if(!touchMode&&lockMode){tryLock();return;}
+  setPause(false);});
+/*MENUFIX*/document.addEventListener('pointerlockchange',()=>{if(!G)return;if(document.pointerLockElement){G.relock=false;LOCKOK=true;LOCKFAIL=0;setPause(false);}else if(!INV.open&&!G.over&&$('#modal').hidden&&!$('#game').hidden){setPause(true,'Paused','The guards wait for you. Nobody else does.');}});
+document.addEventListener('pointerlockerror',()=>lockFail());
+/* a visible prompt whenever the game is running but the mouse is loose */
+{const h=document.createElement('div');h.id='lockhint';h.textContent='Click the view to take back the mouse';h.hidden=true;h.style.cssText='position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);padding:8px 14px;border-radius:8px;background:rgba(10,10,14,.82);border:1px solid var(--lantern);color:var(--lantern);font-size:.95rem;pointer-events:none;z-index:5';
+  view.appendChild(h);
+  setInterval(()=>{const show=!!(G&&!G.paused&&!G.over&&lockMode&&!touchMode&&!document.pointerLockElement&&!INV.open&&!$('#game').hidden&&$('#modal').hidden&&(!$('#creov')||$('#creov').hidden));if(h.hidden===show)h.hidden=!show;},250);}
 function look(dx,dy){if(!G)return;G.P.yaw-=dx*.0024;G.P.pitch=Math.max(-1.3,Math.min(1.3,G.P.pitch-dy*.0024));}
 document.addEventListener('mousemove',ev=>{if(!G||G.paused)return;if(document.pointerLockElement)look(ev.movementX,ev.movementY);
   else if(dragging&&dragging.mouse){const dx=ev.clientX-dragging.x,dy=ev.clientY-dragging.y;if(Math.abs(dx)+Math.abs(dy)>3)dragging.moved=true;look(dx*1.4,dy*1.4);dragging.x=ev.clientX;dragging.y=ev.clientY;}});

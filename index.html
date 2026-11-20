@@ -1383,7 +1383,7 @@ function itemEl(it,src,key,x,y,extra){const b=GB[it.b];const pos=x!=null?`left:$
 function gridHTML(src,W,H){const L=refList(src);return `<div class="gridwrap"><div class="igrid" data-drop="${src}" style="width:${W*CELL}px;height:${H*CELL}px;--cell:${CELL}px">${L.map((e,i)=>itemEl(e.it,src,i,e.x,e.y)).join('')}</div></div>`;}
 function statsHTML(){const S=calcStats(INV.cls),A=S.attrs,c=PROF.chars[INV.cls];const pc=v=>Math.round(v*100)+'%';
   return `<div class="istats"><div class="lvl">Level ${c.lvl} <span class="xpbar"><i style="width:${Math.min(100,c.xp/xpNeed(c.lvl)*100)}%"></i></span> <span class="mono">${c.xp}/${xpNeed(c.lvl)} xp</span></div>
-   <div class="attrs">${['str','vit','agi','int','per'].map(k=>`<span><b>${A[k]}</b>${({str:'Strength',vit:'Vitality',agi:'Agility',int:'Intellect',per:'Perception'})[k]}</span>`).join('')}</div>
+   <div class="attrs">${['str','vit','agi','int','per'].map(k=>`<span data-tip="${esc(attrTip(k,INV.cls,A[k]))}"><b>${A[k]}</b>${({str:'Strength',vit:'Vitality',agi:'Agility',int:'Intellect',per:'Perception'})[k]}</span>`).join('')}</div>
    <dl><dt>Health</dt><dd>${S.hp}</dd><dt>Armor</dt><dd>${S.armorPts} (${pc(S.armor)} less damage)</dd><dt>${esc(S.weapon)}</dt><dd>${S.dmg} damage, ${S.swing}s swing</dd><dt>Spell power</dt><dd>${pc(S.sp)}</dd>
    <dt>Block</dt><dd>${pc(S.block)} · parry ${Math.round(S.parry*1000)}ms</dd><dt>Footsteps</dt><dd>${pc(S.noise)} as loud</dd><dt>Seen at</dt><dd>${pc(S.stealth)} of the usual light</dd><dt>Stamina recovery</dt><dd>${pc(S.staMul)}</dd>
    ${S.cdr?`<dt>Cooldowns</dt><dd>${pc(S.cdr)} faster</dd>`:''}<dt>Fence pays</dt><dd>${pc(S.fence)}</dd></dl>
@@ -2082,7 +2082,7 @@ function renderCreator(){const el=$('#crebox'),d=CR.d,cls=CR.cls,c=PROF.chars[cl
      <label class="label" for="crName">Name</label><div class="row"><input id="crName" maxlength="18" value="${esc(d.nm)}"><button class="btn sm" id="crDice" title="Random name">Roll</button></div>
      <label class="label" for="crAlias">Street alias</label><div class="row"><input id="crAlias" maxlength="14" placeholder="Two-Fingers" value="${esc(d.al||'')}"><button class="btn sm" id="crAliasDice" title="Random alias">Roll</button></div>
      <div class="crsum"><b>${esc(d.al?'"'+d.al+'" ':'')}${esc(d.nm||'Nameless')}</b><span class="note">${SEXES[d.sex]} ${R.n.toLowerCase()} · ${B.n} · ${CLS[cls].name}${lock?' · Level '+c.lvl:''}</span></div>
-     <div class="crattr">${Object.keys(ATTRN).map(k=>`<span class="${PRIM[cls].includes(k)?'pri':''}"><b class="mono">${A[k]}</b>${ATTRN[k]}</span>`).join('')}</div>
+     <div class="crattr">${Object.keys(ATTRN).map(k=>`<span class="${PRIM[cls].includes(k)?'pri':''}" data-tip="${esc(attrTip(k,cls,A[k]))}"><b class="mono">${A[k]}</b>${ATTRN[k]}</span>`).join('')}</div>
      <div class="crstats note">${S.hp} health · ${S.armorPts} armor · ${S.dmg} damage · spell power ${S.sp} · walk ${S.walk.toFixed(2)}</div>
    </div>
    <div class="crright">
@@ -2090,10 +2090,10 @@ function renderCreator(){const el=$('#crebox'),d=CR.d,cls=CR.cls,c=PROF.chars[cl
       <p class="note">${({thief:'Locks, traps, shadows and knives in the back.',warrior:'Breaks doors, holds doorways and fights anything.',wizard:'Sees through walls, dispels wards and burns crowds.',doctor:'Keeps the crew standing, purges plague and burns the restless dead.'})[cls]||''} Primary: ${PRIM[cls].map(k=>ATTRN[k]).join(' and ')} (+2 each).</p></section>
     <section><h4>2. Sex and body <span class="note">cosmetic only</span></h4><div class="lk"><span class="label">Sex</span>${chips('sex',SEXES,d.sex,lock)}<span class="label">Build</span>${chips('build',BUILDS,d.lk.build)}<span class="label">Height</span>${chips('ht',HEIGHTS,d.lk.ht==null?1:d.lk.ht)}<span class="label">Age</span>${chips('age',AGES,d.lk.age==null?1:d.lk.age)}</div></section>
     <section><h4>3. Race</h4><div class="opts">${Object.entries(RACES).map(([k,r])=>`<button class="opt ${k===d.race?'on':''}" data-race="${k}" ${lock?'disabled':''}><b>${r.n} <span class="note">${r.sub}</span></b><span class="note">${r.d}</span><span class="mods">${r.pick?'+1 to any two':modTxt(r.a)} · ${r.perk}</span><span class="drw">${r.draw}</span></button>`).join('')}</div>
-      ${R.pick?`<div class="lk" style="margin-top:8px"><span class="label">Your +1s</span><div class="chips">${Object.keys(ATTRN).map(k=>`<button class="chip ${(d.hpick||[]).includes(k)?'on':''}" data-hp="${k}" ${lock?'disabled':''}>${ATTRN[k]}</button>`).join('')}</div></div>`:''}</section>
+      ${R.pick?`<div class="lk" style="margin-top:8px"><span class="label">Your +1s</span><div class="chips">${Object.keys(ATTRN).map(k=>`<button class="chip ${(d.hpick||[]).includes(k)?'on':''}" data-hp="${k}" data-tip="${esc(attrTip(k))}" ${lock?'disabled':''}>${ATTRN[k]}</button>`).join('')}</div></div>`:''}</section>
     <section><h4>4. Background</h4>${[['Anyone',bgFor(cls).filter(k=>!BGS[k].cls)],[CLS[cls].name+' only',bgFor(cls).filter(k=>BGS[k].cls)]].map(([lab,ks])=>`<p class="label" style="margin:8px 0 4px">${lab}</p><div class="opts">${ks.map(k=>[k,BGS[k]]).map(([k,b])=>`<button class="opt ${k===d.bg?'on':''}" data-bg="${k}" ${lock?'disabled':''}><b>${b.n}</b><span class="note">${b.d}</span><span class="mods">${modTxt(b.a)} · starts with ${b.item}</span><span class="note">${b.perk}</span></button>`).join('')}</div>`).join('')}</section>
     <section><h4>5. Starting stats <span class="note">${statLock?'locked after your first job':left+' of 10 points left'}</span></h4>
-      <div class="pts">${Object.keys(ATTRN).map(k=>{const p=(d.pts||{})[k]||0,bon=A[k]-5-p;return `<div class="pt ${PRIM[cls].includes(k)?'pri':''}"><span>${ATTRN[k]}</span><span class="mono note">5 + ${p}${bon?' '+sgn(bon):''}</span>
+      <div class="pts">${Object.keys(ATTRN).map(k=>{const p=(d.pts||{})[k]||0,bon=A[k]-5-p;return `<div class="pt ${PRIM[cls].includes(k)?'pri':''}" data-tip="${esc(attrTip(k,cls,A[k]))}"><span>${ATTRN[k]}</span><span class="note ptd">${ATTRD[k].s}</span><span class="mono note">5 + ${p}${bon?' '+sgn(bon):''}</span>
         <span class="row"><button class="btn sm" data-pt="${k}" data-d="-1" ${statLock||p<=0?'disabled':''}>−</button><b class="mono">${A[k]}</b><button class="btn sm" data-pt="${k}" data-d="1" ${statLock||p>=4||left<=0?'disabled':''}>+</button></span></div>`;}).join('')}</div>
       <div class="row" style="margin-top:6px;gap:8px;align-items:center"><button class="btn sm" id="crSug" ${statLock?'disabled':''}>Suggested</button><span class="note">Every attribute starts at 5. Spend 10 points, at most 4 in one (9 before bonuses). Class, race and background go on top.</span></div></section>
     <section><h4>6. Face and colours <span class="note">other players see this</span></h4>
@@ -3252,6 +3252,25 @@ function ctMouseMesh(o,g){const brass=new THREE.MeshLambertMaterial({color:0xb89
   g.position.set(o.x*T,elAt(o.x,o.y),o.y*T);g.userData.px=o.x;g.userData.py=o.y;}
 function ctMouseAnim(o,g,dt){const u=g.userData,dx=o.x-u.px,dy=o.y-u.py;if(Math.hypot(dx,dy)>.002)g.rotation.y=Math.atan2(-dx,-dy);u.px=o.x;u.py=o.y;
   g.position.set(o.x*T,elAt(o.x,o.y)+Math.abs(Math.sin(G.time*22))*.02,o.y*T);if(u.key)u.key.rotation.x+=dt*(o.t>1?9:2);u.sq=(u.sq||0)-dt;if(u.sq<=0&&o.t>.5){u.sq=.5+Math.random()*1.1;sfx(Math.random()<.6?'squeak':'tick',o.x,o.y);}}
+
+/*ATTRIN*/
+/* ---------- attribute descriptions and hover tooltips ---------- */
+const ATTRD={
+  str:{s:'Hit harder in melee.',per:'+2% melee damage and cleave power per point. (Wizards fight with spells, so it does nothing for them.)'},
+  vit:{s:'More health.',per:'+3 maximum health per point.'},
+  agi:{s:'Faster, quieter, lighter on your feet.',per:'Per point: swings 1.2% faster, footsteps 1% quieter, stamina comes back 2% faster, walk 0.6% faster.'},
+  int:{s:'Stronger magic and medicine.',per:'+2.5% spell power per point (fire, hexes, potions). A Plague Doctor also heals 3% more per point.'},
+  per:{s:'Spot traps sooner, sell loot for more.',per:'Per point: you notice traps 0.12 tiles further away, and fences pay 2% more for what you bring home.'}};
+function attrTip(k,cls,v){const d=ATTRD[k];let t=`${ATTRN[k]}: ${d.s} ${d.per}`;
+  if(cls&&v!=null&&typeof CBASE!=='undefined'&&CBASE[cls]){const n=v-CBASE[cls][k];if(n){const e={str:cls==='wizard'?'no effect':`${sgn(n*2)}% melee damage`,vit:`${sgn(n*3)} health`,agi:`${sgn(Math.round(n*1.2*10)/10)}% swing speed, ${sgn(n*2)}% stamina recovery`,int:`${sgn(Math.round(n*2.5*10)/10)}% spell power`,per:`${sgn(n*2)}% from fences`}[k];t+=` Yours: ${v} (${sgn(n)} vs the class baseline of ${CBASE[cls][k]}), ${e}.`;}else t+=` Yours: ${v}, the baseline for your class. Bonuses count from here.`;}
+  return t;}
+/* one floating tooltip for anything with data-tip */
+(function(){const tb=document.createElement('div');tb.id='tipbox';tb.style.cssText='position:fixed;z-index:9999;max-width:260px;padding:7px 9px;border-radius:7px;background:#15121a;color:#e8dcc8;border:1px solid #6a5634;box-shadow:0 6px 18px rgba(0,0,0,.5);font:12px/1.4 system-ui,sans-serif;pointer-events:none;display:none';document.body.appendChild(tb);
+  const st=document.createElement('style');st.textContent='[data-tip]{cursor:help}.pt .ptd{font-size:.72rem;line-height:1.3}.crattr span[data-tip]:hover,.istats .attrs span[data-tip]:hover{outline:1px solid var(--lantern)}';document.head.appendChild(st);
+  const place=ev=>{const w=tb.offsetWidth,h=tb.offsetHeight;let x=ev.clientX+14,y=ev.clientY+16;if(x+w>innerWidth-6)x=ev.clientX-w-12;if(y+h>innerHeight-6)y=ev.clientY-h-12;tb.style.left=Math.max(6,x)+'px';tb.style.top=Math.max(6,y)+'px';};
+  document.addEventListener('mouseover',ev=>{const el=ev.target.closest&&ev.target.closest('[data-tip]');if(!el||document.pointerLockElement){tb.style.display='none';return;}tb.textContent=el.dataset.tip;tb.style.display='block';place(ev);});
+  document.addEventListener('mousemove',ev=>{if(tb.style.display==='block')place(ev);});
+  document.addEventListener('mousedown',()=>{tb.style.display='none';});})();
 
 /* ---------- interaction ---------- */
 function findFocus(){

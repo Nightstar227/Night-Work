@@ -306,7 +306,7 @@ textarea{width:100%;box-sizing:border-box;min-height:70px;background:var(--ink);
 <script>
 "use strict";
 /* ---------- constants ---------- */
-const WALL=0,FLOOR=1,DOOR=2,OPEN=3,BARR=4,WARD=5,LARDER=6,POOL=7,CHEST=8,EXIT=9,TABLE=10,PATIENT=22,MIASMA=23,SLAB=24,WINCH=25,IRONDOOR=26,RUNE=27,RATS=28;
+const WALL=0,FLOOR=1,DOOR=2,OPEN=3,BARR=4,WARD=5,LARDER=6,POOL=7,CHEST=8,EXIT=9,TABLE=10,PATIENT=22,MIASMA=23,SLAB=24,WINCH=25,IRONDOOR=26,RUNE=27,RATS=28,COVER=29,LOCKDOOR=30,ESCAPE=31,HATCH=32,COUNTER=33;
 const DIRS=[[0,-1],[1,0],[0,1],[-1,0]];
 const ROLES=['thief','warrior','wizard','doctor'];
 const CLS={
@@ -352,6 +352,7 @@ const JOBTYPES={
   rescue:{n:'Prisoner rescue',fam:'Rescue',g:'Bring the beaten informant out alive.',need:[['doctor'],['warrior']],sk:[2,4],bi:['keep','sewer']},
   snatch:{n:'Body-snatch',fam:'Delve',g:'Steal one particular corpse for a rival surgeon.',need:[['doctor'],['warrior']],sk:[1,3],bi:['crypt']},
   well:{n:'Poisoned-well cleanup',fam:'Contract',g:'City work: cure the well and find whoever fouled it.',need:[['doctor']],sk:[1,3],bi:['sewer']},
+  bank:{n:'Bank job',fam:'Heist',g:'A whole street block: walk the street, the alley, the rooftops and the sewer, find your way in, crack the vault and hustle the heavy crates to a getaway.',need:[],sk:[3,5],bi:['keep'],bank:1},
   big:{n:'Big score',fam:'Heist',g:'Everything a full crew can do, in one night.',need:[['thief'],['warrior'],['wizard'],['doctor']],sk:[5,5],bi:['keep','crypt','sewer','lair']},
 };
 const MODS={night:{n:'Night',d:'More darkness: half the torches are out.',p:0},rain:{n:'Rain',d:'Footsteps are muffled.',p:5},fog:{n:'Fog',d:'Everyone is harder to see.',p:5},
@@ -364,6 +365,7 @@ function modTags(m){return (m.mods||[]).map(k=>MODS[k]?`<span class="mtag" title
 const ADJ=['Salt','Ember','Hollow','Gilded','Drowned','Quiet','Iron','Crooked','Lantern','Widow\'s'];
 
 function objList(m,boss){
+  if(m.type==='bank')boss='the head of security';
   const L={
     thief:[{id:'tlock',text:'Pick the needle-trapped lock on the vault door'},{id:'captain',text:'Eliminate '+boss},{id:'poison',text:'Bonus: poison the larder (sickens the barracks)',bonus:true}],
     warrior:[{id:'wlock',text:'Break the iron crossbar on the vault door'},{id:'barracks',text:'Clear the barracks'}],
@@ -391,18 +393,68 @@ function makeMission(seed,force){
   if(!mods){mods=[];if(J.mod&&roles.includes('doctor'))mods.push(J.mod);const nm=[0,1,ri(1,2),2,ri(2,3)][sk-1]-(sk===1&&R()<.5?0:0);
     const pool=Object.keys(MODS).filter(k=>!mods.includes(k)&&(!MODS[k].need||roles.includes(MODS[k].need))&&!(k==='inside'&&J.loud));for(let i=mods.length;i<nm&&pool.length;i++)mods.push(pool.splice(Math.floor(R()*pool.length),1)[0]);}
   const pct=mods.reduce((a,k)=>a+(MODS[k]?MODS[k].p:0),0);
-  const title=J.n+': the '+pick(ADJ)+' '+pick(BIOMES[biome].places);
-  return {id:'m'+seed.toString(36),seed,biome,roles,cx,sk,type,mods,title,payout:Math.round(JOBPOOL[sk-1]*(1+pct/100)*(1+.04*ri(0,3))/10)*10,state:null,history:[],status:'open'};
+  const title=J.bank?J.n+': the '+pick(['Countinghouse','Mint Street','Guildmasters\'','Merchant\'s','Silver Lane'])+' Bank':J.n+': the '+pick(ADJ)+' '+pick(BIOMES[biome].places);
+  const open=!J.bank&&R()<.6;
+  return {id:'m'+seed.toString(36),seed,biome,roles,cx,sk,type,mods,open,title,payout:Math.round(JOBPOOL[sk-1]*(1+pct/100)*(1+.04*ri(0,3))/10)*10,state:null,history:[],status:'open'};
 }
 
+const BANK_BASE=['%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%%%%%%%%%%%%~~~%%%%%%%%%%%%%%,%%%%%%%%%%%%%%%%%%%%%%%%%%%%5%%%%%','%%%%%%%%%%%%~~~%#########%%##,##%%#############%%%%%%%%%%%6%%%%%','%%%%%%%%%%%%~~~%#bbbbbbb#%%#...#%%#___________#%%%%%%%%%%%7%%%%%','%%%%%%%%%%%%~~~%#bbbbbbb#%%#...#%%#___________#%%%%%%%%%%%8%%%%%','%%%%%%%%%%%%~~~%#bbbbbbb#%%#...#%%#___________#%%%%%%%%%%%^%%%%%','%%%%%%%%%%%%~~~%#bbbbbbb#%%#...####___________#^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbb#%%#...1234____________^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbb#%%#...####___________#^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbb#%%#GGGGGGGGGGGGGGGGG##^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%####b#####%#GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbbb#%#GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbbb#%#GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbbb#%#GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbbb#%#GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbbb#%#GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~~#bbbbbbbb#%#GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbbb###GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbbbyxwGGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbbb###GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%#bbbbbbbb#%#GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%##########%#GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%~~~%%%%%%%%%%%%#GGGGGGGGGGGGGGGGG#%^^^^^^^^^^^^^^^^%','%%%%%%%%%%%%%%%%%%%%%%%%%%%########GG#########%,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%','%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%','%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'];
+const BANK_OVER=['                                                                ','                                                                ','   V                KK                       KK                 ','   V         H                                                  ','                                                                ','             H                                                  ','                             L                                  ','                              X         #                       ','                  cc cc     R        T  #  P                    ','                                        #                       ','                                   ## ##### ##                  ','                                              L                 ','                  c   c             r  r  r  r                  ','                                        #                       ','                    D                   # cc      KK            ','             M       q                  #                       ','                     q                  L                       ','                     q                  #                       ','                     q      == ==============                   ','                     q                                          ','                B    q                                 KK       ','                     q         #    #    #                      ','            zzz      q                                          ','                     q                                          ','                     q         #    #    #                      ','                                                                ','             H                                                  ','                                   LL                           ','                                                                ','             H                                                  ','          KK                                                    ','                  KK                        KK                  ','                                                                ','  E                                                         V   ','                          KK                        KK          ','         K                                                      ','                                        K                       ','                                                                ','                                                                ','                                                                '];
+
+/* ---------- the bank job: a hand-built street block with four ways in ---------- */
+function generateBank(m){
+  const R=mulberry(m.seed^0xba4c);const ri=(a,b)=>a+Math.floor(R()*(b-a+1));const pick=a=>a[Math.floor(R()*a.length)];
+  const W=BANK_BASE[0].length,H=BANK_BASE.length,has=r=>m.roles.includes(r);
+  const t=[],el=[],ceil=[],mat=[],tall=[];
+  const BASE={'%':[WALL,0,null,0],'#':[WALL,0,null,0],',':[FLOOR,0,-99,1],'^':[FLOOR,3.6,-99,2],'5':[FLOOR,.72,-99,1],'6':[FLOOR,1.44,-99,1],'7':[FLOOR,2.16,-99,1],'8':[FLOOR,2.88,-99,1],
+    '~':[FLOOR,-3,-.2,3],'b':[FLOOR,-3,-.2,0],'y':[FLOOR,-2.25,3.6,0],'x':[FLOOR,-1.5,3.6,0],'w':[FLOOR,-.75,3.6,0],'.':[FLOOR,0,3.6,4],'G':[FLOOR,0,7.2,4],'_':[FLOOR,3.6,7.2,4],
+    '1':[FLOOR,.72,7.2,4],'2':[FLOOR,1.44,7.2,4],'3':[FLOOR,2.16,7.2,4],'4':[FLOOR,2.88,7.2,4]};
+  const crates=[];let start=[2,33],door=null;const world={W,H,t,cells:[],biome:m.biome,enemies:[],traps:[],locks:{},poisoned:false,scried:false,cleared:[],snuffed:[],glimpse:0,el,ceil,mat,tall,bank:true,sky:0x070a12,slabs:[],winches:[]};
+  for(let y=0;y<H;y++){t.push([]);el.push([]);ceil.push([]);mat.push([]);tall.push([]);for(let x=0;x<W;x++){const bc=BANK_BASE[y][x],oc=BANK_OVER[y][x];const B=BASE[bc]||BASE['%'];
+    let tt=B[0];el[y].push(B[1]);ceil[y].push(B[2]);mat[y].push(B[3]);tall[y].push(bc==='%'?8:0);
+    switch(oc){case '#':tt=WALL;break;case 'D':tt=DOOR;door=[x,y];break;case '=':case 'r':tt=COUNTER;break;case 'L':tt=LOCKDOOR;break;case 'T':tt=TABLE;break;
+      case 'R':if(has('thief')){tt=LARDER;world.larder=[x,y];}break;case 'X':if(has('doctor')){tt=PATIENT;world.patient=[x,y];}break;case 'P':if(has('wizard')){tt=POOL;world.pool=[x,y];}break;
+      case 'H':tt=HATCH;break;case 'B':tt=has('warrior')?BARR:LOCKDOOR;break;case 'M':if(has('doctor'))tt=MIASMA;break;case 'z':if(has('doctor'))tt=RATS;break;case 'q':if(has('wizard'))tt=RUNE;break;
+      case 'V':tt=ESCAPE;break;case 'K':tt=COVER;break;case 'E':tt=EXIT;start=[x,y];break;case 'c':crates.push([x,y]);break;}
+    t[y].push(tt);}}
+  world.start=start;world.door=door;for(const r of m.roles)world.locks[r]=false;
+  world.hatches=[[[13,29],[13,26]],[[13,3],[13,5]]];
+  // rooms: patrol homes, loot, lights
+  const C=(role,x0,y0,x1,y1,o)=>{const c=Object.assign({i:world.cells.length,role,x0,y0,x1,y1},o||{});world.cells.push(c);return c;};
+  const street=C('hall',1,28,62,37,{torches:8,out:1}),alley=C('hall',1,1,62,4,{torches:4,out:1}),roof=C('hall',47,10,62,26,{torches:0,out:1}),sewer=C('hall',12,5,14,26,{torches:2});
+  const lobby=C('hall',28,19,44,26,{torches:4}),tellers=C('hall',28,13,39,17,{torches:2}),deposit=C('vault',41,13,44,17,{torches:1}),staff=C('larder',28,7,30,12,{torches:1});
+  const sec=C('barracks',35,7,39,9,{torches:2}),mgr=C('captain',41,7,45,9,{torches:1}),upper=C('hall',35,11,45,12,{torches:2}),ante=C('hall',17,15,24,24,{torches:2}),vault=C('vault',17,7,23,13,{crew:true,torches:2});
+  C('entrance',1,31,3,35,{torches:1});
+  const crew=Math.max(1,Math.min(4,(m.state&&m.state.crew)||m.crew||1)),mods=m.mods||[];world.crewN=crew;
+  const occ=new Set();const add=(x,y,o)=>{const e=Object.assign({id:world.enemies.length,x,y,hp:40,max:40,dmg:20,face:[0,1],base:'patrol',state:'patrol',home:null,group:null},o);e.state=e.base;world.enemies.push(e);occ.add(x+','+y);return e;};
+  const spot=c=>{for(let k=0;k<40;k++){const x=ri(c.x0,c.x1),y=ri(c.y0,c.y1);if(t[y][x]===FLOOR&&!occ.has(x+','+y)&&!crates.some(p=>p[0]===x&&p[1]===y))return [x,y];}return null;};
+  const patrol=(c,n)=>{for(let i=0;i<n;i++){const p=spot(c);if(p)add(p[0],p[1],{home:c.i});}};
+  add(34,28,{base:'sentry',face:[0,1],home:street.i});add(37,28,{base:'sentry',face:[0,1],home:street.i});
+  patrol(street,2+(crew>=3?1:0));patrol(alley,1);patrol(lobby,2);patrol(tellers,1);patrol(upper,1);patrol(ante,1+(m.sk>=3?1:0));
+  add(54,25,{base:'sentry',face:[0,1],home:roof.i});add(23,15,{base:'sentry',face:[-1,0],home:ante.i});
+  for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]])add(37+dx,8+dy,{base:'idle',face:[-dx,-dy],group:'barracks',home:sec.i});
+  add(42,9,{base:'sentry',hp:90,max:90,dmg:34,captain:true,home:mgr.i,face:[0,1]});
+  if(mods.includes('payday'))patrol(street,2);if(mods.includes('doubleshift')){patrol(lobby,1);patrol(alley,1);}
+  if(crew>=4)patrol(lobby,1);
+  // traps: the sewer and the basement
+  const tr=[];for(const c of [sewer,ante])for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++)if(t[y][x]===FLOOR&&!occ.has(x+','+y))tr.push([x,y]);
+  for(let i=tr.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[tr[i],tr[j]]=[tr[j],tr[i]];}
+  tr.slice(0,(2+m.cx)*(mods.includes('trapped')?2:1)).forEach(([x,y],i)=>world.traps.push({id:i,x,y,revealed:false,disarmed:false}));
+  // the heavy crates
+  const pool=m.payout||1800;world.crates=crates.map(([x,y],i)=>{const vlt=inRect(vault,x,y);return {id:i,x:x+.5,y:y+.5,v:Math.round(pool/(vlt?7:14)/10)*10,vault:vlt,c:null,del:false};});world.crGold=0;
+  return world;
+}
+function inRect(c,x,y){return x>=c.x0&&x<=c.x1&&y>=c.y0&&y<=c.y1;}
+
 function generate(m){
+  if(m.type==='bank')return generateBank(m);
   const R=mulberry(m.seed); const ri=(a,b)=>a+Math.floor(R()*(b-a+1)); const pick=a=>a[Math.floor(R()*a.length)];
   const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
   const COLS=4,ROWS=3,CW=9,CH=8,W=COLS*CW+1,H=ROWS*CH+1;
   const t=Array.from({length:H},()=>new Array(W).fill(WALL));
   const cells=[];
   for(let cy=0;cy<ROWS;cy++)for(let cx=0;cx<COLS;cx++){
-    const c={cx,cy,i:cells.length,role:'hall'}; sizeRoom(c,ri(3,7),ri(3,6)); cells.push(c);
+    const c={cx,cy,i:cells.length,role:'hall'}; sizeRoom(c,m.open?ri(5,7):ri(3,7),m.open?ri(4,6):ri(3,6)); cells.push(c);
   }
   function sizeRoom(c,w,h){c.x0=c.cx*CW+1+ri(0,7-w);c.y0=c.cy*CH+1+ri(0,6-h);c.x1=c.x0+w-1;c.y1=c.y0+h-1;}
   const at=(x,y)=>cells[y*COLS+x];
@@ -449,6 +501,9 @@ function generate(m){
     const uniq=[];const s=new Set();for(const p of tiles){const k=p[0]+','+p[1];if(!s.has(k)){s.add(k);uniq.push(p);}}
     e.tiles=uniq; for(const [x,y] of uniq)t[y][x]=FLOOR;
   }
+  if(m.open)for(const e of edges){if(!e.tree)continue;let A=cells[e.a],B=cells[e.b];if(A.role!=='hall'||B.role!=='hall')continue;
+    if(A.cy===B.cy){if(A.cx>B.cx)[A,B]=[B,A];const lo=Math.max(A.y0,B.y0),hi=Math.min(A.y1,B.y1);if(hi-lo<1)continue;for(let y=lo;y<=hi;y++)for(let x=A.x1+1;x<B.x0;x++)t[y][x]=FLOOR;}
+    else{if(A.cy>B.cy)[A,B]=[B,A];const lo=Math.max(A.x0,B.x0),hi=Math.min(A.x1,B.x1);if(hi-lo<1)continue;for(let x=lo;x<=hi;x++)for(let y=A.y1+1;y<B.y0;y++)t[y][x]=FLOOR;}}
   const inRoom=(c,x,y)=>x>=c.x0&&x<=c.x1&&y>=c.y0&&y<=c.y1;
   const center=c=>[Math.floor((c.x0+c.x1)/2),Math.floor((c.y0+c.y1)/2)];
   const world={W,H,t,cells,biome:m.biome,enemies:[],traps:[],locks:{},poisoned:false,scried:false,cleared:[],snuffed:[],glimpse:0};
@@ -498,7 +553,14 @@ function generate(m){
   if(m.roles.includes('doctor')){
     for(const e of shuffle(edges.filter(e=>e.tiles.length>=5)).slice(0,1+(m.cx>=2?1:0))){const k=Math.floor(e.tiles.length/2)-1;
       for(let i=k;i<k+3;i++){const p=e.tiles[i];if(p&&t[p[1]][p[0]]===FLOOR&&!cells.some(c=>inRoom(c,p[0],p[1]))&&!(p[0]===door[0]&&p[1]===door[1]))t[p[1]][p[0]]=RATS;}}}
-  world.traps=world.traps.filter(tr=>t[tr.y][tr.x]===FLOOR);
+  if(m.open){let made=0;for(const c of shuffle(cells.filter(c=>c.role==='hall'&&c.x1-c.x0>=4&&c.y1-c.y0>=4))){if(made>=2)break;
+      const W_=x=>t[c.y0-1][x]===WALL,ok=[];for(let x=c.x0-1;x<=c.x1+1;x++)ok.push(W_(x));
+      if(!ok.every(Boolean)||t[c.y0][c.x0-1]!==WALL||t[c.y0][c.x1+1]!==WALL||t[c.y0+1][c.x1+1]!==WALL||t[c.y0+2][c.x1+1]!==WALL)continue;
+      let clear=true;for(let x=c.x0;x<=c.x1;x++)if(t[c.y0][x]!==FLOOR)clear=false;if(t[c.y0+1][c.x1]!==FLOOR||t[c.y0+2][c.x1]!==FLOOR)clear=false;if(!clear)continue;
+      if(!world.el){world.el=t.map(r=>r.map(()=>0));world.ceil=t.map(r=>r.map(()=>3.2));}
+      for(let x=c.x0;x<=c.x1;x++)world.el[c.y0][x]=2.4;world.el[c.y0+1][c.x1]=1.6;world.el[c.y0+2][c.x1]=.8;
+      for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++)world.ceil[y][x]=6.4;c.gallery=true;made++;}}
+  world.traps=world.traps.filter(tr=>t[tr.y][tr.x]===FLOOR&&!(world.el&&world.el[tr.y][tr.x]));
   world.traps.forEach((tr,i)=>tr.id=i);
   return world;
 }
@@ -510,12 +572,13 @@ function applyState(w,s){
   for(const tr of w.traps){if(s.dis.includes(tr.id))tr.disarmed=true;if(s.rev.includes(tr.id))tr.revealed=true;}
   Object.assign(w.locks,s.locks);w.poisoned=s.poisoned;w.scried=s.scried;w.stab=!!s.stab;if(w.stab)w.traps.forEach(tr=>tr.revealed=true);w.cleared=s.cleared.slice();
   for(const [x,y] of w.cleared)w.t[y][x]=FLOOR;
+  if(s.crates&&w.crates)s.crates.forEach((v,i)=>{const c=w.crates[i];if(c){c.x=v[0];c.y=v[1];c.del=!!v[2];}});if(s.crG)w.crGold=s.crG;
   if(w.scried)w.traps.forEach(tr=>tr.revealed=true);
   if(Object.values(w.locks).every(Boolean))w.t[w.door[1]][w.door[0]]=OPEN;
 }
 function snapshot(w){
   const pos={};w.enemies.forEach(e=>pos[e.id]=[+e.x.toFixed(2),+e.y.toFixed(2),e.hp,e.sick?1:0]);
-  return {dead:w.enemies.filter(e=>e.dead).map(e=>e.id),pos,dis:w.traps.filter(t=>t.disarmed).map(t=>t.id),rev:w.traps.filter(t=>t.revealed).map(t=>t.id),locks:{...w.locks},poisoned:!!w.poisoned,scried:!!w.scried,cleared:w.cleared.slice(),snuffed:(w.snuffed||[]).slice(),rt:true,stab:!!w.stab,crew:w.crewN||1};
+  return {dead:w.enemies.filter(e=>e.dead).map(e=>e.id),pos,dis:w.traps.filter(t=>t.disarmed).map(t=>t.id),rev:w.traps.filter(t=>t.revealed).map(t=>t.id),locks:{...w.locks},poisoned:!!w.poisoned,scried:!!w.scried,cleared:w.cleared.slice(),snuffed:(w.snuffed||[]).slice(),rt:true,stab:!!w.stab,crew:w.crewN||1,crates:w.crates?w.crates.map(c=>[+c.x.toFixed(2),+c.y.toFixed(2),c.del?1:0]):undefined,crG:w.crGold||0};
 }
 function objDone(w,id){
   switch(id){
@@ -555,7 +618,7 @@ function freshBoard(){
     makeMission(7741,{sk:2,type:'rescue'}),
   ]};
 }
-let board=loadBoard()||freshBoard();saveBoard(board);
+let board=loadBoard()||freshBoard();if(!board.missions.some(m=>m.type==='bank'))board.missions.unshift(makeMission(8080,{sk:4,type:'bank',roles:['thief','warrior','wizard','doctor']}));saveBoard(board);
 
 /* ---------- board UI ---------- */
 const $=s=>document.querySelector(s);
@@ -675,8 +738,9 @@ function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.
 const SCODE={patrol:0,idle:1,sentry:2,suspicious:3,search:4,return:5,alert:6};const SNAME=Object.keys(SCODE);
 function packWorld(){const w=G.w;const bits=(a,f)=>a.map(x=>f(x)?1:0).join('');
   return {g:w.enemies.map(e=>[Math.round(e.x*100),Math.round(e.y*100),Math.round(e.ang*100),SCODE[e.state]??0,Math.max(0,Math.round(e.hp)),(e.dead?1:0)|(e.sick?2:0)|(e.atk>0?4:0)|(G.time-(e.hitT||-9)<.25?8:0)|(e.walking?16:0)|(e.stag>0?32:0),e.atk>0?Math.round((1-e.atk/(e.atkMax||.85))*9):0]),
-    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,st:w.stab?1:0,cr:(w.crew||[]).map(o=>w.t[o.y][o.x]),ep:(G.eproj||[]).map(p=>[Math.round(p.x*100),Math.round(p.y*100)]),lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id),dr:(w.loot||[]).filter(l=>l.drop).map(l=>[l.id,Math.round(l.x*100),Math.round(l.y*100),l.it.b,l.it.r,l.it.s])};}
+    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,st:w.stab?1:0,bx:w.crates?w.crates.map(c=>[Math.round(c.x*20),Math.round(c.y*20),c.c?(c.c==='me'?(NET.myPeer||'h'):c.c):0,c.del?1:0]):null,cg:w.crGold||0,cr:(w.crew||[]).map(o=>w.t[o.y][o.x]),ep:(G.eproj||[]).map(p=>[Math.round(p.x*100),Math.round(p.y*100)]),lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id),dr:(w.loot||[]).filter(l=>l.drop).map(l=>[l.id,Math.round(l.x*100),Math.round(l.y*100),l.it.b,l.it.r,l.it.s])};}
 function applyWorld(W){const w=G.w;if(!W||!W.g)return;
+  if(W.bx&&w.crates){W.bx.forEach((v,i)=>{const c=w.crates[i];if(!c)return;c.x=v[0]/20;c.y=v[1]/20;c.c=v[2]||null;if(v[3]&&!c.del){c.del=true;G.looted=true;}});w.crGold=W.cg||0;}
   if(W.dr&&w.loot)for(const [id,x,y,b,r,sd] of W.dr){if(w.loot[id]||!GB[b])continue;w.loot[id]={id,x:x/100,y:y/100,it:{b,r,s:sd},taken:false,drop:true};G.featDirty=true;}
   if(W.lo&&w.loot){let ch=false;w.loot.forEach((l,i)=>{const t=W.lo[i]==='1';if(l&&t&&!l.taken){l.taken=true;ch=true;}});if(ch)G.featDirty=true;}
   if(W.cr&&w.crew)w.crew.forEach((o,i)=>{const t=W.cr[i];if(t!=null&&w.t[o.y][o.x]!==t){w.t[o.y][o.x]=t;G.featDirty=true;}});
@@ -696,7 +760,7 @@ function applyWorld(W){const w=G.w;if(!W||!W.g)return;
 function pushPresence(force){if(!NET.room||!G)return;const o={p:packMe(),a:NET.acts};
   if(G.tavern){o.a=null;o.tv=1;if(G.mode==='host'){o.th=1;o.job=jobSummary(G.job);Object.assign(o,{h:null,m:null,w:null,hits:null,lg:null,end:null,lid:null});}
     NET.room.presence(o).catch(()=>{});return;}
-  o.tv=null;if(G.mode==='host'){o.th=null;o.job=null;o.lid=NET.lid||null;o.h=1;o.m={id:G.m.id,seed:G.m.seed,biome:G.m.biome,roles:G.m.roles,cx:G.m.cx,sk:G.m.sk,type:G.m.type,mods:G.m.mods,crew:G.m.crew,title:G.m.title,payout:G.m.payout};o.w=NET.end?null:packWorld();o.hits=NET.hitsOut;o.lg=NET.logsOut;o.end=NET.end;}
+  o.tv=null;if(G.mode==='host'){o.th=null;o.job=null;o.lid=NET.lid||null;o.h=1;o.m={id:G.m.id,seed:G.m.seed,biome:G.m.biome,roles:G.m.roles,cx:G.m.cx,sk:G.m.sk,open:G.m.open,type:G.m.type,mods:G.m.mods,crew:G.m.crew,title:G.m.title,payout:G.m.payout};o.w=NET.end?null:packWorld();o.hits=NET.hitsOut;o.lg=NET.logsOut;o.end=NET.end;}
   NET.room.presence(o).catch(err=>{if(o.end&&o.end.s){NET.end=Object.assign({},NET.end,{s:null});}});}
 function players(){const out=[];if(G.down<=0)out.push({key:'me',x:G.P.x,y:G.P.y,cls:G.cls,crouch:G.P.crouch,moving:G.P.moving,sprint:G.P.sprint,invis:G.P.invis>0,vis:G.vis});
   for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.dn||p.x==null)continue;out.push({key:rr.peer,x:p.x,y:p.y,cls:p.c,crouch:!!p.cr,moving:!!p.mv,sprint:!!p.sp,invis:!!p.iv,vis:p.vs||0,rr});}return out;}
@@ -713,6 +777,7 @@ function onRemote(){
 function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peerName(rr)};if(!actor.cls)return;
   if(a.t==='doc'){docHostAct(rr,a,actor);return;}
   if(a.t==='rune'){runeTrip(a.x|0,a.y|0,actor);return;}
+  if(a.t==='crate'){crateAct(a.op,a.id|0,actor);return;}
   if(a.t==='hit'){const e=w.enemies[a.id];if(!e||e.dead)return;G.lastActor=actor.key;actor.rr=rr;
     const fx={};if(Array.isArray(a.fx))for(const k of a.fx)if(LEGS[k])fx[k]=1;
     applyHit(e,actor.cls,(a.k==='cleave'||a.k==='charge')&&actor.cls==='warrior'?a.k:a.k==='arrow'&&actor.cls==='thief'?'arrow':'melee',{ua:!!a.ua,actor,bs:!!a.bs,venom:!!a.venom&&actor.cls==='thief',src:[rr.p.x,rr.p.y],bj:+a.bj||0,hid:Math.min(2,+a.hid||0),ram:!!a.ram,kd:!!a.kd,boot:+a.boot||0,stag:!!a.stag,dm:Math.min(150,Math.max(0,+a.dm||0)),stg:Math.min(1.5,Math.max(0,+a.stg||0)),pw:Math.min(2.5,Math.max(.5,+a.pw||1)),bsx:!!a.bsx,fx,mk:actor.cls==='doctor'?Math.min(2,+a.mk||0):0,amp:actor.cls==='doctor'?Math.min(2,+a.amp||0):0});}
@@ -738,7 +803,7 @@ function hostGone(){if(!G||G.over)return;settle(true);G.over=true;if(document.po
   showModal('The host left',`<p>The host closed the job, so the run is over. Their board keeps whatever the crew got done up to their last save.</p>`);}
 function hostEnded(end){G.over=true;const hl=settle(true,end.lt?Math.round((end.pay||0)/Math.max(1,(end.h||[]).length)):0);{const h=NET.remote.get(NET.hostPeer);NET.doneLid=h&&h.pres?h.pres.lid:null;}if(document.pointerLockElement)document.exitPointerLock();
   const can=!!end.s;
-  showModal(end.lt?'Payday':'Job reposted',`<p>${end.lt?`The host walked out with the strongbox. The crew splits <b class="mono">${(end.pay||0).toLocaleString()} gold</b>.`:'The host led the crew out and reposted the job.'}</p>${end.h&&end.h.length?`<ul>${end.h.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls]?CLS[h.cls].name:'?'}: ${esc((h.did||[]).join('; ')||'came along')}</li>`).join('')}</ul>`:''}
+  showModal(end.lt?'Payday':'Job reposted',`<p>${end.lt?`${end.bank?'The crates are on the getaway.':'The host walked out with the strongbox.'} The crew splits <b class="mono">${(end.pay||0).toLocaleString()} gold</b>.`:'The host led the crew out and reposted the job.'}</p>${end.h&&end.h.length?`<ul>${end.h.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls]?CLS[h.cls].name:'?'}: ${esc((h.did||[]).join('; ')||'came along')}</li>`).join('')}</ul>`:''}
     ${can&&!end.lt?'<p><button class="btn" id="addJob">Add this job to my board</button></p>':''}${hl?`<p class="note">${esc(hl)}</p>`:''}`,{label:'Back to the back room',fn:()=>{if(NET.room&&NET.remote.get(NET.hostPeer))startTavern('client',G&&G.cls);else{G=null;toBoard();}}});
   const ab=$('#addJob');if(ab)ab.onclick=()=>{const m=Object.assign({},end.m,{id:'m'+end.m.seed.toString(36)+'-'+Date.now().toString(36),state:end.s,history:(end.h||[]).map(h=>Object.assign({},h,{by:h.peer===NET.myPeer?'You':h.by})),status:'open'});board.missions.unshift(m);saveBoard(board);ab.textContent='Added';ab.disabled=true;};
 }
@@ -771,10 +836,10 @@ function pickClass(host){const m=host.pres.m;const taken=new Set([...NET.remote.
 const now=()=>performance.now()/1000;
 function tileAt(x,y){const tx=Math.floor(x),ty=Math.floor(y);return (tx<0||ty<0||tx>=G.w.W||ty>=G.w.H)?WALL:G.w.t[ty][tx];}
 const walkT=t=>t===FLOOR||t===EXIT||t===OPEN||t===ROPE||t===LADDER||t===GATEUP||t===RUNE||t===RATS;
-const opaqueT=t=>t===WALL||t===DOOR||t===BARR||t===RACK||t===STREET||t===IRONDOOR;
-function losT(x0,y0,x1,y1){const dx=x1-x0,dy=y1-y0,n=Math.ceil(Math.hypot(dx,dy)/.2);for(let i=1;i<n;i++){const f=i/n;if(opaqueT(tileAt(x0+dx*f,y0+dy*f)))return false;}return true;}
+const opaqueT=t=>t===WALL||t===DOOR||t===BARR||t===RACK||t===STREET||t===IRONDOOR||t===COVER||t===LOCKDOOR;
+function losT(x0,y0,x1,y1){const dx=x1-x0,dy=y1-y0,n=Math.ceil(Math.hypot(dx,dy)/.2);const ev=G&&G.w&&G.w.el,z0=ev?elAt(x0,y0)+1.5:0,z1=ev?elAt(x1,y1)+1.2:0;for(let i=1;i<n;i++){const f=i/n;if(opaqueT(tileAt(x0+dx*f,y0+dy*f)))return false;if(ev&&elevLos(x0,y0,x1,y1,f,z0,z1))return false;}return true;}
 function angDiff(a,b){let d=a-b;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;return d;}
-function nameOf(e){const tn=!e.captain&&e.type&&TYPE_NAMES[G.w.biome]&&TYPE_NAMES[G.w.biome][e.type];if(tn)return 'The '+tn.toLowerCase();const B=BIOMES[G.w.biome];return e.captain?cap(B.boss):'The '+B.foe.toLowerCase();}
+function nameOf(e){if(e.captain&&G.w&&G.w.bank)return 'The head of security';const tn=!e.captain&&e.type&&TYPE_NAMES[G.w.biome]&&TYPE_NAMES[G.w.biome][e.type];if(tn)return 'The '+tn.toLowerCase();const B=BIOMES[G.w.biome];return e.captain?cap(B.boss):'The '+B.foe.toLowerCase();}
 function lc(s){return s.replace(/^The /,'the ');}
 function cap(s){return s[0].toUpperCase()+s.slice(1);}
 function log(msg,cls){G.log.unshift({msg,cls});if(G.log.length>40)G.log.pop();toast(msg,cls);G.sideDirty=true;}
@@ -784,7 +849,7 @@ function placeTorches(w,seed){
   const R=mulberry(seed^0x5bd1e995),out=[];
   for(const c of w.cells){
     const area=(c.x1-c.x0+1)*(c.y1-c.y0+1);
-    let n=c.role==='barracks'?3:c.role==='entrance'||c.role==='vault'?1:area>=20?2:1;
+    let n=c.torches!=null?c.torches:c.role==='barracks'?3:c.role==='entrance'||c.role==='vault'?1:area>=20?2:1;
     if(c.role==='hall'&&R()<.3)n=0;
     const cand=[];
     for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++)for(const [dx,dy] of DIRS){const nx=x+dx,ny=y+dy;
@@ -1213,9 +1278,9 @@ function openInv(ctx,shop){ensureChars();INV.ctx=ctx;INV.shop=shop||null;INV.sel
   if(G){G.keys={};G.blockHeld=false;}if(document.pointerLockElement)document.exitPointerLock();
   INV.open=true;$('#invov').hidden=false;renderInv();}
 function closeInv(){INV.open=false;$('#invov').hidden=true;$('#invtip').hidden=true;saveProf();if(G){applyGear();G.sideDirty=true;relock();}else renderStash();}
-/*LOCKIN*/let LOCKOK=false,LOCKFAIL=0,LOCKERRT=0;
-function tryLock(){const v=$('#view');if(!v.requestPointerLock){lockMode=false;setPause(false);return;}G.relock=true;let r;try{r=v.requestPointerLock();}catch(e){lockFail();return;}if(r&&r.catch)r.catch(()=>lockFail());}
-function lockFail(){const t=performance.now();if(t-LOCKERRT<150)return;LOCKERRT=t;if(G)G.relock=false;LOCKFAIL++;
+/*LOCKIN*/let LOCKOK=false,LOCKFAIL=0,LOCKERRT=0,LOCKPEND=false;
+function tryLock(){const v=$('#view');if(!v.requestPointerLock){lockMode=false;setPause(false);return;}G.relock=true;LOCKPEND=true;let r;try{r=v.requestPointerLock();}catch(e){lockFail();return;}if(r&&r.catch)r.catch(()=>lockFail());}
+function lockFail(){if(!LOCKPEND)return;LOCKPEND=false;if(G)G.relock=false;LOCKFAIL++;
   if(LOCKFAIL>=4&&!LOCKOK){lockMode=false;if(G){setPause(false);toast('This browser won\'t lock the mouse here. Hold the left button and drag to look around.');}return;}
   if(G&&G.paused)$('#pauseText').textContent='The browser needs a second after Esc. Click again to take back the mouse.';}
 function relock(){if(!G||G.over||G.paused||touchMode||!lockMode||document.pointerLockElement||$('#game').hidden)return;tryLock();}
@@ -1796,7 +1861,7 @@ function moveAbility(){const P=G.P;if(G.paused||G.down>0||G.tavern&&false)return
   if(!land||Math.hypot(land[0]-P.x,land[1]-P.y)<.4){toast('Nowhere to blink.');return;}
   G.bursts=G.bursts||[];G.bursts.push({x:P.x,y:P.y,t:.2,col:0x9a95f5});P.x=land[0];P.y=land[1];G.bursts.push({x:P.x,y:P.y,t:.2,col:0x9a95f5});
   P.st-=28*(G.S.moveCost||1)*(SK('tether')>1?.5:1);P.stDelay=1;P.dodgeCd=1.1;P.iframe=.25;breakInvis('Blinking breaks your invisibility.');if(G.mode!=='client'&&SK('tether')<2)noise(P.x,P.y,4,.3,.6);}
-function updMove(dt){const P=G.P;
+function updMove(dt){const P=G.P;elevStep(dt);
   if(P.charge>0){P.charge-=dt;const k=9/T*dt;const mx=P.chargeDir[0]*k,my=P.chargeDir[1]*k;
     const ax=Math.floor(P.x+P.chargeDir[0]*.5),ay=Math.floor(P.y+P.chargeDir[1]*.5);if(G.w.t[ay]&&G.w.t[ay][ax]===GATE&&SK('ram')){const d={k:'ram',x:ax,y:ay};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:'warrior',name:'You'});P.charge=0;}
     if(G.w.t[ay]&&G.w.t[ay][ax]===BARR){const d={k:'tile',x:ax,y:ay};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:'warrior',name:'You'});P.charge=0;}
@@ -1813,7 +1878,7 @@ function jobRunStart(){const m=G.m,w=G.w,mods=m.mods||[];
 function startRun(m,cls,opts){
   opts=opts||{};
   /*JOBSIN*/if(!(m.state&&m.state.crew)){if(opts.mode==='host')m.crew=Math.min(4,1+[...NET.remote.values()].filter(r=>r.p&&r.p.c).length);else if(opts.mode!=='client')m.crew=1;}
-  const w=generate(m);retype(w,m);crewRoutes(w,m);
+  const w=generate(m);retype(w,m);if(w.bank)w.crew=[];else crewRoutes(w,m);
   {const k=(m.sk||m.cx||1)-1;if(k>0)for(const e of w.enemies){e.max=Math.round((e.max||e.hp)*(1+.12*k));e.hp=e.max;e.dmg=Math.round(e.dmg*(1+.08*k));}}
   w.enemies.forEach(e=>{e.seat=[e.x+.5,e.y+.5];e.homeAng=Math.atan2(e.face[1],e.face[0]);});
   applyState(w,m.state);
@@ -1841,7 +1906,7 @@ function startRun(m,cls,opts){
   $('#toasts').innerHTML='';
   $('#abl').innerHTML=KIT[cls].lines.map(l=>`<li>${l}</li>`).join('');
   const prior=m.history.length?` Earlier on this job: ${m.history.map(h=>(h.by==='You'?'you':h.by)+' as '+CLS[h.cls].name).join(', ')}.`:'';
-  log(`You slip into the ${BIOMES[m.biome].name.toLowerCase()} as the ${CLS[cls].name}.${prior}`);
+  log(`You slip into the ${w.bank?'street':BIOMES[m.biome].name.toLowerCase()} as the ${CLS[cls].name}.${prior}`);
   if(w.scried)log('A Wizard scried this place. Your map is already drawn.','good');
   if(G.alarm>0)log('The guards are still jumpy from the last crew. The alarm is already up.','bad');
   if(w.bellCut)log('Someone already cut the alarm bell rope.','good');
@@ -2027,7 +2092,7 @@ const view=$('#viewwrap');
 $('#pauseov').addEventListener('click',ev=>{ev.stopPropagation();if(!G||G.over)return;
   if(!touchMode&&lockMode){tryLock();return;}
   setPause(false);});
-/*MENUFIX*/document.addEventListener('pointerlockchange',()=>{if(!G)return;if(document.pointerLockElement){G.relock=false;LOCKOK=true;LOCKFAIL=0;setPause(false);}else if(!INV.open&&!G.over&&$('#modal').hidden&&!$('#game').hidden){setPause(true,'Paused','The guards wait for you. Nobody else does.');}});
+/*MENUFIX*/document.addEventListener('pointerlockchange',()=>{if(!G)return;if(document.pointerLockElement){G.relock=false;LOCKOK=true;LOCKFAIL=0;LOCKPEND=false;setPause(false);}else if(!INV.open&&!G.over&&$('#modal').hidden&&!$('#game').hidden){setPause(true,'Paused','The guards wait for you. Nobody else does.');}});
 document.addEventListener('pointerlockerror',()=>lockFail());
 /* a visible prompt whenever the game is running but the mouse is loose */
 {const h=document.createElement('div');h.id='lockhint';h.textContent='Click the view to take back the mouse';h.hidden=true;h.style.cssText='position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);padding:8px 14px;border-radius:8px;background:rgba(10,10,14,.82);border:1px solid var(--lantern);color:var(--lantern);font-size:.95rem;pointer-events:none;z-index:5';
@@ -2093,7 +2158,7 @@ function update(dt){
   if(P.tonic>0){P.tonic-=dt;P.st=Math.min(100,P.st+24*dt);}
   updMove(dt);
   if(P.dodge>0){P.dodge-=dt;const k=7.5/T*dt;const mx=P.dodgeDir[0]*k,my=P.dodgeDir[1]*k;if(!blockedAt(P.x+mx,P.y,.24))P.x+=mx;if(!blockedAt(P.x,P.y+my,.24))P.y+=my;}
-  let spd=S.walk*(P.crouch?.5*(SK('softstep')>1?1.15:1):P.sprint?1.75:1)*(P.blocking?.5:1)*(G.looted&&!SK('packmule')&&!SK('featherlight')&&!bgIs('dockhand')?.85:1)*(P.bandage>0?.5:1)*(G.onRats?.6:1);
+  let spd=S.walk*(P.crouch?.5*(SK('softstep')>1?1.15:1):P.sprint?1.75:1)*(P.blocking?.5:1)*(G.looted&&!SK('packmule')&&!SK('featherlight')&&!bgIs('dockhand')?.85:1)*(P.bandage>0?.5:1)*(G.onRats?.6:1)*carryMul();
   P.moving=len>.1;
   if(P.chan){if(P.moving||G.down>0){P.chan=null;toast('Interrupted.');}else{P.chan.t+=dt;if(P.chan.t>=P.chan.dur){const c=P.chan;P.chan=null;c.done();}}}
   if(P.moving){const fx=-Math.sin(P.yaw),fy=-Math.cos(P.yaw),rx=Math.cos(P.yaw),ry=-Math.sin(P.yaw);const k=Math.min(1,len)/len*spd/T*dt;
@@ -2119,11 +2184,11 @@ function update(dt){
     for(const e of G.w.enemies)if(!e.dead)updGuard(e,dt);updAlarm(dt);updEProj(dt);if(!G.tavern)updGates(dt);}
   if(G.over)return;
   if(G.mp){NET.sendT-=dt;if(NET.sendT<=0){NET.sendT=G.mode==='host'?.1:.066;pushPresence();}updRemoteAvatars(dt);G.crewT=(G.crewT||0)-dt;if(G.crewT<=0){G.crewT=.5;renderCrew();}}
-  updProj(dt);updHaz(dt);docUpdate(dt);idUpdate(dt);obsUpdate(dt);
+  updProj(dt);updHaz(dt);docUpdate(dt);idUpdate(dt);obsUpdate(dt);bankUpdate(dt);
   checkObjectives();
   G.focus=findFocus();if(!G.tavern)slipCheck(dt);
 }
-function blockedAt(x,y,r){for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r]])if(!walkT(tileAt(x+ox,y+oy)))return true;return false;}
+function blockedAt(x,y,r){for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r]])if(!walkT(tileAt(x+ox,y+oy))||elevBlocked(x+ox,y+oy))return true;return false;}
 function hurt(d,msg,src){const P=G.P,S=G.S;if(G.down>0)return;
   if(P.chan&&!P.chan.hold&&src){P.chan=null;toast('Interrupted.');}
   if(src&&src.proj&&remNear('coverme',2.2,true)){log("Your Warrior's shield takes the shot.",'good');return 'block';}
@@ -2155,7 +2220,7 @@ function pathTo(e,tx,ty){
   const start=sy*W+sx,goal=ty*W+tx;if(start===goal)return [];
   const prev=new Int32Array(W*H).fill(-1);prev[start]=start;const q=[start];let qi=0,found=false;
   while(qi<q.length){const c=q[qi++];if(c===goal){found=true;break;}const cx=c%W,cy=(c/W)|0;
-    for(const [dx,dy] of DIRS){const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const nk=ny*W+nx;if(prev[nk]!==-1)continue;if(!walkT(G.w.t[ny][nx]))continue;prev[nk]=c;q.push(nk);}}
+    for(const [dx,dy] of DIRS){const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const nk=ny*W+nx;if(prev[nk]!==-1)continue;{const tt=G.w.t[ny][nx];if(!walkT(tt)&&!(typeof LOCKDOOR!=='undefined'&&tt===LOCKDOOR))continue;}if(G.w.el&&Math.abs((G.w.el[ny][nx]||0)-(G.w.el[cy][cx]||0))>.8)continue;prev[nk]=c;q.push(nk);}}
   if(!found)return null;const out=[];let c=goal;while(c!==start){out.unshift([c%W+.5,((c/W)|0)+.5]);c=prev[c];}return out;
 }
 function moveTo(e,tx,ty,ms,dt){
@@ -2252,7 +2317,7 @@ function updGuard(e,dt){
       if(amt>0&&tp)turnTo(e,Math.atan2(tp.y-e.y,tp.x-e.x),dt*8);
       if(e.atk>0){e.atk-=dt;if(tp&&e.atk>e.atkMax*.4)turnTo(e,Math.atan2(tp.y-e.y,tp.x-e.x),dt*3);
         if(e.atk<=0&&FT(e).ranged&&!e.captain){e.cool=FT(e).cool;if(tp){const a=Math.atan2(tp.y-e.y,tp.x-e.x);G.eproj.push({x:e.x+Math.cos(a)*.4,y:e.y+Math.sin(a)*.4,vx:Math.cos(a)*4.5,vy:Math.sin(a)*4.5,t:0,dmg:e.dmg,id:e.id,name:nameOf(e)});}break;}
-        if(e.atk<=0){e.cool=e.captain?1.7:FT(e).cool;for(const pl of players()){const dd=Math.hypot(pl.x-e.x,pl.y-e.y);if(dd>1.15||pl.invis||Math.abs(angDiff(Math.atan2(pl.y-e.y,pl.x-e.x),e.ang))>.9)continue;
+        if(e.atk<=0){e.cool=e.captain?1.7:FT(e).cool;for(const pl of players()){const dd=Math.hypot(pl.x-e.x,pl.y-e.y);if(dd>1.15||Math.abs(elAt(pl.x,pl.y)-elAt(e.x,e.y))>1.4||pl.invis||Math.abs(angDiff(Math.atan2(pl.y-e.y,pl.x-e.x),e.ang))>.9)continue;
           if(pl.key==='me'){if(hurt(e.dmg*(e.taunt>0&&SK('warhornsk')?.8:1)*(e.weakT>0?.75:1),`${nameOf(e)} hits you.`,{x:e.x,y:e.y,heavy:!!(e.captain||FT(e).heavy)})==='parry'){stagger(e,e.captain?1.1:1.7,true);if(G.S.fx&&G.S.fx.fang){G.lastActor='me';applyHit(e,G.cls,'counter');}}}
           else{NET.hitsOut.push({n:++NET.hitSeq,to:pl.key,d:Math.round(e.dmg*(e.weakT>0?.75:1)),m:nameOf(e),id:e.id,hv:e.captain||FT(e).heavy?1:0});if(NET.hitsOut.length>8)NET.hitsOut.shift();}}}break;}
       if(FT(e).ranged&&!e.captain&&tp){const los=losT(e.x,e.y,tp.x,tp.y);
@@ -2305,10 +2370,10 @@ function burstAt(x,y,cls,actor,sp,rad,fs){let n=0;fs=fs||{};let r=rad||1.35;ratF
   if(fs.wild>1)for(const h of hits)for(const e of G.w.enemies)if(!e.dead&&!hits.includes(e)&&Math.hypot(e.x-h.x,e.y-h.y)<1)applyHit(e,cls,'fire',{actor,sp:(sp||1)*.5,src});
   if(fs.wf)addHaz({k:'burn',x,y,t:5,actor});
   if(fs.hol){const dead=hits.filter(e=>e.dead);if(dead.length){const d0=dead[0];const nx=G.w.enemies.filter(e=>!e.dead&&Math.hypot(e.x-d0.x,e.y-d0.y)<4).sort((a,b)=>Math.hypot(a.x-d0.x,a.y-d0.y)-Math.hypot(b.x-d0.x,b.y-d0.y))[0];if(nx){G.bursts=G.bursts||[];G.bursts.push({x:nx.x,y:nx.y,t:0});burstAt(nx.x,nx.y,cls,actor,sp,rad,Object.assign({},fs,{hol:0,wild:0}));}}}noise(x,y,10,1,1);return n;}
-function inArc(e,reach,arc){const P=G.P,[fx,fy]=fwd();const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>reach)return false;const a=Math.abs(angDiff(Math.atan2(dy,dx),Math.atan2(fy,fx)));return (a<arc||d<.35)&&losT(P.x,P.y,e.x,e.y);}
+function inArc(e,reach,arc){if(G.w&&G.w.el&&Math.abs(elAt(e.x,e.y)-(G.P.fz||0))>1.5)return false;const P=G.P,[fx,fy]=fwd();const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>reach)return false;const a=Math.abs(angDiff(Math.atan2(dy,dx),Math.atan2(fy,fx)));return (a<arc||d<.35)&&losT(P.x,P.y,e.x,e.y);}
 function breakInvis(why){if(G.P.invis>0){G.P.invis=0;log(why);}}
 function attack(){
-  const P=G.P,S=G.S;if(G.over||P.swing>0||G.down>0||P.blocking)return;if(P.st<S.cost*.5){toast('Out of breath.');return;}P.st-=S.cost;P.stDelay=.8;P.swing=S.swing;G.swingStart=G.time;G.swingN=(G.swingN||0)+1;
+  const P=G.P,S=G.S;if(G.over||P.swing>0||G.down>0||P.blocking)return;if(myCrate()){toast('Your hands are full. Set the crate down first (E).');return;}if(P.st<S.cost*.5){toast('Out of breath.');return;}P.st-=S.cost;P.stDelay=.8;P.swing=S.swing;G.swingStart=G.time;G.swingN=(G.swingN||0)+1;
   breakInvis('Striking breaks your invisibility.');
   const tg=G.w.enemies.filter(e=>!e.dead&&inArc(e,S.reach,.6)).sort((a,b)=>Math.hypot(a.x-P.x,a.y-P.y)-Math.hypot(b.x-P.x,b.y-P.y))[0];
   if(!tg)return;
@@ -2430,18 +2495,112 @@ function obsMesh(t,x,y,cx,cz,w){const Mt=R3.mat,wl=(a,b)=>w.t[b]&&w.t[b][a]===WA
   return false;}
 obsInit();
 
+/*ELEVIN*/
+/* ---------- height levels: raised floors, stairs, drops, sunken sewers ---------- */
+function elAt(x,y){const w=G&&G.w;if(!w||!w.el)return 0;const tx=Math.floor(x),ty=Math.floor(y);const r=w.el[ty];return r&&r[tx]!=null?r[tx]:0;}
+function elW(wx,wz){const w=G&&G.w;if(!w||!w.el)return 0;const x=wx/T,y=wz/T,tx=Math.floor(x),ty=Math.floor(y);if(!w.t[ty]||w.t[ty][tx]==null)return 0;
+  if(w.t[ty][tx]!==WALL)return w.el[ty][tx]||0;let best=0,bd=9;for(const [dx,dy] of DIRS){const nx=tx+dx,ny=ty+dy;if(!w.t[ny]||w.t[ny][nx]==null||w.t[ny][nx]===WALL)continue;const d=Math.hypot(nx+.5-x,ny+.5-y);if(d<bd){bd=d;best=w.el[ny][nx]||0;}}return best;}
+function elevStep(dt){const P=G.P;if(!G.w||!G.w.el){P.vz=0;P.fz=0;return;}const fz=elAt(P.x,P.y);P.fz=fz;if(P.vz==null)P.vz=fz;
+  if(fz>P.vz)P.vz=Math.min(fz,P.vz+dt*7);else if(fz<P.vz){if(P.fallFrom==null)P.fallFrom=P.vz;P.vz=Math.max(fz,P.vz-dt*(4+ (P.fallFrom-P.vz)*6));}
+  if(P.fallFrom!=null&&P.vz<=fz+.001){const h=P.fallFrom-fz;P.fallFrom=null;if(h>1.6&&!G.tavern){log(h>3?'You drop down hard.':'You drop down.');if(G.mode!=='client')noise(P.x,P.y,h>3?9:6,.5,.7);if(h>3.4&&!SK('featherlight'))hurt(Math.round((h-3.4)*8+4),'The fall jars every bone.');}}}
+function elevBlocked(x,y){const w=G.w;if(!w||!w.el)return false;return elAt(x,y)>(G.P.fz||0)+.8;}
+function elevLos(x0,y0,x1,y1,f,z0,z1){return elAt(x0+(x1-x0)*f,y0+(y1-y0)*f)>z0+(z1-z0)*f;}
+/* render: keep every object at the height of the floor under it */
+function elevPass(){const w=G&&G.w;if(!w||!w.el||G.tavern)return;const fix=o=>{const ud=o.userData;if(ud.noEl)return;const e=elW(o.position.x,o.position.z);
+    if(ud.elY!==undefined&&o.position.y===ud.elY)o.position.y+=e-ud.elOff;else o.position.y+=e;ud.elOff=e;ud.elY=o.position.y;};
+  for(const o of R3.scene.children){if(o===R3.dyn){for(const k of o.children)fix(k);continue;}fix(o);}}
+function elevBuild(){const w=G.w;if(!w.el)return;const sc=R3.scene,B=BIOMES[w.biome];
+  let lo=0;for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++)if(w.t[y][x]!==WALL)lo=Math.min(lo,w.el[y][x]||0);
+  const MATS=[B.floor,'#3b3a3c','#2f3138','#2c3a36','#5a4330'],MATS2=[B.floor2,'#343336','#2a2c33','#283531','#523c2b'];
+  const tileTex=k=>canvasTex(64,64,g=>{g.fillStyle=MATS[k];g.fillRect(0,0,64,64);g.fillStyle=MATS2[k];
+    if(k===4){for(let i=0;i<4;i++)g.fillRect(0,i*16,64,1.5);for(let i=0;i<4;i++)g.fillRect((i*23)%64,i*16,1.5,16);}
+    else if(k===1){for(let r=0;r<4;r++)for(let c=0;c<4;c++){g.fillStyle=(r+c)%2?MATS2[k]:MATS[k];g.beginPath();g.arc(c*16+8+(r%2?4:0),r*16+8,6.5,0,7);g.fill();}}
+    else if(k===2){for(let r=0;r<8;r++){g.fillRect(0,r*8,64,1.5);for(let c=0;c<4;c++)g.fillRect(c*16+(r%2?8:0),r*8,1.5,8);}}
+    else{g.fillRect(0,0,32,32);g.fillRect(32,32,32,32);}
+    for(let i=0;i<60;i++){g.fillStyle=`rgba(0,0,0,${Math.random()*.2})`;g.fillRect(Math.random()*64,Math.random()*64,2,2);}});
+  const groups=[[],[],[],[],[]],sides=[],ceils=[];
+  for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++){if(w.t[y][x]===WALL)continue;const e=w.el[y][x]||0,k=(w.mat&&w.mat[y][x])||0;groups[k].push([x,y,e]);if(e>lo+.01)sides.push([x,y,e]);const c=w.ceil&&w.ceil[y][x];if(c!=null&&c>-50)ceils.push([x,y,c]);}
+  const M=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new THREE.Vector3(),V=new THREE.Vector3(),rot=new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,0));
+  groups.forEach((list,k)=>{if(!list.length)return;const mat=new THREE.MeshLambertMaterial({map:tileTex(k)});const im=new THREE.InstancedMesh(new THREE.PlaneGeometry(T,T),mat,list.length);
+    list.forEach(([x,y,e],i)=>{M.compose(V.set((x+.5)*T,e+.002,(y+.5)*T),rot,S.set(1,1,1));im.setMatrixAt(i,M);});im.userData.noEl=true;sc.add(im);});
+  if(sides.length){const im=new THREE.InstancedMesh(new THREE.BoxGeometry(T,1,T),new THREE.MeshLambertMaterial({map:R3.wallTex,color:0x9a948a}),sides.length);
+    sides.forEach(([x,y,e],i)=>{const h=e-lo;M.compose(V.set((x+.5)*T,lo+h/2,(y+.5)*T),Q.identity(),S.set(1,h,1));im.setMatrixAt(i,M);});im.userData.noEl=true;sc.add(im);}
+  if(ceils.length){const im=new THREE.InstancedMesh(new THREE.PlaneGeometry(T,T),new THREE.MeshLambertMaterial({color:0x15161a,side:THREE.DoubleSide}),ceils.length);const rc=new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI/2,0,0));
+    ceils.forEach(([x,y,c],i)=>{M.compose(V.set((x+.5)*T,c,(y+.5)*T),rc,S.set(1,1,1));im.setMatrixAt(i,M);});im.userData.noEl=true;sc.add(im);}
+  if(w.sky){sc.add(new THREE.HemisphereLight(0x7f8fc0,0x141418,.5));const moon=new THREE.DirectionalLight(0xa8b8e8,.35);moon.position.set(-30,60,20);moon.userData.noEl=true;sc.add(moon);}
+  R3.elLo=lo;}
+function elevWallSpan(x,y){const w=G.w;let top=-99,bot=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const nx=x+dx,ny=y+dy;if(!w.t[ny]||w.t[ny][nx]==null||w.t[ny][nx]===WALL)continue;const e=w.el[ny][nx]||0,c=w.ceil&&w.ceil[ny][nx];
+    top=Math.max(top,c!=null&&c>-50?c:e+WALLH);bot=Math.min(bot,e);}
+  if(w.tall&&w.tall[y]&&w.tall[y][x])top=Math.max(top,w.tall[y][x]);return [Math.min(bot,R3.elLo||0),top<-50?WALLH:top];}
+
+/*BANKIN*/
+/* ---------- bank job: locked doors, hatches, cover, getaways and heavy crates ---------- */
+function myCrate(){const w=G&&G.w;if(!w||!w.crates)return null;const me=G.mode==='client'?NET.myPeer:'me';return w.crates.find(c=>c.c===me&&!c.del)||null;}
+function nearEscape(x,y){const w=G.w;for(let ty=Math.floor(y)-2;ty<=Math.floor(y)+2;ty++)for(let tx=Math.floor(x)-2;tx<=Math.floor(x)+2;tx++)if(w.t[ty]&&w.t[ty][tx]===ESCAPE&&Math.hypot(tx+.5-x,ty+.5-y)<1.75)return true;return false;}
+function carryMul(){const c=myCrate();if(!c)return 1;return G.cls==='warrior'?.82:.58;}
+function hatchDest(x,y){const w=G.w;for(const [a,b] of w.hatches||[]){const o=a[0]===x&&a[1]===y?b:b[0]===x&&b[1]===y?a:null;if(!o)continue;for(const [dx,dy] of DIRS){const nx=o[0]+dx,ny=o[1]+dy;if(w.t[ny]&&walkT(w.t[ny][nx]))return [nx+.5,ny+.5];}}return null;}
+function bankLabel(c){const C=G.cls,w=G.w;
+  switch(c.t){
+    case LOCKDOOR:return C==='thief'?{act:true,text:'<b>E</b> Pick the lock (3 s, quiet)'}:C==='warrior'?{act:true,text:'<b>E</b> Kick the door in (loud)'}:{act:false,text:'A locked door. A Thief can pick it, a Warrior can kick it in. Guards carry keys.'};
+    case HATCH:{const up=elAt(c.x+.5,c.y+.5)<-1;return {act:true,text:`<b>E</b> ${up?'Climb the ladder up':'Lift the grate and climb down'}`};}
+    case ESCAPE:return {act:false,text:myCrate()?'':'A getaway. Bring the heavy crates here.'};}
+  return null;}
+function bankFocus(){const c=myCrate();if(!c)return null;const P=G.P;
+  if(nearEscape(P.x,P.y))return {kind:'carry',cx:P.x,cy:P.y,label:{act:true,text:`<b>E</b> Load the crate onto the getaway (${c.v}g)`}};
+  return {kind:'carry',cx:P.x,cy:P.y,label:{act:true,text:'<b>E</b> Set the crate down'}};}
+function bankInteract(c){const P=G.P;
+  if(c.kind==='carry'){const cr=myCrate();if(!cr)return true;crateDo(nearEscape(P.x,P.y)?'deliver':'drop',cr.id);return true;}
+  if(c.kind==='crate'){crateDo('pick',c.cr.id);return true;}
+  if(c.kind!=='tile')return false;
+  if(c.t===HATCH){const d=hatchDest(c.x,c.y);if(!d)return true;P.chan={t:0,dur:1.2,label:'Climbing',done:()=>{P.x=d[0];P.y=d[1];P.vz=elAt(d[0],d[1]);P.fallFrom=null;log(elAt(d[0],d[1])<-1?'You drop into the sewer. It stinks.':'You climb out.');}};return true;}
+  if(c.t===LOCKDOOR&&G.cls==='thief'){P.chan={t:0,dur:3*(G.S.pick||1),label:'Picking the lock',done:()=>{const d={k:'tile',x:c.x,y:c.y};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}};return true;}
+  return false;}
+function bankUse(t,d,C,say,nm){const w=G.w,cx=d.x+.5,cy=d.y+.5;
+  if(t===LOCKDOOR){if(C!=='thief'&&C!=='warrior')return;w.t[d.y][d.x]=FLOOR;w.cleared.push([d.x,d.y]);G.featDirty=true;
+    if(C==='warrior'){noise(cx,cy,16,1,1);say('You put your boot through the door. It bangs open.',`${nm} kicked a door in.`);}else say('The lock gives with a soft click.',`${nm} picked a lock.`,'good');}}
+/* crates: host decides; clients ask */
+function crateDo(op,id){if(G.mode==='client'){sendAct({t:'crate',op,id});return;}crateAct(op,id,{key:'me',name:'You',cls:G.cls});}
+function crateAct(op,id,actor){const w=G.w,c=w.crates&&w.crates[id];if(!c||c.del)return;
+  const pos=actor.key==='me'?G.P:(NET.remote.get(actor.key)||{}).p;if(!pos)return;
+  const say=(mine,theirs,cls)=>{if(actor.key==='me')log(mine,cls);else log(theirs,cls);if(G.mode==='host')netLog(theirs,cls);};
+  if(op==='pick'){if(c.c||w.crates.some(o=>o.c===actor.key&&!o.del)||Math.hypot(c.x-pos.x,c.y-pos.y)>1.8)return;c.c=actor.key;say(`You heave up a ${c.vault?'vault crate':'deposit crate'} (${c.v}g). Slow going. Get it to a getaway: the van in the alley or the cart down the street.`,`${actor.name} picked up a crate.`);}
+  else if(op==='drop'){if(c.c!==actor.key)return;c.c=null;c.x=pos.x;c.y=pos.y;}
+  else if(op==='deliver'){if(c.c!==actor.key||!nearEscape(pos.x,pos.y))return;c.c=null;c.del=true;w.crGold=(w.crGold||0)+c.v;G.looted=true;G.featDirty=true;
+    say(`Crate loaded: ${c.v} gold on the getaway. ${w.crates.filter(o=>o.del).length} of ${w.crates.length} out.`,`${actor.name} loaded a crate onto the getaway (+${c.v}g).`,'good');}
+  G.sideDirty=true;}
+function bankUpdate(dt){const w=G.w;if(!w||!w.crates||G.tavern)return;
+  if(G.mode!=='client'){for(const c of w.crates){if(!c.c||c.del)continue;if(c.c==='me'){if(G.down>0){c.c=null;}else{c.x=G.P.x;c.y=G.P.y;}continue;}
+      const rr=NET.remote.get(c.c);if(!rr||!rr.p||rr.p.dn){c.c=null;continue;}c.x=rr.p.x;c.y=rr.p.y;}}
+  else{const m=myCrate();if(m&&G.down>0&&!G.dropSent){G.dropSent=1;crateDo('drop',m.id);}if(G.down<=0)G.dropSent=0;}
+  if(!R3.crates&&R3.scene){R3.crateMat=R3.crateMat||new THREE.MeshLambertMaterial({color:0x6b5130});R3.crateBand=R3.crateBand||new THREE.MeshLambertMaterial({color:0x8a8a90});
+    R3.crates=w.crates.map(c=>{const g=new THREE.Group();g.add(new THREE.Mesh(new THREE.BoxGeometry(.75,.55,.55),R3.crateMat));for(const s of [-.25,.25]){const b=new THREE.Mesh(new THREE.BoxGeometry(.06,.57,.57),R3.crateBand);b.position.x=s;g.add(b);}R3.scene.add(g);return g;});}
+  if(R3.crates){const me=G.mode==='client'?NET.myPeer:'me';w.crates.forEach((c,i)=>{const g=R3.crates[i];if(!g)return;g.visible=!c.del&&c.c!==me;if(!g.visible)return;g.position.set(c.x*T,c.c?1.05:.28,c.y*T);g.rotation.y=i*.7;});}}
+function bankMesh(t,x,y,cx,cz,w){const Mt=R3.mat,wl=(a,b)=>w.t[b]&&w.t[b][a]===WALL,alongX=wl(x-1,y)||wl(x+1,y);
+  if(t===COVER){const s=addMesh(new THREE.BoxGeometry(1.5,1.1,1.4),R3.crateMat||(R3.crateMat=new THREE.MeshLambertMaterial({color:0x6b5130})),cx,.55,cz);s.rotation.y=(x*7+y)%3*.2;const s2=addMesh(new THREE.BoxGeometry(1.1,.8,1.1),Mt.woodDark,cx+.1,1.5,cz-.1);s2.rotation.y=.4;return true;}
+  if(t===COUNTER){addMesh(new THREE.BoxGeometry(T,1.05,T*.7),Mt.woodDark,cx,.52,cz);addMesh(new THREE.BoxGeometry(T*1.02,.07,T*.76),Mt.table||Mt.wood,cx,1.07,cz);return true;}
+  if(t===LOCKDOOR){addMesh(new THREE.BoxGeometry(alongX?T:.22,2.6,alongX?.22:T),Mt.wood,cx,1.3,cz);for(const hy of [.5,1.3,2.1])addMesh(new THREE.BoxGeometry(alongX?T*1.01:.26,.1,alongX?.26:T*1.01),Mt.iron,cx,hy,cz);return true;}
+  if(t===HATCH){const down=elAt(x+.5,y+.5)<-1;if(!down){const d=addMesh(new THREE.CylinderGeometry(.55,.55,.04,18),Mt.iron,cx,.02,cz);}else{for(const s of [-.25,.25])addMesh(new THREE.BoxGeometry(.05,3.1,.05),Mt.iron,cx+s,1.55,cz);for(let i=0;i<7;i++)addMesh(new THREE.BoxGeometry(.55,.04,.04),Mt.iron,cx,.3+i*.42,cz);}return true;}
+  if(t===ESCAPE){const body=addMesh(new THREE.BoxGeometry(1.8,1.0,1.2),new THREE.MeshLambertMaterial({color:0x4a3a2a}),cx,.9,cz);for(const [ox,oz] of [[-.6,-.62],[.6,-.62],[-.6,.62],[.6,.62]]){const wh=addMesh(new THREE.CylinderGeometry(.38,.38,.1,14),Mt.woodDark,cx+ox,.38,cz+oz);wh.rotation.x=Math.PI/2;}
+    const lamp=addMesh(new THREE.SphereGeometry(.09,8,6),new THREE.MeshBasicMaterial({color:0x7fcf8a}),cx,1.7,cz);lamp.userData.spin=1;return true;}
+  return false;}
+function bankObjLine(){const w=G.w;if(!w.crates)return null;const n=w.crates.filter(c=>c.del).length;const left=Object.keys(w.locks).filter(r=>!w.locks[r]);
+  return `<li class="o ${n?'done':''}"><span>${n?'✓':'○'}</span><span>${left.length?'Vault sealed: '+left.length+' lock'+(left.length>1?'s':'')+' left. ':''}Crates at the getaway: ${n} of ${w.crates.length} (${w.crGold||0}g)</span></li>`;}
+function jobPay(m){return G&&G.w&&G.w.crates?(G.w.crGold||0):m.payout;}
+
 /* ---------- interaction ---------- */
 function findFocus(){
+  {const bf=G.tavern?null:bankFocus();if(bf)return bf;}
   const P=G.P,w=G.w,C=G.cls,[fx,fy]=fwd(),fa=Math.atan2(fy,fx),cands=[];
   const px=Math.floor(P.x),py=Math.floor(P.y);
-  for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if((G.tavern?[RACK,STREET,TABLE,VENDOR,GAMBLER]:[DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT,PIT,LEDGE,GATE,GATEUP,PATIENT,MIASMA,SLAB,WINCH,IRONDOOR,RATS,...(C==='wizard'?[RUNE]:[])]).includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
+  for(let y=py-2;y<=py+2;y++)for(let x=px-2;x<=px+2;x++){if(x<0||y<0||x>=w.W||y>=w.H)continue;const t=w.t[y][x];if((G.tavern?[RACK,STREET,TABLE,VENDOR,GAMBLER]:[DOOR,BARR,WARD,LARDER,POOL,CHEST,EXIT,PIT,LEDGE,GATE,GATEUP,PATIENT,MIASMA,SLAB,WINCH,IRONDOOR,RATS,LOCKDOOR,HATCH,ESCAPE,...(C==='wizard'?[RUNE]:[])]).includes(t))cands.push({kind:'tile',t,x,y,cx:x+.5,cy:y+.5});}
   for(const tr of w.traps)if(C==='thief'&&tr.revealed&&!tr.disarmed)cands.push({kind:'trap',tr,cx:tr.x+.5,cy:tr.y+.5});
   if(!G.tavern)for(const l of w.loot||[])if(l&&!l.taken&&w.t[Math.floor(l.y)][Math.floor(l.x)]!==SLAB&&Math.hypot(l.x-P.x,l.y-P.y)<1.6&&losT(P.x,P.y,l.x,l.y))cands.push({kind:l.cf?'coffer':'loot',l,cx:l.x,cy:l.y});
   if(!G.tavern&&C==='thief')for(const e of w.enemies)if(canPick(e))cands.push({kind:'pocket',e,cx:e.x,cy:e.y});
   if(w.bell&&!w.bellCut&&!G.tavern)cands.push({kind:'bell',cx:w.bell.px,cy:w.bell.py});
+  if(!G.tavern&&w.crates)for(const cr of w.crates)if(!cr.del&&!cr.c&&Math.hypot(cr.x-P.x,cr.y-P.y)<1.5)cands.push({kind:'crate',cr,cx:cr.x,cy:cr.y});
   if(C==='thief'&&!G.tavern)for(const to of G.torches)if(!to.out)cands.push({kind:'torch',to,cx:to.wx,cy:to.wy});
   let best=null,bs=9;
-  for(const c of cands){const dx=c.cx-P.x,dy=c.cy-P.y,d=Math.hypot(dx,dy);
+  for(const c of cands){const dx=c.cx-P.x,dy=c.cy-P.y,d=Math.hypot(dx,dy);if(w.el&&Math.abs(elAt(c.cx,c.cy)-(P.fz||0))>1.5)continue;
     if(c.kind==='tile'&&c.t===EXIT){if(d<.8){best=c;bs=-1;}continue;}
     const reach=c.kind==='tile'?(G.tavern?1.5:1.2):c.kind==='torch'&&SK('wick')?2.2:1.1;if(d>reach)continue;const a=Math.abs(angDiff(Math.atan2(dy,dx),fa));if(a>.7&&d>.45)continue;if(a<bs){bs=a;best=c;}}
   if(!best)return null;best.label=focusLabel(best);return best;
@@ -2456,6 +2615,8 @@ function focusLabel(c){
   if(c.kind==='loot'){const it=lootItem(c.l),b=GB[it.b];const nm=`<span style="color:${itemColor(it)}">${esc(itemName(it))}</span>`;ensureChars();const room=findSpot(PROF.chars[C].bag,b.w,b.h,BAGW,BAGH);
     return room?{act:true,text:`<b>E</b> Take the ${nm} <span class="dim">${b.val?b.v+'g':RAR[it.r].n}</span>`}:{act:false,text:`${nm}. No room in your bag. Press I to make some.`};}
   if(c.kind==='bell')return G.alarm>=2?{act:false,text:'The alarm bell. Too late, it already rang.'}:{act:true,text:'<b>E</b> Cut the alarm bell rope'};
+  if(c.kind==='crate')return {act:true,text:`<b>E</b> Heave up the ${c.cr.vault?'vault crate':'deposit crate'} <span class="dim">${c.cr.v}g, heavy</span>`};
+  {const bl=bankLabel(c);if(bl)return bl;}
   {const ol=obsLabel(c);if(ol)return ol;}
   switch(c.t){
     case EXIT:return {act:true,text:G.looted?'<b>E</b> Leave with the strongbox':'<b>E</b> Leave and repost the job'};
@@ -2489,6 +2650,7 @@ function interact(){
   if(c.kind==='coffer'){cofferUse(c.l);return;}
   if(c.kind==='tile'&&c.t===PATIENT){const P=G.P;P.chan={t:0,dur:G.S.stab||4,label:'Stabilising the informant',hold:SK('steady')>1,done:()=>{const d={k:'tile',x:c.x,y:c.y};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}};return;}
   if(c.kind==='tile'&&c.t===MIASMA&&SK('purge')){const ts=[];for(let y=c.y-4;y<=c.y+4;y++)for(let x=c.x-4;x<=c.x+4;x++)if(G.w.t[y]&&G.w.t[y][x]===MIASMA&&Math.hypot(x-G.P.x+.5,y-G.P.y+.5)<4.5)ts.push([x,y]);for(const [x,y] of ts){const d={k:'tile',x,y,pg:SK('purge')};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}return;}
+  if(bankInteract(c))return;
   if(obsInteract(c))return;
   if(c.kind==='pocket'){pickPocket(c.e);return;}
   const d={k:c.kind,id:c.kind==='trap'?c.tr.id:c.kind==='torch'?c.to.id:c.kind==='loot'?c.l.id:undefined,x:c.x,y:c.y,rw:c.kind==='trap'?SK('rewire'):0,pz:SK('poisoner')>1?1:0,sd:G.cls==='doctor'?SK('sleepdraught'):0,pg:G.cls==='doctor'?SK('purge'):0};
@@ -2510,6 +2672,7 @@ function doUse(d,actor){
   const t=w.t[d.y]&&w.t[d.y][d.x];const cx=d.x+.5,cy=d.y+.5;
   switch(t){
     case SLAB:case WINCH:case RUNE:case RATS:obsUse(t,d,C,say,nm);return;
+    case LOCKDOOR:bankUse(t,d,C,say,nm);return;
     case DOOR:{if(!(C in w.locks)||w.locks[C])return;w.locks[C]=true;
       if(C==='thief')say('You ease the needles back and turn the tumblers. One lock down.',`${nm} picked the needle-trapped lock.`,'good');
       if(C==='warrior'){say('You wrench the crossbar out of its brackets. The clang echoes.',`${nm} wrenched out the iron crossbar.`,'good');noise(cx,cy,16,1,1);}
@@ -2545,17 +2708,17 @@ function leave(){
   const m=board.missions.find(x=>x.id===G.m.id)||G.m;
   m.state=snapshot(G.w);m.state.ro=(G.w.ropes||[]).slice();m.state.lo=G.w.loot.filter(l=>l&&l.taken&&!l.drop).map(l=>l.id);m.state.al=Math.max(0,(G.alarm||0)-1);if(G.w.bellCut)m.state.bc=1;
   const entry={by:'You',cls:G.cls,did:G.did.slice(),secs:Math.round(G.time)};
-  if(G.looted){entry.did.push('Carried out the strongbox');entry.outcome='complete';m.status='complete';}
+  if(G.looted){entry.did.push(G.w.bank?'Got crates onto the getaway':'Carried out the strongbox');entry.outcome='complete';m.status='complete';}
   m.history.push(entry);
   const crewH=[];
   if(G.mode==='host'){for(const rr of NET.remote.values()){if(!rr.p)continue;const h={by:peerName(rr),cls:rr.p.c,did:(G.credits[rr.peer]||[]).slice(),peer:rr.peer};crewH.push(h);m.history.push({by:h.by,cls:h.cls,did:h.did});}
-    NET.end={lt:G.looted?1:0,pay:m.payout,m:{seed:m.seed,biome:m.biome,roles:m.roles,cx:m.cx,sk:m.sk,type:m.type,mods:m.mods,crew:m.crew,title:m.title,payout:m.payout},s:G.looted?null:m.state,h:[{by:'The host',cls:G.cls,did:entry.did}].concat(crewH)};
+    NET.end={lt:G.looted?1:0,pay:jobPay(m),bank:G.w.bank?1:0,m:{seed:m.seed,biome:m.biome,roles:m.roles,cx:m.cx,sk:m.sk,open:m.open,type:m.type,mods:m.mods,crew:m.crew,title:m.title,payout:m.payout},s:G.looted?null:m.state,h:[{by:'The host',cls:G.cls,did:entry.did}].concat(crewH)};
     pushPresence(true);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G||G.over)leaveRoom();},90000);}
   saveBoard(board);
-  const crewN=1+(G.mode==='host'?[...NET.remote.values()].filter(r=>r.p).length:0);const hl=settle(true,G.looted?Math.round(m.payout/crewN):0);const hlP=hl?`<p class="note">${esc(hl)}</p>`:'';
+  const crewN=1+(G.mode==='host'?[...NET.remote.values()].filter(r=>r.p).length:0);const hl=settle(true,G.looted?Math.round(jobPay(m)/crewN):0);const hlP=hl?`<p class="note">${esc(hl)}</p>`:'';
   const st=roleStatus(m);const need=m.roles.filter(r=>!st[r]);
   const back=G.mode==='host'&&NET.room?{label:'Back to the back room',fn:()=>startTavern('host',G.cls)}:G.fromTav?{label:'Back to the tavern',fn:()=>startTavern('solo',G.cls)}:null;
-  if(G.looted)showModal('Payday',`<p>You walk out with the strongbox. The crew splits <b class="mono">${m.payout.toLocaleString()} gold</b>.</p><ul>${m.history.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls].name}: ${esc(h.did.join('; ')||'scouted')}</li>`).join('')}</ul>${hlP}`,back);
+  if(G.looted)showModal('Payday',`<p>${G.w.bank?`${G.w.crates.filter(c=>c.del).length} crate${G.w.crates.filter(c=>c.del).length>1?'s':''} made it onto the getaway. The crew splits`:'You walk out with the strongbox. The crew splits'} <b class="mono">${jobPay(m).toLocaleString()} gold</b>.</p><ul>${m.history.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls].name}: ${esc(h.did.join('; ')||'scouted')}</li>`).join('')}</ul>${hlP}`,back);
   else showModal('Reposted',`<p>${st[G.cls]?`Your part is done. The ${CLS[G.cls].name} is no longer needed on this job.`:`You left before finishing. The ${CLS[G.cls].name} role stays open.`}</p>
     <p>${need.length?'Still needed: <b>'+need.map(r=>CLS[r].name).join(', ')+'</b>. Take one of those on the board to walk into the world exactly as you left it.':'Every lock is open. Anyone can go in and carry out the strongbox.'}</p>
     ${G.did.length?`<ul>${G.did.map(d=>`<li>${esc(d)}</li>`).join('')}</ul>`:''}${hlP}`,back);
@@ -2585,7 +2748,7 @@ function renderSide(){
     h+=`<li class="grp" style="color:${CLS[r].color}"><span>${CLS[r].name}</span><span class="label">${mine?'you':'not your role'}</span></li>`;
     for(const o of G.objs[r]){const d=objDone(w,o.id);h+=`<li class="o ${d?'done':''} ${mine?'':'other'}"><span>${d?'✓':'○'}</span><span>${o.text}</span></li>`;}}
   const left=Object.keys(w.locks).filter(r=>!w.locks[r]);
-  h+=`<li class="grp" style="color:var(--lantern)"><span>Anyone</span></li><li class="o ${G.looted?'done':''}"><span>${G.looted?'✓':'○'}</span><span>${left.length?'Vault sealed: '+left.length+' lock'+(left.length>1?'s':'')+' left':G.looted?'Strongbox taken: get back to the stairs':'Vault open: take the strongbox and leave by the stairs'}</span></li>`;
+  h+=`<li class="grp" style="color:var(--lantern)"><span>Anyone</span></li>`;{const bl=bankObjLine();if(bl)h+=bl;else h+=`<li class="o ${G.looted?'done':''}"><span>${G.looted?'✓':'○'}</span><span>${left.length?'Vault sealed: '+left.length+' lock'+(left.length>1?'s':'')+' left':G.looted?'Strongbox taken: get back to the stairs':'Vault open: take the strongbox and leave by the stairs'}</span></li>`;}
   $('#objs').innerHTML=h;renderPack();
   $('#log').innerHTML=G.log.slice(0,14).map(l=>`<li class="${l.cls||''}">${esc(l.msg)}</li>`).join('');
   G.sideDirty=false;
@@ -2608,7 +2771,7 @@ function drawMini(){if(!G.tavern&&G.w.bell){}
   const cv=$('#mini'),c=cv.getContext('2d'),w=G.w,s=Math.min(cv.width/w.W,cv.height/w.H),B=BIOMES[w.biome],P=G.P;
   c.clearRect(0,0,cv.width,cv.height);
   for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++){if(!G.explored.has(y*w.W+x))continue;const t=w.t[y][x];if(t===WALL)continue;
-    c.fillStyle=t===PIT?'#050505':t===ROPE||t===LADDER?'#8a6a3a':t===LEDGE?'#77736a':t===GATE||t===GATEUP?'#6a6e75':t===DOOR?'#c9952f':t===EXIT?'#e7e2d6':t===BARR?'#a07a48':t===WARD?'#9a95f5':t===CHEST?'#f1c860':t===POOL?'#3a5bd8':t===LARDER?'#7d5d3a':t===MIASMA?'#6f8a3a':t===PATIENT?'#c9a94a':t===SLAB?'#8a8478':t===WINCH?'#b08a3a':t===IRONDOOR?'#4a5058':t===RATS?'#6a3a2a':t===RUNE&&G.runeVis?'#7fb0ff':B.floor;c.fillRect(x*s,y*s,s+.3,s+.3);}
+    c.fillStyle=t===PIT?'#050505':t===ROPE||t===LADDER?'#8a6a3a':t===LEDGE?'#77736a':t===GATE||t===GATEUP?'#6a6e75':t===DOOR?'#c9952f':t===EXIT?'#e7e2d6':t===BARR?'#a07a48':t===WARD?'#9a95f5':t===CHEST?'#f1c860':t===POOL?'#3a5bd8':t===LARDER?'#7d5d3a':t===MIASMA?'#6f8a3a':t===PATIENT?'#c9a94a':t===COVER?'#6b5130':t===LOCKDOOR?'#a0784a':t===ESCAPE?'#7fcf8a':t===HATCH?'#9a9a9a':t===COUNTER?'#4a3a2a':t===SLAB?'#8a8478':t===WINCH?'#b08a3a':t===IRONDOOR?'#4a5058':t===RATS?'#6a3a2a':t===RUNE&&G.runeVis?'#7fb0ff':B.floor;c.fillRect(x*s,y*s,s+.3,s+.3);}
   for(const l of w.loot||[]){if(!l||l.taken||!G.explored.has(Math.floor(l.y)*w.W+Math.floor(l.x)))continue;c.fillStyle=l.cf?'#b6b2ff':'#e7c27a';c.fillRect(l.x*s-1.5,l.y*s-1.5,3,3);}
   if(w.bell&&G.explored.has(w.bell.y*w.W+w.bell.x)){c.fillStyle=w.bellCut?'#6a5a3a':'#f1c860';c.beginPath();c.arc(w.bell.px*s,w.bell.py*s,Math.max(2,s*.4),0,7);c.fill();}
   for(const tr of w.traps)if(tr.revealed&&!tr.disarmed){c.fillStyle='#e0574a';c.fillRect(tr.x*s+s*.25,tr.y*s+s*.25,s*.5,s*.5);}
@@ -2625,7 +2788,7 @@ function init3D(){
   try{
     if(!window.THREE)throw new Error('three missing');
     R3.renderer=new THREE.WebGLRenderer({canvas:$('#view'),antialias:true});R3.renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
-    R3.scene=new THREE.Scene();R3.camera=new THREE.PerspectiveCamera(75,1.7,.05,80);R3.camera.rotation.order='YXZ';
+    R3.scene=new THREE.Scene();R3.camera=new THREE.PerspectiveCamera(75,1.7,.05,80);R3.camera.rotation.order='YXZ';R3.camera.userData.noEl=true;
     const box=(x,y,z)=>new THREE.BoxGeometry(x,y,z);
     R3.geo={wall:box(T,WALLH,T),door:box(T*.98,WALLH,T*.98),plank:box(T*1.05,.18,.18),post:box(.16,1.6,.16),ward:box(T*.98,WALLH,T*.98),
       barrel:new THREE.CylinderGeometry(.42,.46,1.05,16),pool:new THREE.CylinderGeometry(.82,.86,.12,28),rim:new THREE.TorusGeometry(.86,.09,8,28),
@@ -2658,7 +2821,7 @@ function build3D(){
   sc.background=new THREE.Color(0x020203);sc.fog=new THREE.Fog(0x020203,6,34);
   sc.add(new THREE.AmbientLight(0xb8c4ff,.09));
   R3.lights=[];for(let i=0;i<8;i++){const l=new THREE.PointLight(0xffa850,0,13,1.6);l.position.set(-100,-100,-100);sc.add(l);R3.lights.push(l);}
-  R3.plight=new THREE.PointLight(0xc8d0ff,.38,6,2);sc.add(R3.plight);
+  R3.plight=new THREE.PointLight(0xc8d0ff,.38,6,2);R3.plight.userData.noEl=true;sc.add(R3.plight);
   R3.wallTex=canvasTex(128,128,g=>{g.fillStyle=shade(B.wallTop,-.2);g.fillRect(0,0,128,128);
     for(let r=0;r<8;r++){const off=r%2?16:0;for(let c=-1;c<5;c++){g.fillStyle=shade(B.wallTop,(Math.sin(r*7.3+c*3.1)*.12)-.08);g.fillRect(c*32+off+1,r*16+1,30,14);}}
     for(let i=0;i<500;i++){g.fillStyle=`rgba(0,0,0,${Math.random()*.18})`;g.fillRect(Math.random()*128,Math.random()*128,2,2);}});
@@ -2670,7 +2833,8 @@ function build3D(){
       for(let i=0;i<8;i++){g.fillStyle=`rgba(255,255,255,${Math.random()*.05})`;g.fillRect(x*S+Math.random()*S,y*S+Math.random()*S,2,2);}}});
   floorTex.anisotropy=8;
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(w.W*T,w.H*T),new THREE.MeshLambertMaterial({map:floorTex}));floor.rotation.x=-Math.PI/2;floor.position.set(w.W*T/2,0,w.H*T/2);sc.add(floor);
-  const ceil=new THREE.Mesh(new THREE.PlaneGeometry(w.W*T,w.H*T),new THREE.MeshLambertMaterial({color:0x111216}));ceil.rotation.x=Math.PI/2;ceil.position.set(w.W*T/2,WALLH,w.H*T/2);sc.add(ceil);
+  if(w.el){floor.position.y=-.01+(()=>{let lo=0;for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++)if(w.t[y][x]!==WALL)lo=Math.min(lo,w.el[y][x]||0);return lo;})();R3.elLo=floor.position.y;}floor.userData.noEl=true;
+  const ceil=new THREE.Mesh(new THREE.PlaneGeometry(w.W*T,w.H*T),new THREE.MeshLambertMaterial({color:0x111216}));ceil.rotation.x=Math.PI/2;ceil.position.set(w.W*T/2,WALLH,w.H*T/2);ceil.userData.noEl=true;if(!w.el)sc.add(ceil);else{sc.background=new THREE.Color(w.sky||0x020203);sc.fog=new THREE.Fog(w.sky||0x020203,8,60);elevBuild();}
   R3.dyn=new THREE.Group();sc.add(R3.dyn);
   // torches
   R3.torchMeshes=G.torches.map(t=>{const g=new THREE.Group();const br=new THREE.Mesh(R3.geo.bracket,R3.mat.woodDark);br.position.y=1.75;const fl=new THREE.Mesh(R3.geo.flame,R3.mat.flame);fl.position.y=2.1;g.add(br,fl);g.position.set(t.wx*T,0,t.wy*T);g.userData.fl=fl;sc.add(g);return g;});
@@ -2770,7 +2934,8 @@ function rebuildWalls(){
   const w=G.w,sc=R3.scene;if(R3.walls)sc.remove(R3.walls);
   const cells=[];for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++){if(w.t[y][x]!==WALL)continue;let near=false;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<w.W&&ny<w.H&&w.t[ny][nx]!==WALL)near=true;}if(near)cells.push([x,y]);}
   const im=new THREE.InstancedMesh(R3.geo.wall,new THREE.MeshLambertMaterial({map:R3.wallTex}),cells.length);const M=new THREE.Matrix4();
-  cells.forEach(([x,y],i)=>{M.makeTranslation((x+.5)*T,WALLH/2,(y+.5)*T);im.setMatrixAt(i,M);});sc.add(im);R3.walls=im;
+  if(w.el){const Q=new THREE.Quaternion(),S=new THREE.Vector3(),V=new THREE.Vector3();cells.forEach(([x,y],i)=>{const [b,t]=elevWallSpan(x,y);M.compose(V.set((x+.5)*T,(b+t)/2,(y+.5)*T),Q,S.set(1,(t-b)/WALLH,1));im.setMatrixAt(i,M);});}
+  else cells.forEach(([x,y],i)=>{M.makeTranslation((x+.5)*T,WALLH/2,(y+.5)*T);im.setMatrixAt(i,M);});im.userData.noEl=true;sc.add(im);R3.walls=im;
 }
 function addMesh(geo,mat,x,y,z,ry){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(ry)m.rotation.y=ry;R3.dyn.add(m);return m;}
 function syncFeatures(){
@@ -2796,6 +2961,7 @@ function syncFeatures(){
     else if(t===GATE||t===GATEUP){const up=t===GATEUP?2.4:0;const o=crewAt(x,y);const alongX=o&&o.top[1]!==0;for(let i=-4;i<=4;i++){const b=addMesh(new THREE.BoxGeometry(.06,WALLH,.06),Mt.iron,cx+(alongX?i*T*.11:0),WALLH/2+up,cz+(alongX?0:i*T*.11));}
       for(const hy of [.5,1.6,2.7]){const b=addMesh(new THREE.BoxGeometry(alongX?T:.06,.06,alongX?.06:T),Mt.iron,cx,hy+up,cz);}}
     else if(obsMesh(t,x,y,cx,cz,w)){}
+    else if(bankMesh(t,x,y,cx,cz,w)){}
     else if(t===TABLE){addMesh(Gm.table,Mt.table,cx,.88,cz);addMesh(Gm.leg,Mt.table,cx,.41,cz);addMesh(Gm.die,Mt.bone,cx-.2,.99,cz);addMesh(Gm.die,Mt.bone,cx+.25,.99,cz+.2);}
   }
   for(const l of w.loot||[]){if(!l||l.taken||w.t[Math.floor(l.y)][Math.floor(l.x)]===SLAB)continue;const k=l.it.b,B=GB[k],cx=l.x*T,cz=l.y*T;
@@ -2825,7 +2991,7 @@ function frame(){
   if(G.hazDirty||(G.haz&&G.haz.length&&R3.hazG&&R3.hazG.parent!==R3.scene))syncHaz();
   const P=G.P,c=R3.camera;
   const bob=P.moving?Math.sin(P.bob)*.035:0;
-  c.position.set(P.x*T,P.eye+bob,P.y*T);c.rotation.y=P.yaw;c.rotation.x=P.pitch;
+  c.position.set(P.x*T,P.eye+bob+(P.vz||0),P.y*T);c.rotation.y=P.yaw;c.rotation.x=P.pitch;
   // weapon swing
   const sw=P.swing>0?1-P.swing/G.S.swing:0;const k=sw>0?Math.sin(sw*Math.PI):0;
   R3.bk=(R3.bk||0)+((P.blocking?1:0)-(R3.bk||0))*Math.min(1,dt*14);const bk=R3.bk;
@@ -2859,13 +3025,13 @@ function frame(){
   if(G.bursts)G.bursts=G.bursts.filter(b=>!b.done);
   // projectiles
   for(const p of G.proj){if(!p.mesh){if(p.kind==='arrow'){p.mesh=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.6),p.at==='water'?new THREE.MeshBasicMaterial({color:0x6aa8ff}):p.at==='rope'?new THREE.MeshLambertMaterial({color:0xc8b48a}):R3.mat.wood);}else p.mesh=new THREE.Mesh(p.kind==='fire'?R3.geo.fire:R3.geo.pebble,p.kind==='fire'?R3.mat.fire:R3.mat.pebble);R3.scene.add(p.mesh);}p.mesh.position.copy(p.pos);if(p.kind==='arrow')p.mesh.lookAt(p.pos.clone().add(p.vel));}
-  R3.renderer.render(R3.scene,c);
+  elevPass();R3.renderer.render(R3.scene,c);
   G.hudT-=dt;if(G.hudT<=0){G.hudT=.08;renderHUD();}
   G.miniT-=dt;if(G.miniT<=0){G.miniT=.2;drawMini();}
   if(G.sideDirty)renderSide();
 }
 
 renderBoard();renderStash();
-window.__NET=NET;window.__TL={placeLoot,jobRunStart,makeMission,runeTrip,obsUse,obsUpdate,winchAt,floodTiles,ratFire,findFocus,docAbility,docPower,docCenser,docEvac,docUpdate,applyHit,doUse,CR,openCreator,closeCreator,makeCharacter,RACES,BGS,buildAvatar,packLook,unpackLook,SKILLS,SKBYID,skLearn,skCan,skPoints,skSpent,usePower,applyThrow,cofferUse,cofferNeeds,pickPocket,canPick,updHaz,meleeDmg,get ITEMS(){return ITEMS;},INV,openInv,closeInv,calcStats,makeItem,bagAdd,moveItem,gamble,invAction,GB,LEGS,RAR,lootItem,dropGear,awardXP,get CELL(){return CELL;},moveAbility,cycleArrow,crewAt,get PROF(){return PROF;},useBelt,settle,renderStash,buildAvatar,startTavern,launchJob,setClass,tavernUse,openJobPicker,get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
+window.__NET=NET;window.__TL={myCrate,crateAct,crateDo,bankUpdate,hatchDest,generate,elAt,elW,elevPass,losT,blockedAt,pathTo,placeLoot,jobRunStart,makeMission,runeTrip,obsUse,obsUpdate,winchAt,floodTiles,ratFire,findFocus,docAbility,docPower,docCenser,docEvac,docUpdate,applyHit,doUse,CR,openCreator,closeCreator,makeCharacter,RACES,BGS,buildAvatar,packLook,unpackLook,SKILLS,SKBYID,skLearn,skCan,skPoints,skSpent,usePower,applyThrow,cofferUse,cofferNeeds,pickPocket,canPick,updHaz,meleeDmg,get ITEMS(){return ITEMS;},INV,openInv,closeInv,calcStats,makeItem,bagAdd,moveItem,gamble,invAction,GB,LEGS,RAR,lootItem,dropGear,awardXP,get CELL(){return CELL;},moveAbility,cycleArrow,crewAt,get PROF(){return PROF;},useBelt,settle,renderStash,buildAvatar,startTavern,launchJob,setClass,tavernUse,openJobPicker,get G(){return G;},get board(){return board;},generate,makeMission,startRun,roleStatus,snapshot,applyState,update,interact,attack,useAbility,leave,setPause,findFocus};
 </script>
 </body></html>

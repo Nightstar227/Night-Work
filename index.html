@@ -765,8 +765,8 @@ function alertBox(t){$('#joinMsg').textContent=t;}
 function mkCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ';let s='';for(let i=0;i<4;i++)s+=A[Math.floor(Math.random()*A.length)];return s;}
 async function joinRoom(code,host){const r=await NET.lobby.join(code.toLowerCase(),{host:!!host});NET.room=r;NET.code=code;NET.remote=new Map();NET.hostPeer=null;NET.end=null;NET.lastHit=0;NET.lastLog=0;NET.acts=[];NET.hitsOut=[];NET.logsOut=[];
   r.onPeers(ch=>{for(const p of ch.left){const rr=NET.remote.get(p.peer);if(rr&&rr.mesh&&R3.scene)R3.scene.remove(rr.mesh);NET.remote.delete(p.peer);if(G&&G.mode==='client'&&p.peer===NET.hostPeer&&!G.over)hostGone();else if(G&&rr)log(`${peerName(rr)} left the job.`);}
-    for(const p of ch.peers){if(p.sameTab)continue;let rr=NET.remote.get(p.peer);if(!rr){rr={peer:p.peer,by:p.by,acts:{},stepT:.5,lastSw:0};NET.remote.set(p.peer,rr);nameFor(p.by).then(n=>{rr.name=n;G&&(G.sideDirty=true);});}
-      rr.pres=p.presence;rr.p=p.presence.p||null;if(p.presence.h||p.presence.th)NET.hostPeer=p.peer;}
+    for(const p of ch.peers){if(p.sameTab)continue;let rr=NET.remote.get(p.peer);if(!rr){rr=mpRemote({peer:p.peer,by:p.by,acts:{},stepT:.5,lastSw:0});NET.remote.set(p.peer,rr);nameFor(p.by).then(n=>{rr.name=n;G&&(G.sideDirty=true);});}
+      mpRemote(rr);rr.pres=p.presence;rr.pl=p.presence.tv?'tv':'run';rr.p=p.presence.p||null;if(p.presence.h||p.presence.th)NET.hostPeer=p.peer;}
     if(G)G.sideDirty=true;onRemote();});
   return r;}
 function leaveRoom(){if(NET.room){try{NET.room.leave();}catch(e){}}NET.room=null;NET.code=null;for(const rr of NET.remote.values())if(rr.mesh&&R3.scene)R3.scene.remove(rr.mesh);NET.remote=new Map();NET.hostPeer=null;}
@@ -776,13 +776,13 @@ function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.
 const SCODE={patrol:0,idle:1,sentry:2,suspicious:3,search:4,return:5,alert:6};const SNAME=Object.keys(SCODE);
 function packWorld(){const w=G.w;const bits=(a,f)=>a.map(x=>f(x)?1:0).join('');
   return {g:w.enemies.map(e=>[Math.round(e.x*100),Math.round(e.y*100),Math.round(e.ang*100),SCODE[e.state]??0,Math.max(0,Math.round(e.hp)),(e.dead?1:0)|(e.sick?2:0)|(e.atk>0?4:0)|(G.time-(e.hitT||-9)<.25?8:0)|(e.walking?16:0)|(e.stag>0?32:0),e.atk>0?Math.round((1-e.atk/(e.atkMax||.85))*9):0]),
-    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,st:w.stab?1:0,bx:w.crates?w.crates.map(c=>[Math.round(c.x*20),Math.round(c.y*20),c.c?(c.c==='me'?(NET.myPeer||'h'):c.c):0,c.del?1:0]):null,cg:w.crGold||0,zx:zxPack(),cr:(w.crew||[]).map(o=>w.t[o.y][o.x]),ep:(G.eproj||[]).map(p=>[Math.round(p.x*100),Math.round(p.y*100)]),lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id),dr:(w.loot||[]).filter(l=>l.drop).map(l=>[l.id,Math.round(l.x*100),Math.round(l.y*100),l.it.b,l.it.r,l.it.s])};}
+    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,st:w.stab?1:0,bx:w.crates?w.crates.map(c=>[Math.round(c.x*20),Math.round(c.y*20),c.c?(c.c==='me'?(NET.myPeer||'h'):c.c):0,c.del?1:0]):null,cg:w.crGold||0,zx:zxPack(),cr:(w.crew||[]).map(o=>w.t[o.y][o.x]),ep:(G.eproj||[]).map(p=>[Math.round(p.x*100),Math.round(p.y*100),Math.round((p.z||1.3)*100)]),lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id),dr:(w.loot||[]).filter(l=>l.drop).map(l=>[l.id,Math.round(l.x*100),Math.round(l.y*100),l.it.b,l.it.r,l.it.s])};}
 function applyWorld(W){const w=G.w;if(!W||!W.g)return;if(W.zx)zxApply(W.zx);
   if(W.bx&&w.crates){W.bx.forEach((v,i)=>{const c=w.crates[i];if(!c)return;c.x=v[0]/20;c.y=v[1]/20;c.c=v[2]||null;if(v[3]&&!c.del){c.del=true;G.looted=true;}});w.crGold=W.cg||0;}
   if(W.dr&&w.loot)for(const [id,x,y,b,r,sd] of W.dr){if(w.loot[id]||!GB[b])continue;w.loot[id]={id,x:x/100,y:y/100,it:{b,r,s:sd},taken:false,drop:true};G.featDirty=true;}
   if(W.lo&&w.loot){let ch=false;w.loot.forEach((l,i)=>{const t=W.lo[i]==='1';if(l&&t&&!l.taken){l.taken=true;ch=true;}});if(ch)G.featDirty=true;}
   if(W.cr&&w.crew)w.crew.forEach((o,i)=>{const t=W.cr[i];if(t!=null&&w.t[o.y][o.x]!==t){w.t[o.y][o.x]=t;G.featDirty=true;}});
-  G.eprojV=(W.ep||[]).map(q=>({x:q[0]/100,y:q[1]/100}));
+  G.eprojV=(W.ep||[]).map(q=>({x:q[0]/100,y:q[1]/100,z:q[2]!=null?q[2]/100:null}));
   if(W.al!=null&&W.al!==G.alarm){G.alarm=W.al;G.sideDirty=true;}if(W.bc&&!w.bellCut){w.bellCut=true;G.featDirty=true;}
   (W.rf||[]).forEach((r,i)=>{const id=G.baseN+i;if(w.enemies[id])return;w.enemies.push({id,x:r[0]/100,y:r[1]/100,hp:40,max:40,dmg:20,face:[0,1],base:'patrol',state:'alert',reinf:true,ang:0,aw:1,atk:0,cool:0,walkPh:0,seat:[0,0],homeAng:0});G.foesDirty=true;});
   for(const o of w.enemies)o.runner=(W.rn||[]).includes(o.id);
@@ -795,8 +795,8 @@ function applyWorld(W){const w=G.w;if(!W||!W.g)return;if(W.zx)zxApply(W.zx);
   if(W.lt){for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++)if(w.t[y][x]===CHEST)w.t[y][x]=FLOOR;}
   if(Object.values(w.locks).every(Boolean)&&w.t[w.door[1]][w.door[0]]===DOOR){w.t[w.door[1]][w.door[0]]=OPEN;walls=true;}
   G.featDirty=true;G.lightT=0;if(walls&&R3.ok)rebuildWalls();G.sideDirty=true;}
-function pushPresence(force){if(!NET.room||!G)return;const o={p:packMe(),a:NET.acts};
-  if(G.tavern){o.a=null;o.tv=1;if(G.mode==='host'){o.th=1;o.job=jobSummary(G.job);Object.assign(o,{h:null,m:null,w:null,hits:null,lg:null,end:null,lid:null});}
+function pushPresence(force){if(NET.bgOn)return;if(!NET.room||!G)return;const o={p:packMe(),a:NET.acts};
+  if(G.tavern){o.a=null;o.tv=1;if(G.mode==='host'){o.th=1;o.job=jobSummary(G.job);Object.assign(o,{h:null,m:null,w:null,hits:null,lg:null,end:null,lid:null});if(NET.run)Object.assign(o,mpRunFields());else if(NET.bgEnd)Object.assign(o,{end:NET.bgEnd,lid:NET.bgEndLid});}o.go=NET.goN||0;
     NET.room.presence(o).catch(()=>{});return;}
   o.tv=null;if(G.mode==='host'){o.th=null;o.job=null;o.lid=NET.lid||null;o.h=1;o.m={id:G.m.id,seed:G.m.seed,biome:G.m.biome,roles:G.m.roles,cx:G.m.cx,sk:G.m.sk,open:G.m.open,type:G.m.type,mods:G.m.mods,crew:G.m.crew,title:G.m.title,payout:G.m.payout};o.w=NET.end?null:packWorld();o.hits=NET.hitsOut;o.lg=NET.logsOut;o.end=NET.end;}
   NET.room.presence(o).catch(err=>{if(o.end&&o.end.s){NET.end=Object.assign({},NET.end,{s:null});}});}
@@ -821,8 +821,8 @@ function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peer
   if(a.t==='hit'){const e=w.enemies[a.id];if(!e||e.dead)return;G.lastActor=actor.key;actor.rr=rr;
     const fx={};if(Array.isArray(a.fx))for(const k of a.fx)if(LEGS[k])fx[k]=1;
     applyHit(e,actor.cls,(a.k==='cleave'||a.k==='charge')&&actor.cls==='warrior'?a.k:a.k==='arrow'&&actor.cls==='thief'?'arrow':'melee',{ua:!!a.ua,actor,bs:!!a.bs,venom:!!a.venom&&actor.cls==='thief',src:[rr.p.x,rr.p.y],bj:+a.bj||0,hid:Math.min(2,+a.hid||0),ram:!!a.ram,kd:!!a.kd,boot:+a.boot||0,stag:!!a.stag,dm:Math.min(150,Math.max(0,+a.dm||0)),stg:Math.min(1.5,Math.max(0,+a.stg||0)),pw:Math.min(2.5,Math.max(.5,+a.pw||1)),bsx:!!a.bsx,fx,mk:actor.cls==='doctor'?Math.min(2,+a.mk||0):0,amp:actor.cls==='doctor'?Math.min(2,+a.amp||0):0});}
-  else if(a.t==='pot'){G.lastActor=actor.key;actor.rr=rr;burstAt(a.x,a.y,'pot',actor);}
-  else if(a.t==='burst'&&actor.cls==='wizard'){G.lastActor=actor.key;actor.rr=rr;burstAt(a.x,a.y,'wizard',actor,Math.min(3,Math.max(1,+a.sp||1)),a.em?2:1.35,a.fs&&typeof a.fs==='object'?{wf:+a.fs.wf?1:0,sp:Math.min(2,+a.fs.sp||0),spo:Math.min(2,+a.fs.spo||0),wild:Math.min(2,+a.fs.wild||0),hol:+a.fs.hol?1:0}:null);}
+  else if(a.t==='pot'){G.lastActor=actor.key;actor.rr=rr;burstAt(a.x,a.y,'pot',actor,undefined,undefined,undefined,+a.z);}
+  else if(a.t==='burst'&&actor.cls==='wizard'){G.lastActor=actor.key;actor.rr=rr;burstAt(a.x,a.y,'wizard',actor,Math.min(3,Math.max(1,+a.sp||1)),a.em?2:1.35,a.fs&&typeof a.fs==='object'?{wf:+a.fs.wf?1:0,sp:Math.min(2,+a.fs.sp||0),spo:Math.min(2,+a.fs.spo||0),wild:Math.min(2,+a.fs.wild||0),hol:+a.fs.hol?1:0}:null,+a.z);}
   else if(a.t==='noise')noise(a.x,a.y,Math.min(10,a.r),Math.min(.5,a.a),Math.min(.6,a.c));
   else if(a.t==='trap'){const tr=w.traps[a.id];if(tr&&!tr.disarmed){tr.disarmed=true;tr.revealed=true;G.featDirty=true;noise(tr.x+.5,tr.y+.5,12,.6,.9);netLog(`${actor.name} set off a dart trap.`,'bad');}}
   else if(a.t==='rev'){const tr=w.traps[a.id];if(tr&&!tr.revealed){tr.revealed=true;G.featDirty=true;}}
@@ -847,10 +847,11 @@ function hostEnded(end){G.over=true;const hl=settle(true,end.lt?Math.round((end.
     ${can&&!end.lt?'<p><button class="btn" id="addJob">Add this job to my board</button></p>':''}${hl?`<p class="note">${esc(hl)}</p>`:''}`,{label:'Back to the back room',fn:()=>{if(NET.room&&NET.remote.get(NET.hostPeer))startTavern('client',G&&G.cls);else{G=null;toBoard();}}});
   const ab=$('#addJob');if(ab)ab.onclick=()=>{const m=Object.assign({},end.m,{id:'m'+end.m.seed.toString(36)+'-'+Date.now().toString(36),state:end.s,history:(end.h||[]).map(h=>Object.assign({},h,{by:h.peer===NET.myPeer?'You':h.by})),status:'open'});board.missions.unshift(m);saveBoard(board);ab.textContent='Added';ab.disabled=true;};
 }
-function renderCrew(){const panel=$('#crewPanel');if(!G||!G.mp){panel.hidden=true;$('#roomBadge').hidden=true;return;}panel.hidden=false;
+function renderCrew(){if(NET.bgOn)return;const panel=$('#crewPanel');if(!G||!G.mp){panel.hidden=true;$('#roomBadge').hidden=true;return;}panel.hidden=false;
   const rb=$('#roomBadge');rb.hidden=false;rb.textContent='Room '+NET.code;$('#crewLabel').textContent=`Crew · room ${NET.code}`;
   const rows=[`<li><span><span class="dot" style="background:${CLS[G.cls].color}"></span>You (${CLS[G.cls].name}${G.mode==='host'?', host':''})</span><span class="mono">${Math.max(0,Math.round(G.P.hp))}</span></li>`];
   for(const rr of NET.remote.values()){if(!rr.p)continue;rows.push(`<li><span><span class="dot" style="background:${CLS[rr.p.c]?CLS[rr.p.c].color:'#888'}"></span>${esc(peerName(rr))} (${CLS[rr.p.c]?CLS[rr.p.c].name:'?'}${rr.pres&&rr.pres.h?', host':''})</span><span class="mono">${rr.p.dn?'down':rr.p.hp}</span></li>`);}
+  for(const rr of NET.remote.values()){if(rr.p||!rr.pRaw)continue;rows.push(`<li class="note"><span>${esc(peerName(rr))} (${CLS[rr.pRaw.c]?CLS[rr.pRaw.c].name:'?'})</span><span>${rr.pl==='tv'?'in the back room':'on the job'}</span></li>`);}
   if(rows.length<2)rows.push(`<li class="note">Waiting for friends. They join with code <b class="mono">${NET.code}</b>.</li>`);
   $('#crew').innerHTML=rows.join('');}
 $('#roomBadge').addEventListener('click',()=>{try{navigator.clipboard.writeText(NET.code).then(()=>toast('Room code copied.'),()=>{});}catch(e){}});
@@ -883,7 +884,7 @@ function nameOf(e){if(e.civName)return 'The '+e.civName;if(e.captain&&G.w&&G.w.b
 function lc(s){return s.replace(/^The /,'the ');}
 function cap(s){return s[0].toUpperCase()+s.slice(1);}
 function log(msg,cls){G.log.unshift({msg,cls});if(G.log.length>40)G.log.pop();toast(msg,cls);G.sideDirty=true;}
-function toast(msg,cls){const box=$('#toasts');const d=document.createElement('div');d.textContent=msg;if(cls)d.className=cls;box.prepend(d);while(box.children.length>4)box.lastChild.remove();setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),700);},4200);}
+function toast(msg,cls){if(NET.bgOn)return;const box=$('#toasts');const d=document.createElement('div');d.textContent=msg;if(cls)d.className=cls;box.prepend(d);while(box.children.length>4)box.lastChild.remove();setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),700);},4200);}
 
 function placeTorches(w,seed){
   const R=mulberry(seed^0x5bd1e995),out=[];
@@ -926,9 +927,9 @@ function startTavern(mode,cls){
   if(mode==='solo'){log('You take a seat in the back room. The vendor and the gambler are at their counters. Pick a job at the table and walk out the door.');
     setPause(true,'The back room','The vendor on the left sells honest kit. The gambler on the right sells covered items. Press I for your gear and bag. Pick a job at the table, then walk out the door at the top.');}
   else if(mode==='host'){log('You take the back room. Pick a job at the table, gear up at the racks, then lead the crew out the door.');
-    setPause(true,'The back room',`Room code ${NET.code}. Send friends this page's address and the code; they choose Join a friend. Pick the job at the planning table, gear up at the racks along the back wall, and walk out the door when the crew is ready.`);}
+    setPause(true,'The back room',`Room code ${NET.code}. Send friends this page's address and the code; they choose Join a friend. Pick the job at the planning table and gear up at the racks along the back wall. Anyone can walk out the door to start the job, and everyone comes and goes as they like.`);}
   else{G.hostJob=host&&host.pres&&host.pres.job||null;log(`You slip down into ${peerName(host)}'s back room. Gear up at the racks while the host picks the job.`);
-    setPause(true,'The back room',`You're in ${peerName(host)}'s crew. Pick your class at the racks along the back wall. The job starts when the host leads everyone out the door.`);}
+    setPause(true,'The back room',`You're in ${peerName(host)}'s crew. Pick your class at the racks along the back wall. Once the host has picked a job, walk out the door whenever you're ready; you can slip back here and return any time.`);}
   build3D();resize3D();renderSide();renderCrew();pushPresence(true);window.scrollTo(0,0);
 }
 function tavernBadge(){const b=$('#gClass');b.textContent=CLS[G.cls].name;b.style.color=CLS[G.cls].color;$('#abl').innerHTML=KIT[G.cls].lines.map(l=>`<li>${l}</li>`).join('');}
@@ -940,41 +941,44 @@ function tavernLabel(c){const w=G.w;
   if(c.t===RACK){const r=w.racks[c.x+','+c.y];return r===G.cls?{act:false,text:`The ${CLS[r].name}'s rack. You're already kitted out.`}:{act:true,text:`<b>E</b> Gear up as the ${CLS[r].name}`};}
   if(c.t===TABLE){if(G.mode!=='client')return {act:true,text:G.job?`<b>E</b> Change the job (now: ${esc(G.job.title)})`:'<b>E</b> Pick a job from your board'};
     return {act:false,text:G.hostJob?`The plan: ${esc(G.hostJob.title)}`:'The host spreads the job out here.'};}
+  if(c.t===STREET&&G.mode!=='solo')return mpDoorLabel();
   if(c.t===STREET){if(G.mode!=='host')return {act:false,text:'The host leads the crew out through here.'};
     if(!G.job)return {act:false,text:'Pick a job at the planning table first.'};const [n,tot]=crewAtDoor();
     return {act:true,text:`<b>E</b> Lead the crew out to ${esc(G.job.title)} (${n} of ${tot} at the door)`};}
   return {act:false,text:''};}
 function tavernUse(c){if(c.t===VENDOR){openInv('tavern','vendor');return;}if(c.t===GAMBLER){openInv('tavern','gambler');return;}if(c.t===RACK){setClass(G.w.racks[c.x+','+c.y]);return;}
   if(c.t===TABLE&&G.mode!=='client'){openJobPicker();return;}
+  if(c.t===STREET&&G.mode!=='solo'){mpDoorUse();return;}
   if(c.t===STREET&&G.mode!=='client'&&G.job)launchJob();}
 function openJobPicker(){if(document.pointerLockElement)document.exitPointerLock();
   const list=board.missions.filter(m=>m.status!=='complete');
   $('#modalBox').innerHTML=`<h2>Pick the job</h2><p>Contracts from your board. The crew sees your pick on the table.</p>
     ${list.length?`<div class="jobpick">${list.map(m=>{const s=jobSummary(m);return `<button class="btn" data-job="${m.id}"><b>${esc(m.title)}</b><span class="note">${BIOMES[m.biome].name} · ${skullTxt(m)} ${modTags(m)} · ${s.need.length?'needs '+s.need.map(r=>CLS[r].name).join(', '):'vault open'} · <span class="mono">${m.payout.toLocaleString()} gold</span></span></button>`;}).join('')}</div>`:'<p class="note">Your board has no open contracts. Leave the tavern and post a new one.</p>'}
-    <div><button class="linkbtn" id="jpCancel">Cancel</button></div>`;
+    <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center"><button class="btn sm" id="jpReroll">Re-roll new contracts</button><button class="linkbtn" id="jpCancel">Cancel</button><span class="note">Contracts with crew progress on them stay.</span></div>`;
   $('#modal').hidden=false;
-  $('#modalBox').querySelectorAll('[data-job]').forEach(b=>b.onclick=()=>{$('#modal').hidden=true;G.job=board.missions.find(m=>m.id===b.dataset.job);
+  $('#modalBox').querySelectorAll('[data-job]').forEach(b=>b.onclick=()=>{$('#modal').hidden=true;if(NET.run&&NET.run.m.id!==b.dataset.job)mpEndBg(false);G.job=board.missions.find(m=>m.id===b.dataset.job);
     log(`You spread the plans for ${G.job.title} across the table.`,'good');G.featDirty=true;G.sideDirty=true;pushPresence(true);
     setPause(true,'Job picked',`${G.job.title}. When the crew is geared up, walk to the door at the top of the room and lead them out.`);});
+  $('#jpReroll').onclick=()=>{const n=rerollBoard();toast(`${n} fresh contract${n===1?'':'s'} on the board.`);openJobPicker();};
   $('#jpCancel').onclick=()=>{$('#modal').hidden=true;setPause(true,'The back room','Pick a job at the planning table, then lead the crew out the door.');};}
-function launchJob(){const m=G.job,cls=G.cls,locked=!!document.pointerLockElement;NET.lid=Date.now();NET.end=null;
+function launchJob(){if(NET.run){if(G.job&&NET.run.m.id===G.job.id){mpReenter();return;}mpEndBg(false);}const m=G.job,cls=G.cls,locked=!!document.pointerLockElement;NET.lid=Date.now();NET.end=null;
   startRun(m,cls,G.mode==='solo'?{fromTav:true}:{mode:'host'});log('You lead the crew up the stairs and out into the night.');if(locked)setPause(false);}
 function tavernRemote(){
-  if(G.mode==='host'){for(const rr of NET.remote.values()){for(const a of (rr.pres&&rr.pres.a)||[])rr.lastAct=Math.max(rr.lastAct||0,a.n);}return;}
+  if(G.mode==='host'){mpTavern();return;}
   const host=NET.remote.get(NET.hostPeer);if(!host||!host.pres)return;const hp=host.pres;
   const js=JSON.stringify(hp.job||null);if(js!==G.jobSig){G.jobSig=js;const had=G.hostJob;G.hostJob=hp.job||null;G.sideDirty=true;G.featDirty=true;if(G.hostJob&&(!had||had.title!==G.hostJob.title)&&G.time>.5)log(`${peerName(host)} picked the job: ${G.hostJob.title}.`,'good');}
-  if(hp.h&&hp.m&&hp.w&&!hp.end&&hp.lid!==NET.doneLid){const locked=!!document.pointerLockElement;const m=Object.assign({},hp.m,{state:null,history:[],status:'open'});
-    startRun(m,G.cls,{mode:'client'});log(`${peerName(host)} leads the crew out into the night.`);if(locked)setPause(false);}}
+  mpTavern();}
 function renderTavernSide(){const j=G.mode!=='client'?jobSummary(G.job):G.hostJob;let h='';
   if(j){h+=`<li class="grp" style="color:var(--lantern)"><span>${esc(j.title)}</span><span class="label">${BIOMES[j.biome]?BIOMES[j.biome].name:''}</span></li>`;
     for(const r of ROLES){if(!j.roles.includes(r))continue;const need=j.need.includes(r);h+=`<li class="o ${need?'':'done'}"><span style="color:${CLS[r].color}">${need?'○':'✓'}</span><span>${CLS[r].name}: ${need?'needed':'already done by an earlier crew'}</span></li>`;}
     h+=`<li class="o"><span>·</span><span class="mono">${(j.payout||0).toLocaleString()} gold</span></li>`;
     if(!j.roles.includes(G.cls))h+=`<li class="o other"><span>!</span><span>This job has no ${CLS[G.cls].name} part. You can still come along.</span></li>`;}
   else h+=`<li class="o other"><span>○</span><span>${G.mode!=='client'?'No job yet. Pick one at the planning table.':'Waiting for the host to pick a job.'}</span></li>`;
-  h+=`<li class="grp" style="color:var(--lantern)"><span>Before you go</span></li><li class="o"><span>·</span><span>Swap class at the racks on the back wall. Press I for your gear.</span></li><li class="o"><span>·</span><span>The vendor (left) and the gambler (right) sell gear.</span></li><li class="o"><span>·</span><span>${G.mode!=='client'?'Walk out the door at the top of the room to launch.':'The host walks out the door to launch.'}</span></li>`;
+  h+=`<li class="grp" style="color:var(--lantern)"><span>Before you go</span></li><li class="o"><span>·</span><span>Swap class at the racks on the back wall. Press I for your gear.</span></li><li class="o"><span>·</span><span>The vendor (left) and the gambler (right) sell gear.</span></li><li class="o"><span>·</span><span>${G.mode!=='client'?'Walk out the door at the top of the room to launch. The crew can follow whenever they like.':'Walk out the door when you are ready. You can come back here and go out again any time.'}</span></li>`;
   $('#objs').innerHTML=h;$('#log').innerHTML=G.log.slice(0,14).map(l=>`<li class="${l.cls||''}">${esc(l.msg)}</li>`).join('');G.sideDirty=false;}
-function labelSprite(text,color,w){const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');x.font='600 44px Alegreya Sans, Georgia, sans-serif';x.textAlign='center';x.lineWidth=7;x.strokeStyle='#000';x.strokeText(text,256,62);x.fillStyle=color;x.fillText(text,256,62);
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));sp.scale.set(w||2.4,(w||2.4)*96/512,1);R3.dyn.add(sp);return sp;}
+/*LABELFIT*/function fitLabel(c,text,color,px){const x=c.getContext('2d');const f=`600 ${px}px Alegreya Sans, Georgia, sans-serif`;x.font=f;const tw=Math.ceil(x.measureText(text).width);c.width=tw+px;c.height=Math.round(px*1.5);x.font=f;x.textAlign='center';x.textBaseline='middle';x.lineWidth=Math.max(4,px/6);x.lineJoin='round';x.strokeStyle='#000';x.strokeText(text,c.width/2,c.height/2+1);x.fillStyle=color;x.fillText(text,c.width/2,c.height/2+1);return c.width/c.height;}
+function labelSprite(text,color,w){const c=document.createElement('canvas');const ar=fitLabel(c,text,color,48);const H=.36;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));sp.scale.set(H*ar,H,1);R3.dyn.add(sp);return sp;}
 function syncTavern(){const w=G.w,Gm=R3.geo,Mt=R3.mat;const L=c=>new THREE.MeshLambertMaterial({color:c});
   for(let y=0;y<w.H;y++)for(let x=0;x<w.W;x++){const t=w.t[y][x],cx=(x+.5)*T,cz=(y+.5)*T;
     if(t===PROP){addMesh(Gm.barrel,Mt.barrel,cx-.3,.52,cz-.25);const b=addMesh(Gm.barrel,Mt.barrel,cx+.35,.52,cz+.3);addMesh(Gm.barrel,Mt.barrel,cx,1.55,cz).rotation.z=Math.PI/2;}
@@ -1031,8 +1035,8 @@ function spawnWave(){const w=G.w,[sx,sy]=w.start,B=BIOMES[w.biome];const pl=play
     w.enemies.push({id:w.enemies.length,x,y,hp:40,max:40,dmg:20,face:[0,1],base:'patrol',state:'alert',home:w.cells.findIndex(c=>c.role==='entrance'),group:null,reinf:true,seat:[x,y],homeAng:0,
       ang:0,aw:1,atk:0,cool:.5,path:null,repath:0,timer:0,unseen:0,look:0,walkPh:Math.random()*6,last:[p.x,p.y],tgt:p.key});}
   G.foesDirty=true;const t=G.waves===1?`${n} of the watch storm in by the stairs.`:`More of the watch pour in by the stairs (${G.waves} of 3).`;log(t,'bad');if(G.mode==='host')netLog(t,'bad');}
-function updEProj(dt){if(!G.eproj)return;for(const p of G.eproj){p.t+=dt;const nx=p.x+p.vx*dt,ny=p.y+p.vy*dt;if(opaqueT(tileAt(nx,ny))||p.t>2.5){p.dead=true;continue;}p.x=nx;p.y=ny;
-    for(const pl of players()){if(Math.hypot(pl.x-p.x,pl.y-p.y)>.32)continue;p.dead=true;const sh=G.w.enemies[p.id];const src={x:p.x-p.vx*.2,y:p.y-p.vy*.2,proj:1};
+function updEProj(dt){if(!G.eproj)return;for(const p of G.eproj){p.t+=dt;const nx=p.x+p.vx*dt,ny=p.y+p.vy*dt;if(p.z==null){p.z=elAt(p.x,p.y)+1.3;p.vz=0;}const nz=p.z+(p.vz||0)*dt;if(opaqueT(tileAt(nx,ny))||nz<elAt(nx,ny)+.05||nz>ceilAt(nx,ny)||p.t>2.5){p.dead=true;continue;}p.x=nx;p.y=ny;p.z=nz;
+    for(const pl of players()){if(Math.hypot(pl.x-p.x,pl.y-p.y)>.32)continue;const pz=pl.key==='me'?(G.P.vz||0):elAt(pl.x,pl.y);if(Math.abs(p.z-(pz+1))>1)continue;p.dead=true;const sh=G.w.enemies[p.id];const src={x:p.x-p.vx*.2,y:p.y-p.vy*.2,proj:1};
       if(pl.key==='me')hurt(p.dmg,`${p.name}'s shot hits you.`,src);else{NET.hitsOut.push({n:++NET.hitSeq,to:pl.key,d:p.dmg,m:p.name+"'s shot",id:p.id,pj:1});if(NET.hitsOut.length>8)NET.hitsOut.shift();}break;}}
   G.eproj=G.eproj.filter(p=>!p.dead);}
 function updAlarm(dt){if(G.mode==='client'||G.tavern)return;const w=G.w;G.alarmT+=dt;
@@ -2178,7 +2182,8 @@ view.addEventListener('touchend',ev=>{for(const t of ev.changedTouches){if(t.ide
 document.querySelectorAll('.tbtns button').forEach(b=>b.addEventListener('touchstart',ev=>{ev.preventDefault();if(!G||G.paused)return;const t=b.dataset.t;
   if(t==='attack')attack();else if(t==='block')G.blockHeld=true;else if(t==='dodge')moveAbility();else if(t==='belt'){const i=G.belt?G.belt.findIndex(Boolean):-1;if(i>=0)useBelt(i);}else if(t==='use')interact();else if(t==='inv')openInv(G.tavern?'tavern':'run');else if(t==='crouch'){G.P.crouch=!G.P.crouch;}else{const A=KIT[G.cls].abil[+t-1];if(A)useAbility(A.id);}},{passive:false}));
 document.querySelectorAll('.tbtns button[data-t="block"]').forEach(b=>b.addEventListener('touchend',()=>{if(G)G.blockHeld=false;}));
-document.addEventListener('keydown',ev=>{
+document.addEventListener('keydown',ev=>{/*TYPINGFIX*/
+  {const tg=ev.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.tagName==='SELECT'||tg.isContentEditable)){if(ev.code==='Escape')tg.blur();return;}}
   if(INV.open){if(['KeyI','Tab','Escape'].includes(ev.code)){ev.preventDefault();closeInv();}return;}
   if(!G||$('#game').hidden||ev.target.tagName==='TEXTAREA'||!$('#modal').hidden)return;
   G.keys[ev.code]=true;
@@ -2274,7 +2279,7 @@ function dodge(){const P=G.P;if(G.paused||G.down>0||P.dodgeCd>0||P.st<18)return;
   P.dodgeDir=[(fx*f+rx*s)/l,(fy*f+ry*s)/l];P.dodge=.26;P.iframe=.3;P.dodgeCd=.7;P.st-=18*(G.S.moveCost||1);P.stDelay=.9;P.blocking=false;
   if(G.mode!=='client')noise(P.x,P.y,G.cls==='warrior'?7:4,.3,.7,true);}
 function ccCone(x,y,ang,kind,actor){const range=kind==='repel'?2.7:kind==='smoke'?2.8:2.4,arc=kind==='repel'?.95:kind==='smoke'?7:.85;let n=0;
-  for(const e of G.w.enemies){if(e.dead)continue;const dx=e.x-x,dy=e.y-y,d=Math.hypot(dx,dy);if(d>range||(Math.abs(angDiff(Math.atan2(dy,dx),ang))>arc&&d>.5)||!losT(x,y,e.x,e.y))continue;n++;
+  for(const e of G.w.enemies){if(e.dead)continue;const dx=e.x-x,dy=e.y-y,d=Math.hypot(dx,dy);if(d>range||Math.abs(elAt(e.x,e.y)-elAt(x,y))>1.6||(Math.abs(angDiff(Math.atan2(dy,dx),ang))>arc&&d>.5)||!losT(x,y,e.x,e.y))continue;n++;
     if(kind==='repel'){const bh=actor&&actor.bh;stagger(e,e.captain&&!bh?.5:2.2,!!bh);if(!e.captain){const ux=dx/(d||1),uy=dy/(d||1);for(let i=0;i<12;i++){const nx=e.x+ux*.12,ny=e.y+uy*.12;if(!walkT(tileAt(nx,ny)))break;e.x=nx;e.y=ny;}}}
     else{stagger(e,e.captain?1.4:3.2);e.aw=1;if(kind==='smoke'){e.unseen=Math.max(e.unseen||0,4);e.last=[x+(Math.random()-.5)*6,y+(Math.random()-.5)*6];}}
     if(e.state!=='alert')goAlert(e,true,[x,y]);}
@@ -2383,7 +2388,7 @@ function updGuard(e,dt){if(e.civ){updCiv(e,dt);return;}if(e.type==='lamp'&&ctLam
       const tp=(amt>0&&SP)||players().find(p=>p.key===e.tgt)||null;const d=tp?Math.hypot(tp.x-e.x,tp.y-e.y):99;
       if(amt>0&&tp)turnTo(e,Math.atan2(tp.y-e.y,tp.x-e.x),dt*8);
       if(e.atk>0){e.atk-=dt;if(tp&&e.atk>e.atkMax*.4)turnTo(e,Math.atan2(tp.y-e.y,tp.x-e.x),dt*3);
-        if(e.atk<=0&&FT(e).ranged&&!e.captain){e.cool=FT(e).cool;if(tp){const a=Math.atan2(tp.y-e.y,tp.x-e.x);G.eproj.push({x:e.x+Math.cos(a)*.4,y:e.y+Math.sin(a)*.4,vx:Math.cos(a)*4.5,vy:Math.sin(a)*4.5,t:0,dmg:e.dmg,id:e.id,name:nameOf(e)});}break;}
+        if(e.atk<=0&&FT(e).ranged&&!e.captain){e.cool=FT(e).cool;if(tp){const a=Math.atan2(tp.y-e.y,tp.x-e.x),z0=elAt(e.x,e.y)+1.4,tz=(tp.key==='me'?(G.P.fz!=null?G.P.fz:elAt(tp.x,tp.y)):elAt(tp.x,tp.y))+1.1,fl=Math.max(.3,Math.hypot(tp.x-e.x,tp.y-e.y))/4.5;G.eproj.push({x:e.x+Math.cos(a)*.4,y:e.y+Math.sin(a)*.4,z:z0,vz:(tz-z0)/fl,vx:Math.cos(a)*4.5,vy:Math.sin(a)*4.5,t:0,dmg:e.dmg,id:e.id,name:nameOf(e)});}break;}
         if(e.atk<=0){e.cool=e.captain?1.7:FT(e).cool;for(const pl of players()){const dd=Math.hypot(pl.x-e.x,pl.y-e.y);if(dd>1.15||Math.abs(elAt(pl.x,pl.y)-elAt(e.x,e.y))>1.4||pl.invis||Math.abs(angDiff(Math.atan2(pl.y-e.y,pl.x-e.x),e.ang))>.9)continue;
           if(pl.key==='me'){if(hurt(e.dmg*(e.taunt>0&&SK('warhornsk')?.8:1)*(e.weakT>0?.75:1),`${nameOf(e)} hits you.`,{x:e.x,y:e.y,heavy:!!(e.captain||FT(e).heavy)})==='parry'){stagger(e,e.captain?1.1:1.7,true);if(G.S.fx&&G.S.fx.fang){G.lastActor='me';applyHit(e,G.cls,'counter');}}}
           else{NET.hitsOut.push({n:++NET.hitSeq,to:pl.key,d:Math.round(e.dmg*(e.weakT>0?.75:1)),m:nameOf(e),id:e.id,hv:e.captain||FT(e).heavy?1:0});if(NET.hitsOut.length>8)NET.hitsOut.shift();}}}break;}
@@ -2432,13 +2437,13 @@ function applyHit(e,cls,kind,o){
   if(e.hp<=0){say(kind==='fire'?`Fire takes ${lc(nameOf(e))}.`:`${who==='You'?'You cut':who+' cuts'} down ${lc(nameOf(e))}.`);kill(e,actor);}
   else{goAlert(e,true,o.src);e.hitT=G.time;}
 }
-function burstAt(x,y,cls,actor,sp,rad,fs){let n=0;fs=fs||{};let r=rad||1.35;ratFire(x,y,r);zxIgnite(x,y,r);const src=actor&&actor.rr?[actor.rr.p.x,actor.rr.p.y]:undefined;
+function burstAt(x,y,cls,actor,sp,rad,fs,bz){let n=0;fs=fs||{};if(!(bz>-90))bz=elAt(x,y)+1;const zOk=e=>Math.abs(elAt(e.x,e.y)+1-bz)<1.7;let r=rad||1.35;ratFire(x,y,r);zxIgnite(x,y,r);const src=actor&&actor.rr?[actor.rr.p.x,actor.rr.p.y]:undefined;
   if(fs.wild){const n0=G.w.enemies.filter(e=>!e.dead&&Math.hypot(e.x-x,e.y-y)<r&&losT(x,y,e.x,e.y)).length;r*=1+.3*Math.min(3,n0);}
-  const hits=[];for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-x,e.y-y)<r&&losT(x,y,e.x,e.y)){applyHit(e,cls,'fire',{actor,sp,src});hits.push(e);n++;if(fs.spo&&!e.dead){stagger(e,1.2,true);if(fs.spo>1)e.mute=10;}}}
+  const hits=[];for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-x,e.y-y)<r&&zOk(e)&&losT(x,y,e.x,e.y)){applyHit(e,cls,'fire',{actor,sp,src});hits.push(e);n++;if(fs.spo&&!e.dead){stagger(e,1.2,true);if(fs.spo>1)e.mute=10;}}}
   if(fs.sp)for(const e of G.w.enemies.filter(o=>!o.dead&&!hits.includes(o)&&Math.hypot(o.x-x,o.y-y)<3.2&&losT(x,y,o.x,o.y)).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y)).slice(0,fs.sp>1?5:3)){G.bursts=G.bursts||[];G.bursts.push({x:e.x,y:e.y,t:.2,col:0xffe080});applyHit(e,cls,'fire',{actor,sp:(sp||1)*.5,src});n++;}
   if(fs.wild>1)for(const h of hits)for(const e of G.w.enemies)if(!e.dead&&!hits.includes(e)&&Math.hypot(e.x-h.x,e.y-h.y)<1)applyHit(e,cls,'fire',{actor,sp:(sp||1)*.5,src});
   if(fs.wf)addHaz({k:'burn',x,y,t:5,actor});
-  if(fs.hol){const dead=hits.filter(e=>e.dead);if(dead.length){const d0=dead[0];const nx=G.w.enemies.filter(e=>!e.dead&&Math.hypot(e.x-d0.x,e.y-d0.y)<4).sort((a,b)=>Math.hypot(a.x-d0.x,a.y-d0.y)-Math.hypot(b.x-d0.x,b.y-d0.y))[0];if(nx){G.bursts=G.bursts||[];G.bursts.push({x:nx.x,y:nx.y,t:0});burstAt(nx.x,nx.y,cls,actor,sp,rad,Object.assign({},fs,{hol:0,wild:0}));}}}noise(x,y,10,1,1);return n;}
+  if(fs.hol){const dead=hits.filter(e=>e.dead);if(dead.length){const d0=dead[0];const nx=G.w.enemies.filter(e=>!e.dead&&Math.hypot(e.x-d0.x,e.y-d0.y)<4).sort((a,b)=>Math.hypot(a.x-d0.x,a.y-d0.y)-Math.hypot(b.x-d0.x,b.y-d0.y))[0];if(nx){G.bursts=G.bursts||[];G.bursts.push({x:nx.x,y:nx.y,t:0});burstAt(nx.x,nx.y,cls,actor,sp,rad,Object.assign({},fs,{hol:0,wild:0}),elAt(nx.x,nx.y)+1);}}}noise(x,y,10,1,1);return n;}
 function inArc(e,reach,arc){if(G.w&&G.w.el&&Math.abs(elAt(e.x,e.y)-(G.P.fz||0))>1.5)return false;const P=G.P,[fx,fy]=fwd();const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>reach)return false;const a=Math.abs(angDiff(Math.atan2(dy,dx),Math.atan2(fy,fx)));return (a<arc||d<.35)&&losT(P.x,P.y,e.x,e.y);}
 function breakInvis(why){if(G.P.invis>0){G.P.invis=0;log(why);}}
 function attack(){
@@ -2485,25 +2490,26 @@ function useAbility(id){
   }
   P.cd[id]=A.cd*(1-(G.S.cdr||0))*skCdMul(id);G.sideDirty=true;
 }
-function fireBurst(x,y,pot){G.bursts=G.bursts||[];G.bursts.push({x,y,t:0});
+function fireBurst(x,y,pot,z){if(z==null)z=elAt(x,y)+1;G.bursts=G.bursts||[];G.bursts.push({x,y,z,t:0});
   const sp=pot?1:G.S.sp||1,em=!pot&&G.S.fx&&G.S.fx.ember,fs=pot?null:fireSk();
-  if(G.mode==='client'){sendAct({t:pot?'pot':'burst',x:+x.toFixed(2),y:+y.toFixed(2),sp:+sp.toFixed(2),em:em?1:0,fs});return;}
-  G.lastActor='me';const n=burstAt(x,y,pot?'pot':'wizard',null,sp,em?2:1.35,fs);if(pot){if(!n)log('The firepot shatters and burns out.');return;}if(!n)log('Your fireburst splashes across the stone.');}
+  if(G.mode==='client'){sendAct({t:pot?'pot':'burst',x:+x.toFixed(2),y:+y.toFixed(2),z:+z.toFixed(2),sp:+sp.toFixed(2),em:em?1:0,fs});return;}
+  G.lastActor='me';const n=burstAt(x,y,pot?'pot':'wizard',null,sp,em?2:1.35,fs,z);if(pot){if(!n)log('The firepot shatters and burns out.');return;}if(!n)log('Your fireburst splashes across the stone.');}
 function updProj(dt){
   for(const p of G.proj){p.t+=dt;
-    if(p.kind==='throw'){p.vel.y-=9.8*dt;const np=p.pos.clone().addScaledVector(p.vel,dt);const tx=np.x/T,ty=np.z/T;const wall=opaqueT(tileAt(tx,ty));if(wall||np.y<=elAt(tx,ty)+.05){p.dead=true;throwLand(p.what,wall?p.pos.x/T:tx,wall?p.pos.z/T:ty);continue;}if(np.y>WALLH-.05){p.vel.y=-Math.abs(p.vel.y)*.3;np.y=WALLH-.05;}p.pos.copy(np);if(p.t>4)p.dead=true;continue;}
+    if(p.kind==='throw'){p.vel.y-=9.8*dt;const np=p.pos.clone().addScaledVector(p.vel,dt);const tx=np.x/T,ty=np.z/T;const ge=elAt(tx,ty),face=np.y<=ge+.05&&p.pos.y<=ge+.05;const wall=opaqueT(tileAt(tx,ty))||face;if(wall||np.y<=ge+.05){p.dead=true;throwLand(p.what,wall?p.pos.x/T:tx,wall?p.pos.z/T:ty);continue;}const cz=ceilAt(tx,ty);if(np.y>cz-.05){p.vel.y=-Math.abs(p.vel.y)*.3;np.y=cz-.05;}p.pos.copy(np);if(p.t>4)p.dead=true;continue;}
     if(p.kind==='pebble')p.vel.y-=9.8*dt;if(p.kind==='arrow'){p.vel.y-=2.5*dt;const tt=tileAt(p.pos.x/T,p.pos.z/T);if(tt===PIT)p.over.add(Math.floor(p.pos.x/T)+','+Math.floor(p.pos.z/T));}
     const np=p.pos.clone().addScaledVector(p.vel,dt);const tx=np.x/T,ty=np.z/T;
-    if(p.kind==='arrow'&&(opaqueT(tileAt(tx,ty))||tileAt(tx,ty)===LEDGE&&np.y<1.75||np.y<=.03)){p.dead=true;arrowLand(p,tileAt(tx,ty)===LEDGE?tx:p.pos.x/T,tileAt(tx,ty)===LEDGE?ty:p.pos.z/T);continue;}
-    if(p.kind==='arrow'){for(const en of G.w.enemies){if(en.dead)continue;if(Math.hypot(en.x-tx,en.y-ty)<.3&&np.y<2.1){p.dead=true;if(p.at==='broad'){const ua=en.state!=='alert';if(G.mode==='client'){sendAct({t:'hit',k:'arrow',id:en.id,ua});}else{G.lastActor='me';applyHit(en,'thief','arrow',{ua});}}break;}}if(p.dead)continue;p.pos.copy(np);if(p.t>3)p.dead=true;continue;}
-    if(opaqueT(tileAt(tx,ty))||[LARDER,POOL,CHEST,TABLE,WARD].includes(tileAt(tx,ty))&&np.y<1){
-      if(p.kind==='fire'){p.dead=true;fireBurst(p.pos.x/T,p.pos.z/T,p.pot);}else{p.vel.x*=-.2;p.vel.z*=-.2;}continue;}
-    if(np.y>WALLH-.05){p.vel.y=-Math.abs(p.vel.y)*.3;np.y=WALLH-.05;}
+    const ge=elAt(tx,ty),face=np.y<=ge+.05&&p.pos.y<=ge+.05;
+    if(p.kind==='arrow'&&(opaqueT(tileAt(tx,ty))||face||tileAt(tx,ty)===LEDGE&&np.y<ge+1.75||np.y<=ge+.03)){p.dead=true;const fl=!face&&!opaqueT(tileAt(tx,ty));arrowLand(p,tileAt(tx,ty)===LEDGE||fl?tx:p.pos.x/T,tileAt(tx,ty)===LEDGE||fl?ty:p.pos.z/T);continue;}
+    if(p.kind==='arrow'){for(const en of G.w.enemies){if(en.dead)continue;const ez=elAt(en.x,en.y);if(Math.hypot(en.x-tx,en.y-ty)<.3&&np.y>ez-.05&&np.y<ez+2.1){p.dead=true;if(p.at==='broad'){const ua=en.state!=='alert';if(G.mode==='client'){sendAct({t:'hit',k:'arrow',id:en.id,ua});}else{G.lastActor='me';applyHit(en,'thief','arrow',{ua});}}break;}}if(p.dead)continue;p.pos.copy(np);if(p.t>3)p.dead=true;continue;}
+    if(opaqueT(tileAt(tx,ty))||face||[LARDER,POOL,CHEST,TABLE,WARD].includes(tileAt(tx,ty))&&np.y<ge+1){
+      if(p.kind==='fire'){p.dead=true;fireBurst(p.pos.x/T,p.pos.z/T,p.pot,p.pos.y);}else{p.vel.x*=-.2;p.vel.z*=-.2;}continue;}
+    {const cz=ceilAt(tx,ty);if(np.y>cz-.05){p.vel.y=-Math.abs(p.vel.y)*.3;np.y=cz-.05;}}
     p.pos.copy(np);
-    if(p.kind==='fire'){for(const e of G.w.enemies){if(e.dead)continue;if(Math.hypot(e.x-tx,e.y-ty)<.32&&np.y<2.1){p.dead=true;fireBurst(tx,ty,p.pot);break;}}
-      if(!p.dead&&np.y<=.05){p.dead=true;fireBurst(tx,ty,p.pot);}
+    if(p.kind==='fire'){for(const e of G.w.enemies){if(e.dead)continue;const ez=elAt(e.x,e.y);if(Math.hypot(e.x-tx,e.y-ty)<.32&&np.y>ez-.05&&np.y<ez+2.1){p.dead=true;fireBurst(tx,ty,p.pot,np.y);break;}}
+      if(!p.dead&&np.y<=ge+.05){p.dead=true;fireBurst(tx,ty,p.pot,ge+.3);}
       if(p.t>3)p.dead=true;}
-    else if(np.y<=.05){p.dead=true;if(G.mode==='client')sendAct({t:'noise',x:+tx.toFixed(2),y:+ty.toFixed(2),r:9,a:.45,c:.6});else noise(tx,ty,9,.45,.6);log('A pebble clatters across the stone.');}
+    else if(np.y<=ge+.05){p.dead=true;if(G.mode==='client')sendAct({t:'noise',x:+tx.toFixed(2),y:+ty.toFixed(2),r:9,a:.45,c:.6});else noise(tx,ty,9,.45,.6);log('A pebble clatters across the stone.');}
   }
   G.proj=G.proj.filter(p=>{if(p.dead&&p.mesh){R3.scene.remove(p.mesh);}return !p.dead;});
 }
@@ -2567,6 +2573,7 @@ obsInit();
 
 /*ELEVIN*/
 /* ---------- height levels: raised floors, stairs, drops, sunken sewers ---------- */
+/*VERTREAL*/function ceilAt(x,y){const w=G&&G.w;if(!w||!w.el)return WALLH;const r=w.ceil&&w.ceil[Math.floor(y)];const c=r?r[Math.floor(x)]:null;return c!=null&&c>-50?c:99;}
 function elAt(x,y){const w=G&&G.w;if(!w||!w.el)return 0;const tx=Math.floor(x),ty=Math.floor(y);const r=w.el[ty];return r&&r[tx]!=null?r[tx]:0;}
 function elW(wx,wz){const w=G&&G.w;if(!w||!w.el)return 0;const x=wx/T,y=wz/T,tx=Math.floor(x),ty=Math.floor(y);if(!w.t[ty]||w.t[ty][tx]==null)return 0;
   if(w.t[ty][tx]!==WALL)return w.el[ty][tx]||0;let best=0,bd=9;for(const [dx,dy] of DIRS){const nx=tx+dx,ny=ty+dy;if(!w.t[ny]||w.t[ny][nx]==null||w.t[ny][nx]===WALL)continue;const d=Math.hypot(nx+.5-x,ny+.5-y);if(d<bd){bd=d;best=w.el[ny][nx]||0;}}return best;}
@@ -2873,7 +2880,7 @@ function auNoise(out,t0,dur,o){const c=AU.ctx;const s=c.createBufferSource();s.b
 function auTone(out,t0,dur,o){const c=AU.ctx;const s=c.createOscillator();s.type=o.w||'sine';s.frequency.setValueAtTime(o.f,t0);if(o.f2)s.frequency.exponentialRampToValueAtTime(o.f2,t0+(o.bend||dur));if(o.det)s.detune.value=o.det;
   const e=c.createGain();e.gain.setValueAtTime(0,t0);e.gain.linearRampToValueAtTime(o.v||1,t0+(o.a||.005));e.gain.exponentialRampToValueAtTime(.001,t0+dur);
   let n=s;if(o.lp){const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=o.lp;n.connect(f);n=f;}n.connect(e);e.connect(out);s.start(t0);s.stop(t0+dur+.05);}
-function sfx(name,x,y,vol){if(!AU.ctx||!AU.on||AU.ctx.state!=='running')return;const now=AU.ctx.currentTime;const key=name;if(AU.last[key]&&now-AU.last[key]<.035)return;AU.last[key]=now;
+function sfx(name,x,y,vol){if(NET.bgOn)return;if(!AU.ctx||!AU.on||AU.ctx.state!=='running')return;const now=AU.ctx.currentTime;const key=name;if(AU.last[key]&&now-AU.last[key]<.035)return;AU.last[key]=now;
   const pl=auPlace(x,y);if(pl.g<.01)return;const v=vol==null?1:vol,t=now+.005,R=Math.random;const O=(vv,verb)=>auOut(pl,vv*v,verb==null?.25:verb,t);
   switch(name){
     case 'step':{const o=O(.22,.12);auNoise(o,t,.09,{type:'bandpass',f:420+R()*200,q:1.2,v:1});auNoise(o,t,.04,{type:'highpass',f:2500,v:.25});break;}
@@ -3272,6 +3279,90 @@ function attrTip(k,cls,v){const d=ATTRD[k];let t=`${ATTRN[k]}: ${d.s} ${d.per}`;
   document.addEventListener('mousemove',ev=>{if(tb.style.display==='block')place(ev);});
   document.addEventListener('mousedown',()=>{tb.style.display='none';});})();
 
+/*MPFREEIN*/
+/* ---------- free come-and-go: the job lives on the host whether or not the host's body is in it.
+   Anyone walks out the back-room door to start or join the job, and anyone can slip back to the back room and return. ---------- */
+function mpPlace(){return G&&G.tavern?'tv':'run';}
+function mpRemote(rr){if(Object.getOwnPropertyDescriptor(rr,'p')&&Object.getOwnPropertyDescriptor(rr,'p').get)return rr;const v=rr.p;delete rr.p;
+  Object.defineProperty(rr,'p',{get(){return (this.pl||'run')===mpPlace()?this.pRaw||null:null;},set(x){this.pRaw=x;},configurable:true,enumerable:true});rr.pRaw=v||null;return rr;}
+function mpCrewInRun(){for(const rr of NET.remote.values())if(rr.pl==='run'&&rr.pRaw&&!rr.pRaw.dn)return true;for(const rr of NET.remote.values())if(rr.pl==='run'&&rr.pRaw)return true;return false;}
+/* park the host's absent body: out of the world, never seen, never hurt */
+function mpPark(R){R.hostAway=true;R.down=1e9;R.P.x=-100;R.P.y=-100;R.keys={};R.P.invis=0;}
+/* the background world, stepped every frame while the host is in the back room */
+function mpBgStep(dt){const R=NET.run;if(!R||G===R)return;const TV=G;NET.bgOn=true;G=R;
+  try{G.down=1e9;G.keys={};update(dt);onRemote();
+    for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.dn||!p.mv)continue;rr.stepT-=dt*(p.sp?1.6:1);if(rr.stepT<=0){rr.stepT=.5;const th=p.c==='thief',wa=p.c==='warrior';const rad=p.cr?(th?0:2):p.sp?(wa?13:10):(th?3:wa?7:5);if(rad)noise(p.x,p.y,rad,p.sp?.45:.3,.7,true);}}
+    for(const e of G.w.enemies)if(!e.dead)updGuard(e,dt);updAlarm(dt);updEProj(dt);updGates(dt);
+    updProj(dt);updHaz(dt);docUpdate(dt);idUpdate(dt);obsUpdate(dt);bankUpdate(dt);zxUpdate(dt);
+    if(G.looted&&jobComplete()&&!NET.end)mpEndBg(true);}
+  catch(err){console.error('background job',err);}finally{G=TV;NET.bgOn=false;}}
+/* what the host's presence carries for the crew still on the job */
+function mpRunFields(){const TV=G,R=NET.run;G=R;NET.bgOn=true;try{const m=G.m;
+    return {h:1,lid:NET.lid||null,m:{id:m.id,seed:m.seed,biome:m.biome,roles:m.roles,cx:m.cx,sk:m.sk,open:m.open,type:m.type,mods:m.mods,crew:m.crew,title:m.title,payout:m.payout},w:NET.end?null:packWorld(),hits:NET.hitsOut,lg:NET.logsOut,end:NET.end};}
+  finally{G=TV;NET.bgOn=false;}}
+/* host: start the job in the background (a crewmate walked out first) */
+function mpStartBg(m){if(NET.run||!m)return;const TV=G,pz=$('#pauseov').hidden,pt=$('#pauseTitle').textContent,px=$('#pauseText').textContent;
+  NET.lid=Date.now();NET.end=null;NET.bgEnd=null;NET.bgOn=true;
+  try{startRun(m,TV.cls,{mode:'host'});NET.run=G;mpPark(G);}catch(err){console.error(err);NET.run=null;}finally{NET.bgOn=false;G=TV;}
+  $('#gTitle').textContent='The back room';$('#abandon').textContent='Leave the back room';tavernBadge();$('#pauseov').hidden=pz;$('#pauseTitle').textContent=pt;$('#pauseText').textContent=px;
+  $('#board').hidden=true;$('#game').hidden=false;G.sideDirty=true;G.featDirty=true;renderSide();pushPresence(true);}
+/* host: walk back into the running job */
+function mpReenter(){const R=NET.run;if(!R)return;const cls=G.cls,locked=!!document.pointerLockElement;NET.run=null;const S=runStats(cls),w=R.w;
+  let best=DIRS[0],bl=-1;for(const d of DIRS){let l=0;while(l<12&&walkT(w.t[w.start[1]+d[1]*(l+1)]?.[w.start[0]+d[0]*(l+1)]))l++;if(l>bl){bl=l;best=d;}}
+  Object.assign(R,{cls,S,over:false,settled:false,down:0,hostAway:false,keys:{},xpRun:0,gearFound:0,belt:packBelt(),sideDirty:true,featDirty:true,focus:null,stick:[0,0]});
+  R.P={x:w.start[0]+.5,y:w.start[1]+.5,yaw:Math.atan2(-best[0],-best[1]),pitch:0,hp:S.hp,max:S.hp,st:100,stDelay:0,blocking:false,blockAt:-9,dodge:0,dodgeCd:0,iframe:0,arrows:{broad:8,water:3,rope:2},arrowSel:'broad',crouch:false,sprint:false,moving:false,invis:0,cd:{},used:{},swing:0,stepT:0,bob:0,eye:EYE};
+  G=R;$('#board').hidden=true;$('#game').hidden=false;$('#gTitle').textContent=R.m.title;$('#abandon').textContent='Abandon run';const b=$('#gClass');b.textContent=CLS[cls].name;b.style.color=CLS[cls].color;$('#abl').innerHTML=KIT[cls].lines.map(l=>`<li>${l}</li>`).join('');
+  build3D();resize3D();renderSide();renderCrew();pushPresence(true);log('You slip back into the job. The world kept moving while you were gone.','good');netLog('The host is back on the job.');
+  setPause(true,'Back on the job',`${R.m.title}. The crew kept working while you were in the back room.`);if(locked)setPause(false);}
+/* host: leave the job but keep it running for the crew */
+function mpHostSlipOut(ok){const R=G;const hl=settle(ok);mpPark(R);NET.run=R;netLog('The host slipped back to the back room. The job keeps running.');
+  startTavern('host',R.cls);G.job=board.missions.find(x=>x.id===R.m.id)||R.m;G.featDirty=true;G.sideDirty=true;
+  log(`You slip back to the back room. The crew is still on ${R.m.title}: walk out the door to rejoin them.`,'good');if(hl)log(hl);pushPresence(true);}
+/* host: close the background job (looted, or a different job picked) and tell whoever is still on it */
+function mpEndBg(looted){const R=NET.run;if(!R)return;const TV=G;G=R;NET.bgOn=true;
+  try{const m=board.missions.find(x=>x.id===G.m.id)||G.m;m.state=snapshot(G.w);m.state.ro=(G.w.ropes||[]).slice();m.state.lo=G.w.loot.filter(l=>l&&l.taken&&!l.drop).map(l=>l.id);m.state.al=Math.max(0,(G.alarm||0)-1);if(G.w.bellCut)m.state.bc=1;
+    const crewH=[];for(const rr of NET.remote.values()){if(!rr.pRaw)continue;const h={by:peerName(rr),cls:rr.pRaw.c,did:(G.credits[rr.peer]||[]).slice(),peer:rr.peer};if(!h.did.length&&rr.pl!=='run')continue;crewH.push(h);m.history.push({by:h.by,cls:h.cls,did:h.did});}
+    looted=looted||!!G.looted;const done=looted&&jobComplete();if(looted)m.history.push({by:'The crew',cls:G.cls,did:[G.w.bank?'Got crates onto the getaway':'Carried out the strongbox'],outcome:done?'complete':undefined});if(done)m.status='complete';else if(m.state)m.state.crG=0;
+    NET.end={lt:looted?1:0,pay:looted?jobPay(m):0,bank:G.w.bank?1:0,m:{seed:m.seed,biome:m.biome,roles:m.roles,cx:m.cx,sk:m.sk,open:m.open,type:m.type,mods:m.mods,crew:m.crew,title:m.title,payout:m.payout},s:done?null:m.state,h:[{by:'The host',cls:G.cls,did:G.did.slice()}].concat(crewH)};
+    saveBoard(board);}
+  finally{G=TV;NET.bgOn=false;}
+  const end=NET.end;NET.bgEnd=end;NET.bgEndLid=NET.lid;NET.run=null;NET.end=null;
+  if(end.lt){const crewN=1+[...NET.remote.values()].filter(r=>r.pRaw).length;const share=Math.round(end.pay/crewN);PROF.gold=(PROF.gold||0)+share;saveProf();log(`The crew got the haul out without you. Your share: ${share.toLocaleString()} gold.`,'good');}
+  setTimeout(()=>{if(NET.bgEnd===end)NET.bgEnd=null;},15000);G.sideDirty=true;pushPresence(true);}
+/* client: leave the job for the back room, staying in the crew */
+function mpClientOut(ok){const cls=G.cls;const hl=settle(ok);G.over=true;if(document.pointerLockElement)document.exitPointerLock();
+  startTavern('client',cls);log(ok?'You slip out and head back down to the back room. The job is still on: walk out the door to go back in.':'You bail out to the back room. Whatever was in your bag is gone.',ok?'good':'bad');if(hl)log(hl);}
+/* the back-room door, for everyone */
+function mpLive(){if(G.mode==='host')return NET.run?{title:NET.run.m.title}:null;const h=NET.remote.get(NET.hostPeer),hp=h&&h.pres;return hp&&hp.h&&hp.m&&hp.w&&!hp.end?{title:hp.m.title,hp}:null;}
+function mpDoorLabel(){const live=mpLive();
+  if(G.mode==='host'){if(live)return {act:true,text:`<b>E</b> Go back in to ${esc(live.title)} <span class="dim">(the crew is still on it)</span>`};if(!G.job)return {act:false,text:'Pick a job at the planning table first.'};const [n,tot]=crewAtDoor();return {act:true,text:`<b>E</b> Head out to ${esc(G.job.title)} <span class="dim">(the crew can follow whenever they like · ${n} of ${tot} at the door)</span>`};}
+  if(live)return {act:true,text:`<b>E</b> Head out and join the crew on ${esc(live.title)}`};
+  if(G.wantGo)return {act:false,text:'Heading out…'};
+  if(G.hostJob)return {act:true,text:`<b>E</b> Head out to ${esc(G.hostJob.title)} <span class="dim">(starts the job; the rest follow when they like)</span>`};
+  return {act:false,text:'Waiting for the host to pick a job at the table.'};}
+function mpDoorUse(){const live=mpLive();
+  if(G.mode==='host'){if(live){mpReenter();return;}if(G.job)launchJob();return;}
+  if(live){mpClientIn(live.hp);return;}
+  if(G.hostJob){G.wantGo=true;NET.goN=(NET.goN||0)+1;pushPresence(true);toast('Heading out…');G.goT=G.time;}}
+function mpClientIn(hp){const locked=!!document.pointerLockElement;const host=NET.remote.get(NET.hostPeer);const m=Object.assign({},hp.m,{state:null,history:[],status:'open'});
+  startRun(m,G.cls,{mode:'client'});log(`You head out after ${peerName(host)}'s crew.`);if(locked)setPause(false);}
+/* back-room bookkeeping each frame (from tavernRemote) */
+function mpTavern(){
+  if(G.mode==='host'){for(const rr of NET.remote.values()){const go=(rr.pres&&rr.pres.go)||0;if(rr.lastGo==null){rr.lastGo=go;continue;}if(go>rr.lastGo){rr.lastGo=go;if(!NET.run&&G.job){mpStartBg(G.job);log(`${peerName(rr)} heads out to ${G.job.title}. The job is on: walk out the door to join them.`,'good');}}}
+    if(!NET.run)for(const rr of NET.remote.values()){for(const a of (rr.pres&&rr.pres.a)||[])rr.lastAct=Math.max(rr.lastAct||0,a.n);}return;}
+  const live=mpLive();if(G.wantGo&&live){G.wantGo=false;mpClientIn(live.hp);return;}if(G.wantGo&&G.time-(G.goT||0)>8){G.wantGo=false;toast('The host did not start the job. Try again.');}
+  const sig=live?live.title:'';if(sig!==G.liveSig){if(sig&&G.time>.5)log(`The crew is on ${sig}. Walk out the door when you want to join them.`,'good');G.liveSig=sig;G.sideDirty=true;}}
+/* re-roll: swap every untouched open contract for a fresh one (contracts with progress on them stay) */
+function rerollBoard(){const keep=m=>m.status==='complete'||(m.history&&m.history.length)||m.state||(NET.run&&NET.run.m.id===m.id);
+  const fresh=board.missions.filter(m=>!keep(m));const n=Math.max(fresh.length,6-board.missions.filter(m=>keep(m)&&m.status!=='complete').length);
+  const out=board.missions.filter(keep);for(let i=0;i<n;i++)out.unshift(makeMission(Math.floor(Math.random()*90000)+10000));
+  board.missions=out;saveBoard(board);if(G&&G.job&&!board.missions.includes(G.job)){G.job=null;if(G.tavern){G.featDirty=true;G.sideDirty=true;pushPresence(true);}}
+  if(typeof renderBoard==='function')renderBoard();return n;}
+{const nc=document.getElementById('newContract');if(nc&&!document.getElementById('rerollBoard')){const rb=document.createElement('button');rb.className=nc.className||'btn';rb.id='rerollBoard';rb.textContent='Re-roll new contracts';rb.title='Swap every untouched contract for a fresh one';nc.parentNode.insertBefore(rb,nc.nextSibling);rb.onclick=()=>{const n=rerollBoard();toast(`${n} fresh contract${n===1?'':'s'} on the board.`);};}}
+
+/* a job is only done when its vault is open and its real prize is out; side loot pays but leaves the job on the board */
+function jobComplete(){const w=G.w;if(!w)return false;if(!w.bank)return !!G.looted;return Object.values(w.locks||{}).every(Boolean)&&(w.crates||[]).some(c=>c.vault&&c.del);}
+
 /* ---------- interaction ---------- */
 function findFocus(){
   {const bf=G.tavern?null:bankFocus();if(bf)return bf;}
@@ -3390,22 +3481,24 @@ function checkObjectives(){
 }
 function leave(){
   if(!G||G.over)return;
+  if(G.mode==='client'&&NET.room){mpClientOut(true);return;}
+  if(G.mode==='host'&&NET.room&&!G.looted&&mpCrewInRun()){if(document.pointerLockElement)document.exitPointerLock();mpHostSlipOut(true);return;}
   if(G.mode==='client'){G.over=true;if(document.pointerLockElement)document.exitPointerLock();leaveRoom();const hl=settle(true);showModal('You slipped out',`<p>You left the job. Everything you did stays in the host's world, and they will repost it when they lead the crew out.</p>${hl?`<p class="note">${esc(hl)}</p>`:''}`);return;}
   G.over=true;if(document.pointerLockElement)document.exitPointerLock();
   const m=board.missions.find(x=>x.id===G.m.id)||G.m;
   m.state=snapshot(G.w);m.state.ro=(G.w.ropes||[]).slice();m.state.lo=G.w.loot.filter(l=>l&&l.taken&&!l.drop).map(l=>l.id);m.state.al=Math.max(0,(G.alarm||0)-1);if(G.w.bellCut)m.state.bc=1;
   const entry={by:'You',cls:G.cls,did:G.did.slice(),secs:Math.round(G.time)};
-  if(G.looted){entry.did.push(G.w.bank?'Got crates onto the getaway':'Carried out the strongbox');entry.outcome='complete';m.status='complete';}
+  if(G.looted){entry.did.push(G.w.bank?'Got crates onto the getaway':'Carried out the strongbox');if(jobComplete()){entry.outcome='complete';m.status='complete';}else m.state.crG=0;}
   m.history.push(entry);
   const crewH=[];
   if(G.mode==='host'){for(const rr of NET.remote.values()){if(!rr.p)continue;const h={by:peerName(rr),cls:rr.p.c,did:(G.credits[rr.peer]||[]).slice(),peer:rr.peer};crewH.push(h);m.history.push({by:h.by,cls:h.cls,did:h.did});}
-    NET.end={lt:G.looted?1:0,pay:jobPay(m),bank:G.w.bank?1:0,m:{seed:m.seed,biome:m.biome,roles:m.roles,cx:m.cx,sk:m.sk,open:m.open,type:m.type,mods:m.mods,crew:m.crew,title:m.title,payout:m.payout},s:G.looted?null:m.state,h:[{by:'The host',cls:G.cls,did:entry.did}].concat(crewH)};
+    NET.end={lt:G.looted?1:0,pay:jobPay(m),bank:G.w.bank?1:0,m:{seed:m.seed,biome:m.biome,roles:m.roles,cx:m.cx,sk:m.sk,open:m.open,type:m.type,mods:m.mods,crew:m.crew,title:m.title,payout:m.payout},s:m.status==='complete'?null:m.state,h:[{by:'The host',cls:G.cls,did:entry.did}].concat(crewH)};
     pushPresence(true);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G||G.over)leaveRoom();},90000);}
   saveBoard(board);
   const crewN=1+(G.mode==='host'?[...NET.remote.values()].filter(r=>r.p).length:0);const hl=settle(true,G.looted?Math.round(jobPay(m)/crewN):0);const hlP=hl?`<p class="note">${esc(hl)}</p>`:'';
   const st=roleStatus(m);const need=m.roles.filter(r=>!st[r]);
   const back=G.mode==='host'&&NET.room?{label:'Back to the back room',fn:()=>startTavern('host',G.cls)}:G.fromTav?{label:'Back to the tavern',fn:()=>startTavern('solo',G.cls)}:null;
-  if(G.looted)showModal('Payday',`<p>${G.w.bank?`${G.w.crates.filter(c=>c.del).length} crate${G.w.crates.filter(c=>c.del).length>1?'s':''} made it onto the getaway. The crew splits`:'You walk out with the strongbox. The crew splits'} <b class="mono">${jobPay(m).toLocaleString()} gold</b>.</p><ul>${m.history.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls].name}: ${esc(h.did.join('; ')||'scouted')}</li>`).join('')}</ul>${hlP}`,back);
+  if(G.looted)showModal(m.status==='complete'?'Payday':'Payday, but the job is still open',`${m.status!=='complete'?`<p><b>The vault is still sealed${need.length?': '+need.map(r=>CLS[r].name).join(', ')+' still needed':''}.</b> These crates pay out, but the job stays on the board until the vault is cracked and a vault crate gets out.</p>`:''}<p>${G.w.bank?`${G.w.crates.filter(c=>c.del).length} crate${G.w.crates.filter(c=>c.del).length>1?'s':''} made it onto the getaway. The crew splits`:'You walk out with the strongbox. The crew splits'} <b class="mono">${jobPay(m).toLocaleString()} gold</b>.</p><ul>${m.history.map(h=>`<li>${esc(h.by)} as ${CLS[h.cls].name}: ${esc(h.did.join('; ')||'scouted')}</li>`).join('')}</ul>${hlP}`,back);
   else showModal('Reposted',`<p>${st[G.cls]?`Your part is done. The ${CLS[G.cls].name} is no longer needed on this job.`:`You left before finishing. The ${CLS[G.cls].name} role stays open.`}</p>
     <p>${need.length?'Still needed: <b>'+need.map(r=>CLS[r].name).join(', ')+'</b>. Take one of those on the board to walk into the world exactly as you left it.':'Every lock is open. Anyone can go in and carry out the strongbox.'}</p>
     ${G.did.length?`<ul>${G.did.map(d=>`<li>${esc(d)}</li>`).join('')}</ul>`:''}${hlP}`,back);
@@ -3423,13 +3516,13 @@ function showModal(title,html,back){
   $('#modal').hidden=false;$('#toBoard').focus();$('#toBoard').onclick=()=>{$('#modal').hidden=true;toBoard('ledger');};
   if(back){$('#toTavern').focus();$('#toTavern').onclick=()=>{$('#modal').hidden=true;back.fn();};}
 }
-function toBoard(how){auAmbStop();setTimeout(renderStash,0);$('#abandon').textContent='Abandon run';if(NET.room&&!(G&&G.mode==='host'&&NET.end&&!G.tavern))leaveRoom();else if(NET.leaveTimer){clearTimeout(NET.leaveTimer);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G)leaveRoom();},4000);}G=null;startTavern('solo');if(how==='menu')showTitle(true);else if(how==='ledger')openLedger(true);}
+function toBoard(how){NET.run=null;NET.bgEnd=null;auAmbStop();setTimeout(renderStash,0);$('#abandon').textContent='Abandon run';if(NET.room&&!(G&&G.mode==='host'&&NET.end&&!G.tavern))leaveRoom();else if(NET.leaveTimer){clearTimeout(NET.leaveTimer);NET.leaveTimer=setTimeout(()=>{NET.leaveTimer=null;if(!G)leaveRoom();},4000);}G=null;startTavern('solo');if(how==='menu')showTitle(true);else if(how==='ledger')openLedger(true);}
 let abandonArmed=false;
 $('#abandon').onclick=ev=>{if(G&&G.tavern){if(document.pointerLockElement)document.exitPointerLock();if(G.mode==='solo'){showTitle(true);return;}toBoard('menu');return;}if(!abandonArmed){abandonArmed=true;ev.target.textContent='Click again: lose this run';setTimeout(()=>{abandonArmed=false;ev.target.textContent='Abandon run';},2500);return;}
-  abandonArmed=false;ev.target.textContent='Abandon run';settle(false);if(document.pointerLockElement)document.exitPointerLock();toBoard();};
+  abandonArmed=false;ev.target.textContent='Abandon run';if(document.pointerLockElement)document.exitPointerLock();if(G.mp&&NET.room){if(G.mode==='client'){mpClientOut(false);return;}if(mpCrewInRun()){mpHostSlipOut(false);return;}settle(false);startTavern('host',G.cls);return;}settle(false);toBoard();};
 
 /* ---------- side panel + HUD ---------- */
-function renderSide(){
+function renderSide(){if(NET.bgOn)return;
   if(!G)return;if(G.tavern){renderTavernSide();return;}const w=G.w;let h='';
   for(const r of ROLES){if(!G.objs[r])continue;const mine=r===G.cls;
     h+=`<li class="grp" style="color:${CLS[r].color}"><span>${CLS[r].name}</span><span class="label">${mine?'you':'not your role'}</span></li>`;
@@ -3502,7 +3595,7 @@ function resize3D(){if(!init3D())return;const wrap=$('#viewwrap');/*FULLWIN*/con
 window.addEventListener('resize',()=>{if(G)resize3D();});
 function canvasTex(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'));return new THREE.CanvasTexture(c);}
 function shade(hex,amt){const n=parseInt(hex.slice(1),16);const f=v=>Math.max(0,Math.min(255,Math.round(v*(1+amt))));return `rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`;}
-function build3D(){
+function build3D(){if(NET.bgOn)return;
   if(!init3D()||!G)return;const sc=R3.scene;while(sc.children.length)sc.remove(sc.children[0]);R3.epm=[];
   const w=G.w,B=BIOMES[w.biome];
   sc.background=new THREE.Color(0x020203);sc.fog=new THREE.Fog(0x020203,6,34);
@@ -3574,7 +3667,7 @@ function foeMesh(e){const B=BIOMES[G.w.biome];const g=new THREE.Group();g.rotati
     const sp=new THREE.Sprite(R3.sQ);sp.scale.set(.45,.45,.45);sp.position.y=2.15;sp.renderOrder=999;g.add(sp);
     const gh=new THREE.Mesh(R3.geo.ghost,R3.mat.ghost);gh.position.y=1;gh.renderOrder=998;g.add(gh);
     g.userData={bodyMat,inner,arm,sp,gh};R3.scene.add(g);return g;}
-function updRemoteAvatars(dt){
+function updRemoteAvatars(dt){if(NET.bgOn)return;
   if(!R3.ok)return;
   for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.x==null){if(rr.mesh)rr.mesh.visible=false;continue;}
     if(rr.mesh&&(rr.mesh.userData.cls!==p.c||rr.mesh.userData.lks!==(p.lk||''))){R3.scene.remove(rr.mesh);rr.mesh=null;}
@@ -3585,7 +3678,7 @@ function updRemoteAvatars(dt){
     g.visible=true;g.position.set(rr.dx*T,0,rr.dy*T);g.rotation.set(p.dn?-Math.PI/2:0,rr.dyw,0);if(p.dn)g.position.y=.3;
     g.scale.set(U.sc*U.xz,U.sc*(p.cr?.7:1),U.sc*U.xz);for(const m of U.mats){m.opacity=p.iv?.22:1;m.transparent=!!p.iv;}
     if(p.sw!==rr.lastSw){rr.lastSw=p.sw;rr.swingT=.3;}if(rr.swingT>0){rr.swingT-=dt;U.arm.rotation.x=-Math.sin((1-rr.swingT/.3)*Math.PI)*1.4;}else U.arm.rotation.x=p.bk?.9:0;
-    const label=(p.nm?p.nm+' · ':'')+peerName(rr)+(p.dn?' (down)':'')+(G.cls==='doctor'?` ${Math.max(0,Math.round(p.hp||0))}/${p.mx||'?'}`:'');if(label!==U.label){U.label=label;const x=U.c.getContext('2d');x.clearRect(0,0,256,64);x.font='600 30px Alegreya Sans, sans-serif';x.textAlign='center';x.lineWidth=5;x.strokeStyle='#000';x.strokeText(label,128,42);x.fillStyle=CLS[p.c]?CLS[p.c].color:'#fff';x.fillText(label,128,42);U.sp.material.map.needsUpdate=true;}}
+    const label=(p.nm||peerName(rr))+(p.dn?' (down)':'')+(G.cls==='doctor'?` ${Math.max(0,Math.round(p.hp||0))}/${p.mx||'?'}`:'');if(label!==U.label){U.label=label;const ar=fitLabel(U.c,label,CLS[p.c]?CLS[p.c].color:'#fff',48);const old=U.sp.material.map;U.sp.material.map=new THREE.CanvasTexture(U.c);U.sp.material.needsUpdate=true;if(old)old.dispose();const H=.3;U.sp.scale.set(H*ar,H,1);}}
 }
 /* class silhouettes: thin hooded thief, big burly warrior, robed wizard in a silly pointy hat */
 function buildAvatar(cls,look){
@@ -3674,6 +3767,7 @@ function frame(){
   requestAnimationFrame(frame);if(R3.dyn&&G&&!G.tavern&&R3.last){const tt=now();for(const m of R3.dyn.children)if(m.userData&&m.userData.spin)m.rotation.y=tt*2;else if(m.userData&&m.userData.rune)m.visible=!!G.runeVis;}
   const t=now(),dt=Math.min(.05,t-(R3.last||t));R3.last=t;
   if(!G||!R3.ok||!R3.dyn||$('#game').hidden)return;
+  if(G.tavern&&NET.run)mpBgStep(dt);
   if((!G.paused||G.mp)&&!(INV.open&&!G.mp)&&!G.over&&$('#modal').hidden)update(feelDt(dt));
   if(!G)return;
   if(G.featDirty)syncFeatures();
@@ -3708,12 +3802,12 @@ function frame(){
     U.bodyMat.color.set(e.sick?'#8fbf6a':e.civCol||BIOMES[G.w.biome].foeCol);if(e.civ&&e.cowerT>0){U.inner.position.y=-.32;U.inner.rotation.x=.35;}if(e.hp<e.max)U.bodyMat.color.multiplyScalar(.7+.3*e.hp/e.max);if(e.atk>0)U.bodyMat.color.lerp(new THREE.Color(0xff3020),.55*wp);U.bodyMat.emissive&&U.bodyMat.emissive.setRGB(e.atk>0?.35*wp:0,0,0);});
   // enemy shots
   {const list=G.mode==='client'?(G.eprojV||[]):(G.eproj||[]);R3.epm=R3.epm||[];while(R3.epm.length<list.length){const m=new THREE.Mesh(R3.geo.pebble,R3.mat.pebble);m.scale.setScalar(1.6);R3.scene.add(m);R3.epm.push(m);}
-   R3.epm.forEach((m,i)=>{const p=list[i];m.visible=!!p;if(p)m.position.set(p.x*T,1.3,p.y*T);});}
+   R3.epm.forEach((m,i)=>{const p=list[i];m.visible=!!p;m.userData.noEl=true;if(p)m.position.set(p.x*T,p.z!=null?p.z:elAt(p.x,p.y)+1.3,p.y*T);});}
   // bursts
-  for(const b of (G.bursts||[])){b.t+=dt;if(!b.mesh){b.mesh=new THREE.Mesh(R3.geo.fire,new THREE.MeshBasicMaterial({color:b.col||0xff8a3c,transparent:true,opacity:.7,depthWrite:false}));b.mesh.position.set(b.x*T,1,b.y*T);R3.scene.add(b.mesh);}const s=1+b.t*22;b.mesh.scale.setScalar(s);b.mesh.material.opacity=Math.max(0,.7-b.t*1.6);if(b.t>.45){R3.scene.remove(b.mesh);b.done=true;}}
+  for(const b of (G.bursts||[])){b.t+=dt;if(!b.mesh){b.mesh=new THREE.Mesh(R3.geo.fire,new THREE.MeshBasicMaterial({color:b.col||0xff8a3c,transparent:true,opacity:.7,depthWrite:false}));b.mesh.position.set(b.x*T,b.z!=null?b.z:elAt(b.x,b.y)+1,b.y*T);b.mesh.userData.noEl=true;R3.scene.add(b.mesh);}const s=1+b.t*22;b.mesh.scale.setScalar(s);b.mesh.material.opacity=Math.max(0,.7-b.t*1.6);if(b.t>.45){R3.scene.remove(b.mesh);b.done=true;}}
   if(G.bursts)G.bursts=G.bursts.filter(b=>!b.done);
   // projectiles
-  for(const p of G.proj){if(!p.mesh){if(p.kind==='arrow'){p.mesh=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.6),p.at==='water'?new THREE.MeshBasicMaterial({color:0x6aa8ff}):p.at==='rope'?new THREE.MeshLambertMaterial({color:0xc8b48a}):R3.mat.wood);}else p.mesh=new THREE.Mesh(p.kind==='fire'?R3.geo.fire:R3.geo.pebble,p.kind==='fire'?R3.mat.fire:R3.mat.pebble);R3.scene.add(p.mesh);}p.mesh.position.copy(p.pos);if(p.kind==='arrow')p.mesh.lookAt(p.pos.clone().add(p.vel));}
+  for(const p of G.proj){if(!p.mesh){if(p.kind==='arrow'){p.mesh=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.6),p.at==='water'?new THREE.MeshBasicMaterial({color:0x6aa8ff}):p.at==='rope'?new THREE.MeshLambertMaterial({color:0xc8b48a}):R3.mat.wood);p.mesh.userData.noEl=true;}else p.mesh=new THREE.Mesh(p.kind==='fire'?R3.geo.fire:R3.geo.pebble,p.kind==='fire'?R3.mat.fire:R3.mat.pebble);p.mesh.userData.noEl=true;R3.scene.add(p.mesh);}p.mesh.position.copy(p.pos);if(p.kind==='arrow')p.mesh.lookAt(p.pos.clone().add(p.vel));}
   feelFrame(dt);zxRender(dt);elevPass();R3.renderer.render(R3.scene,c);
   G.hudT-=dt;if(G.hudT<=0){G.hudT=.08;renderHUD();}
   G.miniT-=dt;if(G.miniT<=0){G.miniT=.2;drawMini();}

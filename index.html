@@ -3365,11 +3365,12 @@ function jobComplete(){const w=G.w;if(!w)return false;if(!w.bank)return !!G.loot
 
 /*PDMIN*/
 /* ---------- the Plague Doctor's rigged model: one skinned mesh, walk and run clips, loaded beside the page ---------- */
-const PDM={st:0,lib:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/',url:'models/plague_doctor.glb',H:2.0};
+const PDM={st:0,lib:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/',url:'models/plague_doctor.js',H:2.0};
 function pdmScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});}
 async function pdmLoad(){if(PDM.st||typeof THREE==='undefined')return;PDM.st=1;
   try{if(!THREE.GLTFLoader)await pdmScript(PDM.lib+'loaders/GLTFLoader.js');if(!THREE.SkeletonUtils)await pdmScript(PDM.lib+'utils/SkeletonUtils.js');
-    const gl=await new Promise((ok,no)=>new THREE.GLTFLoader().load(PDM.url,ok,undefined,no));const sc=gl.scene;
+    if(!window.PDM_GLB)await pdmScript(PDM.url);const bin=atob(window.PDM_GLB),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);window.PDM_GLB=null;
+    const gl=await new Promise((ok,no)=>new THREE.GLTFLoader().parse(u8.buffer,'',ok,no));const sc=gl.scene;
     sc.traverse(o=>{if(o.isMesh&&o.material&&o.material.map){PDM.tex=o.material.map;PDM.tex.encoding=THREE.LinearEncoding;PDM.tex.anisotropy=4;}});
     PDM.clips={};for(const a of gl.animations)PDM.clips[a.name]=a;if(!PDM.clips.walk||!PDM.clips.run)throw new Error('missing clips');
     PDM.scene=sc;

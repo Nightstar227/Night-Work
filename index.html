@@ -3368,7 +3368,7 @@ function jobComplete(){const w=G.w;if(!w)return false;if(!w.bank)return !!G.loot
 const CMOD={lib:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/',
   doctor:{url:'models/plague_doctor.js',v:'PDM_GLB',H:2.0,prop:'censer',st:0},
   warrior:{url:'models/warrior.js',v:'WAR_GLB',H:2.15,prop:'blade',st:0},
-  wizard:{url:'models/wizard.js',v:'WIZ_GLB',H:1.95,prop:'staff',st:0}};
+  wizard:{url:'models/wizard.js',v:'WIZ_GLB',H:2.2,prop:'staff',st:0}};
 const PDM=CMOD.doctor;
 function pdmScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});}
 function cmReady(cls){const M=CMOD[cls];return !!(M&&M.st===2);}

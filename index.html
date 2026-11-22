@@ -3364,45 +3364,56 @@ function rerollBoard(){const keep=m=>m.status==='complete'||(m.history&&m.histor
 function jobComplete(){const w=G.w;if(!w)return false;if(!w.bank)return !!G.looted;return Object.values(w.locks||{}).every(Boolean)&&(w.crates||[]).some(c=>c.vault&&c.del);}
 
 /*PDMIN*/
-/* ---------- the Plague Doctor's rigged model: one skinned mesh, walk and run clips, loaded beside the page ---------- */
-const PDM={st:0,lib:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/',url:'models/plague_doctor.js',H:2.0};
+/* ---------- rigged class models (Plague Doctor, Warrior): one skinned mesh each with walk and run clips, loaded beside the page ---------- */
+const CMOD={lib:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/',
+  doctor:{url:'models/plague_doctor.js',v:'PDM_GLB',H:2.0,prop:'censer',st:0},
+  warrior:{url:'models/warrior.js',v:'WAR_GLB',H:2.15,prop:'blade',st:0}};
+const PDM=CMOD.doctor;
 function pdmScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});}
-async function pdmLoad(){if(PDM.st||typeof THREE==='undefined')return;PDM.st=1;
-  try{if(!THREE.GLTFLoader)await pdmScript(PDM.lib+'loaders/GLTFLoader.js');if(!THREE.SkeletonUtils)await pdmScript(PDM.lib+'utils/SkeletonUtils.js');
-    if(!window.PDM_GLB)await pdmScript(PDM.url);const bin=atob(window.PDM_GLB),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);window.PDM_GLB=null;
-    const gl=await new Promise((ok,no)=>new THREE.GLTFLoader().parse(u8.buffer,'',ok,no));const sc=gl.scene;
-    sc.traverse(o=>{if(o.isMesh&&o.material&&o.material.map){PDM.tex=o.material.map;PDM.tex.encoding=THREE.LinearEncoding;PDM.tex.anisotropy=4;}});
-    PDM.clips={};for(const a of gl.animations)PDM.clips[a.name]=a;if(!PDM.clips.walk||!PDM.clips.run)throw new Error('missing clips');
-    PDM.scene=sc;
-    // the standing pose: the moment in the walk where the feet pass each other
-    {const m=THREE.SkeletonUtils.clone(sc),mx=new THREE.AnimationMixer(m),a=mx.clipAction(PDM.clips.walk);a.play();let lf,rf;m.traverse(o=>{if(o.name==='LeftFoot')lf=o;if(o.name==='RightFoot')rf=o;});
-      const A=new THREE.Vector3(),B=new THREE.Vector3(),d=PDM.clips.walk.duration;let best=0,bd=1e9;for(let i=0;i<32;i++){a.time=d*i/32;mx.update(0);m.updateMatrixWorld(true);if(!lf||!rf)break;lf.getWorldPosition(A);rf.getWorldPosition(B);const s=Math.abs(A.z-B.z);if(s<bd){bd=s;best=a.time;}}PDM.idleT=best;
-      // true height of the posed, skinned mesh
-      a.time=best;mx.update(0);m.updateMatrixWorld(true);let sk=null;m.traverse(o=>{if(o.isSkinnedMesh)sk=o;});let lo=1e9,hi=-1e9;if(sk){const ga=sk.geometry.attributes,dnOf=at=>{const ar=at.array;return !at.normalized?1:ar instanceof Int16Array?32767:ar instanceof Uint16Array?65535:ar instanceof Int8Array?127:ar instanceof Uint8Array?255:1;};const pd=dnOf(ga.position),wd=dnOf(ga.skinWeight);
-        const sb=sk.skeleton,Ms=sb.bones.map((bn,j)=>new THREE.Matrix4().multiplyMatrices(bn.matrixWorld,sb.boneInverses[j])),V=new THREE.Vector3(),B=new THREE.Vector3(),Acc=new THREE.Vector3(),n=ga.position.count;
-        for(let i=0;i<n;i+=3){B.fromBufferAttribute(ga.position,i).divideScalar(pd).applyMatrix4(sk.bindMatrix);Acc.set(0,0,0);for(let k=0;k<4;k++){const w=ga.skinWeight.getComponent?ga.skinWeight.getComponent(i,k)/wd:[ga.skinWeight.getX(i),ga.skinWeight.getY(i),ga.skinWeight.getZ(i),ga.skinWeight.getW(i)][k]/wd;if(!w)continue;const j=[ga.skinIndex.getX(i),ga.skinIndex.getY(i),ga.skinIndex.getZ(i),ga.skinIndex.getW(i)][k];V.copy(B).applyMatrix4(Ms[j]).multiplyScalar(w);Acc.add(V);}
-          V.copy(Acc).applyMatrix4(sk.bindMatrixInverse).applyMatrix4(sk.matrixWorld);lo=Math.min(lo,V.y);hi=Math.max(hi,V.y);}}
-      if(!(hi>lo))throw new Error('no size');PDM.h=hi-lo;PDM.y0=lo;}
-    PDM.st=2;if(typeof CR!=='undefined'&&CR&&CR.open&&CR.cls==='doctor')try{crPreview();}catch(e){}}
-  catch(e){PDM.st=3;console.warn('Plague Doctor model not loaded, using the plain figure.',e);}}
-function pdmBuild(g,mats,col){const m=THREE.SkeletonUtils.clone(PDM.scene),wrap=new THREE.Group(),s=PDM.H/PDM.h;wrap.add(m);wrap.rotation.y=Math.PI;wrap.scale.setScalar(s);wrap.position.y=-PDM.y0*s;g.add(wrap);
+function cmReady(cls){const M=CMOD[cls];return !!(M&&M.st===2);}
+async function cmLoad(cls){const M=CMOD[cls];if(!M||M.st||typeof THREE==='undefined')return;M.st=1;
+  try{if(!THREE.GLTFLoader)await pdmScript(CMOD.lib+'loaders/GLTFLoader.js');if(!THREE.SkeletonUtils)await pdmScript(CMOD.lib+'utils/SkeletonUtils.js');
+    if(!window[M.v])await pdmScript(M.url);const bin=atob(window[M.v]),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);window[M.v]=null;
+    const gl=await new Promise((ok,no)=>new THREE.GLTFLoader().parse(u8.buffer,'',ok,no));const sc=gl.scene;M.scene=sc;
+    sc.traverse(o=>{if(o.isMesh&&o.material&&o.material.map){M.tex=o.material.map;M.tex.encoding=THREE.LinearEncoding;M.tex.anisotropy=4;}});
+    M.clips={};for(const a of gl.animations)M.clips[a.name]=a;if(!M.clips.walk||!M.clips.run)throw new Error('missing clips');
+    {const m=THREE.SkeletonUtils.clone(sc),mx=new THREE.AnimationMixer(m),a=mx.clipAction(M.clips.walk);a.play();let lf,rf;m.traverse(o=>{if(o.name==='LeftFoot')lf=o;if(o.name==='RightFoot')rf=o;});
+      // the standing pose: the moment in the walk where the feet pass each other
+      const A=new THREE.Vector3(),B=new THREE.Vector3(),d=M.clips.walk.duration;let best=0,bd=1e9;for(let i=0;i<32;i++){a.time=d*i/32;mx.update(0);m.updateMatrixWorld(true);if(!lf||!rf)break;lf.getWorldPosition(A);rf.getWorldPosition(B);const s=Math.abs(A.z-B.z);if(s<bd){bd=s;best=a.time;}}M.idleT=best;
+      // true height of the posed, skinned mesh (positions and weights may be quantized)
+      a.time=best;mx.update(0);m.updateMatrixWorld(true);let sk=null;m.traverse(o=>{if(o.isSkinnedMesh)sk=o;});let lo=1e9,hi=-1e9;
+      if(sk){const ga=sk.geometry.attributes,dnOf=at=>{const ar=at.array;return !at.normalized?1:ar instanceof Int16Array?32767:ar instanceof Uint16Array?65535:ar instanceof Int8Array?127:ar instanceof Uint8Array?255:1;};const pd=dnOf(ga.position),wd=dnOf(ga.skinWeight);
+        const sb=sk.skeleton,Ms=sb.bones.map((bn,j)=>new THREE.Matrix4().multiplyMatrices(bn.matrixWorld,sb.boneInverses[j])),V=new THREE.Vector3(),Bp=new THREE.Vector3(),Acc=new THREE.Vector3(),n=ga.position.count,sw=ga.skinWeight,si=ga.skinIndex;
+        for(let i=0;i<n;i+=3){Bp.fromBufferAttribute(ga.position,i).divideScalar(pd).applyMatrix4(sk.bindMatrix);Acc.set(0,0,0);const W=[sw.getX(i),sw.getY(i),sw.getZ(i),sw.getW(i)],J=[si.getX(i),si.getY(i),si.getZ(i),si.getW(i)];
+          for(let k=0;k<4;k++){const w=W[k]/wd;if(!w)continue;V.copy(Bp).applyMatrix4(Ms[J[k]]).multiplyScalar(w);Acc.add(V);}V.copy(Acc).applyMatrix4(sk.bindMatrixInverse).applyMatrix4(sk.matrixWorld);lo=Math.min(lo,V.y);hi=Math.max(hi,V.y);}}
+      if(!(hi>lo))throw new Error('no size');M.h=hi-lo;M.y0=lo;}
+    M.st=2;if(typeof CR!=='undefined'&&CR&&CR.open&&CR.cls===cls)try{crPreview();}catch(e){}}
+  catch(e){M.st=3;console.warn('The '+cls+' model did not load, using the plain figure.',e);}}
+function pdmLoad(){cmLoad('doctor');}
+function cmBuild(cls,g,mats,col){const M=CMOD[cls],m=THREE.SkeletonUtils.clone(M.scene),wrap=new THREE.Group(),s=M.H/M.h;wrap.add(m);wrap.rotation.y=Math.PI;wrap.scale.setScalar(s);wrap.position.y=-M.y0*s;g.add(wrap);
   const tint=new THREE.Color(1,1,1).lerp(new THREE.Color(col),.15);
-  m.traverse(o=>{if(o.isMesh){o.material=new THREE.MeshLambertMaterial({map:PDM.tex,skinning:true,color:tint});mats.push(o.material);o.frustumCulled=false;}});
-  const mixer=new THREE.AnimationMixer(m),walk=mixer.clipAction(PDM.clips.walk),run=mixer.clipAction(PDM.clips.run);walk.play();run.play();walk.setEffectiveWeight(1);run.setEffectiveWeight(0);walk.timeScale=0;walk.time=PDM.idleT||0;mixer.update(0);
+  m.traverse(o=>{if(o.isMesh){o.material=new THREE.MeshLambertMaterial({map:M.tex,skinning:true,color:tint});mats.push(o.material);o.frustumCulled=false;}});
+  const mixer=new THREE.AnimationMixer(m),walk=mixer.clipAction(M.clips.walk),run=mixer.clipAction(M.clips.run);walk.play();run.play();walk.setEffectiveWeight(1);run.setEffectiveWeight(0);walk.timeScale=0;walk.time=M.idleT||0;mixer.update(0);
   let hand=null;m.traverse(o=>{if(o.name==='RightHand')hand=o;});
-  // the censer swings from the right hand on a short chain
-  const brass=new THREE.MeshLambertMaterial({color:0x6e5a30});mats.push(brass);const cen=new THREE.Group();const ch=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.3,4),brass);ch.position.y=-.15;const pot=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),brass);pot.position.y=-.33;
-  const cap=new THREE.Mesh(new THREE.ConeGeometry(.06,.07,8),brass);cap.position.y=-.27;cen.add(ch,pot,cap);g.add(cen);
-  if(hand){g.updateMatrixWorld(true);hand.getWorldPosition(PDMV);g.worldToLocal(PDMV);cen.position.copy(PDMV);}
-  g.userData.pdm={mixer,walk,run,k:0,hand,cen,sw:0};return 1;}
+  const prop=new THREE.Group();g.add(prop);
+  if(M.prop==='censer'){// the censer swings from the right hand on a short chain
+    const brass=new THREE.MeshLambertMaterial({color:0x6e5a30});mats.push(brass);const ch=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.3,4),brass);ch.position.y=-.15;const pot=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),brass);pot.position.y=-.33;
+    const cap=new THREE.Mesh(new THREE.ConeGeometry(.06,.07,8),brass);cap.position.y=-.27;prop.add(ch,pot,cap);}
+  if(M.prop==='blade'){// a plain soldier's sword in the right fist, tip down and forward
+    const steel=new THREE.MeshLambertMaterial({color:0x8a8e96}),grip=new THREE.MeshLambertMaterial({color:0x3a2a1c}),guard=new THREE.MeshLambertMaterial({color:0x5a4a2a});mats.push(steel,grip,guard);
+    const bl=new THREE.Mesh(new THREE.BoxGeometry(.075,.85,.02),steel);bl.position.y=-.55;const gd=new THREE.Mesh(new THREE.BoxGeometry(.24,.035,.05),guard);gd.position.y=-.1;const hd=new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,.18,6),grip);
+    const pm=new THREE.Mesh(new THREE.SphereGeometry(.035,6,5),guard);pm.position.y=.1;prop.add(bl,gd,hd,pm);prop.rotation.x=.35;}
+  g.userData.pdm={M,mixer,walk,run,k:0,hand,cen:prop,sw:0,swing:M.prop==='censer'};
+  if(hand){g.updateMatrixWorld(true);hand.getWorldPosition(PDMV);g.worldToLocal(PDMV);prop.position.copy(PDMV);}return 1;}
+function pdmBuild(g,mats,col){return cmBuild('doctor',g,mats,col);}
 const PDMV=new THREE.Vector3();
-function pdmAnim(rr,p,U,dt){const A=U.pdm;if(rr.pdx==null){rr.pdx=rr.dx;rr.pdy=rr.dy;}const sp=Math.hypot(rr.dx-rr.pdx,rr.dy-rr.pdy)*T/Math.max(dt,1e-3);rr.pdx=rr.dx;rr.pdy=rr.dy;rr.psp=(rr.psp||0)+(sp-(rr.psp||0))*Math.min(1,dt*6);
+function pdmAnim(rr,p,U,dt){const A=U.pdm,M=A.M;if(rr.pdx==null){rr.pdx=rr.dx;rr.pdy=rr.dy;}const sp=Math.hypot(rr.dx-rr.pdx,rr.dy-rr.pdy)*T/Math.max(dt,1e-3);rr.pdx=rr.dx;rr.pdy=rr.dy;rr.psp=(rr.psp||0)+(sp-(rr.psp||0))*Math.min(1,dt*6);
   const v=rr.psp,moving=!p.dn&&(v>.5||p.mv&&v>.2),running=moving&&!!p.sp&&!p.cr;A.k+=((running?1:0)-A.k)*Math.min(1,dt*7);A.walk.setEffectiveWeight(1-A.k);A.run.setEffectiveWeight(A.k);
   if(moving){A.walk.timeScale=Math.max(.5,Math.min(1.9,v/(p.cr?2.2:3.4)));A.run.timeScale=Math.max(.7,Math.min(1.5,v/7.5));A.still=0;}
-  else{A.walk.timeScale=0;A.run.timeScale=0;if(!A.still){A.still=1;A.walk.time=PDM.idleT||0;}}
+  else{A.walk.timeScale=0;A.run.timeScale=0;if(!A.still){A.still=1;A.walk.time=M.idleT||0;}}
   A.mixer.update(dt);
-  if(A.hand){const g=rr.mesh;g.updateMatrixWorld(true);A.hand.getWorldPosition(PDMV);g.worldToLocal(PDMV);A.cen.position.copy(PDMV);A.sw+=dt*(moving?6:2);A.cen.rotation.set(Math.sin(A.sw)*(moving?.35:.12),0,Math.cos(A.sw*.7)*.15);}}
-setTimeout(pdmLoad,0);
+  if(A.hand){const g=rr.mesh;g.updateMatrixWorld(true);A.hand.getWorldPosition(PDMV);g.worldToLocal(PDMV);A.cen.position.copy(PDMV);if(A.swing){A.sw+=dt*(moving?6:2);A.cen.rotation.set(Math.sin(A.sw)*(moving?.35:.12),0,Math.cos(A.sw*.7)*.15);}else{const sw=rr.swingT>0?Math.sin((1-rr.swingT/.3)*Math.PI)*1.5:p.bk?.9:0;A.cen.rotation.set(.35+sw,0,p.bk?.9:0);}}}
+setTimeout(()=>{cmLoad('doctor');cmLoad('warrior');},0);
 
 /* ---------- interaction ---------- */
 function findFocus(){
@@ -3711,7 +3722,7 @@ function foeMesh(e){const B=BIOMES[G.w.biome];const g=new THREE.Group();g.rotati
 function updRemoteAvatars(dt){if(NET.bgOn)return;
   if(!R3.ok)return;
   for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.x==null){if(rr.mesh)rr.mesh.visible=false;continue;}
-    if(rr.mesh&&(rr.mesh.userData.cls!==p.c||rr.mesh.userData.lks!==(p.lk||'')||rr.mesh.userData.prim&&PDM.st===2)){R3.scene.remove(rr.mesh);rr.mesh=null;}
+    if(rr.mesh&&(rr.mesh.userData.cls!==p.c||rr.mesh.userData.lks!==(p.lk||'')||rr.mesh.userData.prim&&cmReady(p.c))){R3.scene.remove(rr.mesh);rr.mesh=null;}
     if(!rr.mesh){const g=buildAvatar(p.c,unpackLook(p.lk));const U=g.userData;
       const c=document.createElement('canvas');c.width=256;c.height=64;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));sp.scale.set(1.6,.4,1);sp.position.y=p.c==='wizard'?2.75:2.35;sp.renderOrder=997;g.add(sp);
       Object.assign(U,{sp,c,label:'',lks:p.lk||''});rr.mesh=g;if(rr.dx==null){rr.dx=p.x;rr.dy=p.y;rr.dyw=p.yw;}R3.scene.add(g);}
@@ -3734,7 +3745,8 @@ function buildAvatar(cls,look){
     add(box(.34,.06,.02),L(0xe9e3d0),0,1.5,-.17);// glinting eyes under the hood
     add(cyl(.28,.36,.9),cloak,0,.85,.08,{s:[1,1,.6]});
     const a=new THREE.Mesh(box(.08,.08,.5),cloak);a.position.set(0,0,-.2);arm.add(a);const bl=new THREE.Mesh(box(.02,.02,.32),L(0xc9ccd2));bl.position.set(0,0,-.58);arm.add(bl);arm.position.set(.24,1.05,-.05);sc=.96;}
-  else if(cls==='warrior'){const mail=L(0x777b84),tab=L(col),hide=L(0x5a3e28),hair=L(lv.lk.age===2?new THREE.Color(HAIRC[lv.lk.hc]||'#4a2a14').lerp(new THREE.Color('#a0a0a0'),.55):(HAIRC[lv.lk.hc]||'#4a2a14'));
+  else if(cls==='warrior'&&cmReady('warrior')){sc=cmBuild('warrior',g,mats,col);}
+  else if(cls==='warrior'){cmLoad('warrior');const mail=L(0x777b84),tab=L(col),hide=L(0x5a3e28),hair=L(lv.lk.age===2?new THREE.Color(HAIRC[lv.lk.hc]||'#4a2a14').lerp(new THREE.Color('#a0a0a0'),.55):(HAIRC[lv.lk.hc]||'#4a2a14'));
     add(box(.72,.75,.46),mail,0,1.08,0);add(box(.76,.5,.5),tab,0,.98,0);add(box(.62,.12,.5),hide,0,.72,0);
     add(cyl(.13,.12,.72),hide,-.17,.35,0);add(cyl(.13,.12,.72),hide,.17,.35,0);
     add(sph(.2),mail,-.45,1.4,0,{s:[1.1,.8,1.1]});add(sph(.2),mail,.45,1.4,0,{s:[1.1,.8,1.1]});
@@ -3742,7 +3754,7 @@ function buildAvatar(cls,look){
     add(cyl(.12,.14,.66),mail,-.46,1.02,0,{rz:.12});
     const a=new THREE.Mesh(cyl(.12,.13,.6),mail);a.rotation.x=Math.PI/2;a.position.z=-.22;arm.add(a);const bl=new THREE.Mesh(box(.07,.02,1.05),L(0xb9bcc4));bl.position.set(0,0,-.95);arm.add(bl);const gd=new THREE.Mesh(box(.3,.04,.05),L(0x7a5a2a));gd.position.z=-.45;arm.add(gd);
     arm.position.set(.46,1.12,0);sc=1.15;}
-  else if(cls==='doctor'){if(PDM.st===2)sc=pdmBuild(g,mats,col);else{sc=buildDoctor(add,L,col,arm,{cyl,box,sph,cone});pdmLoad();}}
+  else if(cls==='doctor'){if(cmReady('doctor'))sc=cmBuild('doctor',g,mats,col);else{sc=buildDoctor(add,L,col,arm,{cyl,box,sph,cone});cmLoad('doctor');}}
   else{const robe=L(col),trim=L(new THREE.Color(col).multiplyScalar(.6)),beard=L(HAIRC[lv.lk.hc]||'#e8e4dc'),hat=L(new THREE.Color(col).multiplyScalar(.75)),star=new THREE.MeshBasicMaterial({color:0xf1d36a});mats.push(star);
     add(cone(.42,1.35,16),robe,0,.68,0);add(cyl(.2,.2,.08),trim,0,1.15,0);
     add(sph(.19),skin,0,1.5,0);if(lv.lk.fh>=2)add(cone(.14,lv.lk.fh===3?.5:.28,10),beard,0,lv.lk.fh===3?1.22:1.32,lv.lk.fh===3?-.12:-.13,{rx:Math.PI+.2});
@@ -3751,7 +3763,7 @@ function buildAvatar(cls,look){
     const a=new THREE.Mesh(cyl(.07,.1,.5),robe);a.rotation.x=Math.PI/2;a.position.z=-.2;arm.add(a);const st=new THREE.Mesh(cyl(.025,.03,1.7,8),L(0x5a4130));st.position.set(0,.1,-.42);arm.add(st);
     const orb=new THREE.Mesh(sph(.08),new THREE.MeshBasicMaterial({color:0xb6b2ff}));mats.push(orb.material);orb.position.set(0,.95,-.42);arm.add(orb);arm.position.set(.36,.95,-.05);sc=1;}
   if(!g.userData.pdm)avatarExtras(add,L,cls,lv,{cyl,box,sph,cone});{const RR=RACES[lv.race]||RACES.human;sc*=RR.sc*([.94,1,1.06][lv.lk.ht==null?1:lv.lk.ht]||1);var xz=RR.xz*([.9,1,1.12][lv.lk.build]||1)*(lv.sex?.92:1);}
-  g.userData={arm,cls,mats,sc,xz,pdm:g.userData.pdm,prim:cls==='doctor'&&!g.userData.pdm};return g;
+  g.userData={arm,cls,mats,sc,xz,pdm:g.userData.pdm,prim:!!CMOD[cls]&&!g.userData.pdm};return g;
 }
 function rebuildWalls(){
   const w=G.w,sc=R3.scene;if(R3.walls)sc.remove(R3.walls);

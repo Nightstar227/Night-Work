@@ -995,7 +995,7 @@ function syncTavern(){const w=G.w,Gm=R3.geo,Mt=R3.mat;const L=c=>new THREE.MeshL
       const head=new THREE.Mesh(new THREE.SphereGeometry(.15,12,10),L(0xd9b896));head.position.y=1.82;npc.add(body,head);
       if(vend){const ap=new THREE.Mesh(new THREE.BoxGeometry(.3,.5,.05),L(0xcbbf9a));ap.position.set(.18,1.1,0);ap.rotation.y=Math.PI/2;npc.add(ap);}
       else{const hat=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.03,14),L(0x1d1510));hat.position.y=1.95;const top=new THREE.Mesh(new THREE.CylinderGeometry(.12,.13,.18,12),L(0x1d1510));top.position.y=2.04;npc.add(hat,top);}
-      npc.position.set(cx+sx*.42,0,cz+T/2);R3.dyn.add(npc);if(vend)fenceDress(npc);
+      npc.position.set(cx+sx*.42,0,cz+T/2);R3.dyn.add(npc);npcDress(npc,vend?'fence':'gambler');
       for(let i=0;i<3;i++){const it=vend?addMesh(new THREE.BoxGeometry(.06,.02,.4),L(0xb9bcc4),ccx-sx*.12,1.08,cz+T/2-.5+i*.5):addMesh(new THREE.BoxGeometry(.22,.16,.22),L([0x6b2f2f,0x2f4a6b,0x4a6b2f][i]),ccx-sx*.12,1.14,cz+T/2-.5+i*.5);if(vend)it.rotation.y=.3*i;}
       labelSprite(vend?'Vendor':'Gambler',vend?'#e7c27a':'#c69cff',1.4).position.set(cx,2.5,cz+T/2);}
     else if(t===STREET){addMesh(Gm.door,Mt.wood,cx,WALLH/2,cz-.2);const fz=cz+T/2;addMesh(new THREE.BoxGeometry(.14,.14,.14),Mt.gold,cx+.45,1.05,fz+.02);
@@ -3370,7 +3370,8 @@ const CMOD={lib:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/',
   warrior:{url:'models/warrior.js',v:'WAR_GLB',H:2.15,prop:'blade',st:0},
   wizard:{url:'models/wizard.js',v:'WIZ_GLB',H:2.2,prop:'staff',st:0},
   thief:{url:'models/thief.js',v:'THF_GLB',H:1.9,prop:'dagger',st:0},
-  fence:{url:'models/fence.js',v:'FEN_GLB',H:1.8,npc:true,st:0,wait:[]}};
+  fence:{url:'models/fence.js',v:'FEN_GLB',H:1.8,npc:true,st:0,wait:[],rot:-Math.PI/2},
+  gambler:{url:'models/gambler.js',v:'GAM_GLB',H:1.8,npc:true,st:0,wait:[],rot:Math.PI/2}};
 const PDM=CMOD.doctor;
 function pdmScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});}
 function cmReady(cls){const M=CMOD[cls];return !!(M&&M.st===2);}
@@ -3392,7 +3393,7 @@ async function cmLoad(cls){const M=CMOD[cls];if(!M||M.st||typeof THREE==='undefi
         for(let i=0;i<n;i+=3){Bp.fromBufferAttribute(ga.position,i).divideScalar(pd).applyMatrix4(sk.bindMatrix);Acc.set(0,0,0);const W=[sw.getX(i),sw.getY(i),sw.getZ(i),sw.getW(i)],J=[si.getX(i),si.getY(i),si.getZ(i),si.getW(i)];
           for(let k=0;k<4;k++){const w=W[k]/wd;if(!w)continue;V.copy(Bp).applyMatrix4(Ms[J[k]]).multiplyScalar(w);Acc.add(V);}V.copy(Acc).applyMatrix4(sk.bindMatrixInverse).applyMatrix4(sk.matrixWorld);lo=Math.min(lo,V.y);hi=Math.max(hi,V.y);}}
       if(!(hi>lo))throw new Error('no size');M.h=hi-lo;M.y0=lo;}
-    M.st=2;if(M.wait){for(const n of M.wait.splice(0))fenceDress(n);}if(typeof CR!=='undefined'&&CR&&CR.open&&CR.cls===cls)try{crPreview();}catch(e){}}
+    M.st=2;if(M.wait){for(const n of M.wait.splice(0))npcDress(n,cls);}if(typeof CR!=='undefined'&&CR&&CR.open&&CR.cls===cls)try{crPreview();}catch(e){}}
   catch(e){M.st=3;console.warn('The '+cls+' model did not load, using the plain figure.',e);}}
 function pdmLoad(){cmLoad('doctor');}
 function cmBuild(cls,g,mats,col){const M=CMOD[cls],m=THREE.SkeletonUtils.clone(M.scene),wrap=new THREE.Group(),s=M.H/M.h;wrap.add(m);wrap.rotation.y=Math.PI;wrap.scale.setScalar(s);wrap.position.y=-M.y0*s;g.add(wrap);
@@ -3435,8 +3436,9 @@ function pdmAnim(rr,p,U,dt){const A=U.pdm,M=A.M,C=A.acts;if(rr.pdx==null){rr.pdx
   if(A.hand){const g=rr.mesh;g.updateMatrixWorld(true);A.hand.getWorldPosition(PDMV);g.worldToLocal(PDMV);A.cen.position.copy(PDMV);if(A.swing){A.sw+=dt*(moving2?6:2);A.cen.rotation.set(Math.sin(A.sw)*(moving2?.35:.12),0,Math.cos(A.sw*.7)*.15);}else if(M.prop==='staff'){A.cen.rotation.set(A.castT>0?-.3:.08,0,0);if(A.cen.userData.orb)A.cen.userData.orb.rotation.y+=dt*2;}else{const sw=rr.swingT>0?Math.sin((1-rr.swingT/.3)*Math.PI)*1.5:p.bk?.9:0;A.cen.rotation.set(.35+sw,0,p.bk?.9:0);}}}
 /* the fence behind his counter in the back room: idles, now and then scratches his head over your prices */
 const CMLIVE=[];
-function fenceDress(npc){const M=CMOD.fence;if(M.st!==2){if(M.st!==3){M.wait.push(npc);cmLoad('fence');}return;}if(npc.userData.dressed)return;npc.userData.dressed=1;
-  while(npc.children.length)npc.remove(npc.children[0]);const m=THREE.SkeletonUtils.clone(M.scene),wrap=new THREE.Group(),s=M.H/M.h;wrap.add(m);wrap.rotation.y=Math.PI;wrap.scale.setScalar(s);wrap.position.y=-M.y0*s;npc.add(wrap);npc.rotation.y=-Math.PI/2;
+function fenceDress(npc){npcDress(npc,'fence');}
+function npcDress(npc,key){const M=CMOD[key];if(M.st!==2){if(M.st!==3){M.wait.push(npc);cmLoad(key);}return;}if(npc.userData.dressed)return;npc.userData.dressed=1;
+  while(npc.children.length)npc.remove(npc.children[0]);const m=THREE.SkeletonUtils.clone(M.scene),wrap=new THREE.Group(),s=M.H/M.h;wrap.add(m);wrap.rotation.y=Math.PI;wrap.scale.setScalar(s);wrap.position.y=-M.y0*s;npc.add(wrap);npc.rotation.y=M.rot||0;
   m.traverse(o=>{if(o.isMesh){o.material=new THREE.MeshLambertMaterial({map:M.tex,skinning:true});o.frustumCulled=false;}});
   const mixer=new THREE.AnimationMixer(m),idle=mixer.clipAction(M.clips.idle);idle.play();let scr=null;if(M.clips.scratch){scr=mixer.clipAction(M.clips.scratch);scr.setLoop(THREE.LoopOnce);scr.clampWhenFinished=false;}
   idle.time=Math.random()*M.clips.idle.duration;mixer.update(0);CMLIVE.push({npc,mixer,idle,scr,t:15+Math.random()*20});}
@@ -3444,7 +3446,7 @@ function cmTick(dt){for(let i=CMLIVE.length-1;i>=0;i--){const L=CMLIVE[i];let o=
     if(L.scr&&L.t<=0&&!L.scrOn){L.scrOn=1;L.scr.reset();L.scr.play();L.idle.crossFadeTo(L.scr,.6,false);L.t=L.scr.getClip().duration-.7;}
     else if(L.scrOn&&L.t<=0){L.scrOn=0;L.idle.reset();L.idle.play();L.scr.crossFadeTo(L.idle,.6,false);L.t=25+Math.random()*25;}
     L.mixer.update(dt);}}
-setTimeout(()=>{cmLoad('doctor');cmLoad('warrior');cmLoad('wizard');cmLoad('thief');cmLoad('fence');},0);
+setTimeout(()=>{cmLoad('doctor');cmLoad('warrior');cmLoad('wizard');cmLoad('thief');cmLoad('fence');cmLoad('gambler');},0);
 
 /* ---------- interaction ---------- */
 function findFocus(){

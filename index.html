@@ -2190,6 +2190,7 @@ document.addEventListener('keydown',ev=>{/*TYPINGFIX*/
   if(['KeyW','KeyA','KeyS','KeyD','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ControlLeft'].includes(ev.code))ev.preventDefault();
   if((ev.code==='KeyI'||ev.code==='Tab')&&!ev.repeat&&!G.over){ev.preventDefault();G.keys={};openInv(G.tavern?'tavern':'run');return;}
   if(ev.code==='KeyJ'&&!ev.repeat){toggleJournal();return;}
+  if(ev.code==='KeyV'&&!ev.repeat){tpToggle();return;}
   if(ev.code==='KeyM'&&!ev.repeat){auSetOn(!AU.on);toast(AU.on?'Sound on.':'Sound off.');return;}
   if(G.paused)return;
   if(ev.code==='KeyC'||ev.code==='ControlLeft'||ev.code==='ControlRight'){if(!ev.repeat)G.P.crouch=!G.P.crouch;}
@@ -3448,6 +3449,35 @@ function cmTick(dt){for(let i=CMLIVE.length-1;i>=0;i--){const L=CMLIVE[i];let o=
     L.mixer.update(dt);}}
 setTimeout(()=>{cmLoad('doctor');cmLoad('warrior');cmLoad('wizard');cmLoad('thief');cmLoad('fence');cmLoad('gambler');},0);
 
+/*TPIN*/
+/* ---------- third-person view: V or the View button. Your own figure, a camera over the shoulder that stays out of walls ---------- */
+const TP={on:false,rr:{},V:new THREE.Vector3(),D:new THREE.Vector3()};
+try{TP.on=localStorage.getItem('nw.tp')==='1';}catch(e){}
+function tpSet(on){TP.on=!!on;try{localStorage.setItem('nw.tp',TP.on?'1':'0');}catch(e){}const b=$('#tpBtn');if(b)b.textContent=TP.on?'3rd person':'1st person';if(!TP.on&&TP.av)TP.av.visible=false;}
+function tpToggle(){tpSet(!TP.on);toast(TP.on?'Third-person view. V to switch back.':'First-person view.');}
+function tpBtn(){if($('#tpBtn'))return;const s=$('#sndBtn');if(!s)return;const b=document.createElement('button');b.className='btn';b.id='tpBtn';b.title='Switch first and third person (V)';b.onclick=()=>{tpToggle();b.blur();};s.after(b);tpSet(TP.on);}
+setTimeout(tpBtn,0);
+/* your own figure, rebuilt when class or look changes or a model finishes loading */
+function tpAvatar(dt){const P=G.P;const lk=packLook();let av=TP.av;
+  if(av&&(av.userData.cls!==G.cls||av.userData.lks!==lk||av.userData.prim&&cmReady(G.cls)||av.parent!==R3.scene)){if(av.parent)av.parent.remove(av);av=TP.av=null;}
+  if(!av){av=TP.av=buildAvatar(G.cls,unpackLook(lk));av.userData.lks=lk;av.userData.noEl=true;R3.scene.add(av);TP.rr={dx:P.x,dy:P.y,dyw:P.yaw};}
+  const U=av.userData,rr=TP.rr,dn=G.down>0;av.visible=true;rr.dx=P.x;rr.dy=P.y;rr.dyw=P.yaw;rr.mesh=av;
+  const p={mv:P.moving?1:0,sp:P.sprint?1:0,cr:P.crouch?1:0,dn:dn?1:0,sw:G.swingN||0,bk:P.blocking?1:0};
+  const flat=dn&&!(U.pdm&&U.pdm.acts.die);av.position.set(P.x*T,(P.vz||0)+(flat?.3:0),P.y*T);av.rotation.set(flat?-Math.PI/2:0,P.yaw,0);
+  av.scale.set(U.sc*U.xz,U.sc*(p.cr&&!(U.pdm&&U.pdm.acts.sneak)?.7:1),U.sc*U.xz);for(const m of U.mats){m.opacity=P.invis>0?.3:1;m.transparent=P.invis>0;}
+  if(U.pdm)pdmAnim(rr,p,U,dt);else{if(p.sw!==rr.lastSw){rr.lastSw=p.sw;rr.swingT=.3;}if(rr.swingT>0){rr.swingT-=dt;U.arm.rotation.x=-Math.sin((1-rr.swingT/.3)*Math.PI)*1.4;}else U.arm.rotation.x=p.bk?.9:0;}}
+/* camera: over the right shoulder, pulled in front of anything solid */
+function tpCam(c,P,dt){tpAvatar(dt);const w=G.w,yaw=P.yaw,pit=P.pitch,head=(P.vz||0)+(P.crouch?1.25:1.7);
+  const dx=-Math.sin(yaw)*Math.cos(pit),dy=Math.sin(pit),dz=-Math.cos(yaw)*Math.cos(pit),rx=Math.cos(yaw),rz=-Math.sin(yaw);
+  const px=P.x*T+rx*.7,py=head+.2,pz=P.y*T+rz*.7,want=2.8;let d=.2;
+  for(;d<want;d+=.08){const x=px-dx*d,y=py-dy*d,z=pz-dz*d,tx=x/T,ty=z/T,t=w.t[Math.floor(ty)]&&w.t[Math.floor(ty)][Math.floor(tx)];
+    if(t==null||opaqueT(t)||y<elAt(tx,ty)+.25||y>ceilAt(tx,ty)-.15)break;}
+  d=Math.max(.2,d-.25);TP.d=(TP.d==null||TP.d>d)?d:TP.d+(d-TP.d)*Math.min(1,dt*4);
+  c.position.set(px-dx*TP.d,py-dy*TP.d,pz-dz*TP.d);c.rotation.y=yaw;c.rotation.x=pit;}
+/* render with the first-person hands hidden */
+function tpRender(c){if(!TP.on){if(TP.av)TP.av.visible=false;R3.renderer.render(R3.scene,c);return;}const hid=[];for(const k of c.children){if(k.isLight||!k.visible)continue;k.visible=false;hid.push(k);}
+  R3.renderer.render(R3.scene,c);for(const k of hid)k.visible=true;}
+
 /* ---------- interaction ---------- */
 function findFocus(){
   {const bf=G.tavern?null:bankFocus();if(bf)return bf;}
@@ -3862,7 +3892,7 @@ function frame(){
   if(G.hazDirty||(G.haz&&G.haz.length&&R3.hazG&&R3.hazG.parent!==R3.scene))syncHaz();
   const P=G.P,c=R3.camera;
   const bob=P.moving?Math.sin(P.bob)*.035:0;
-  c.position.set(P.x*T,P.eye+bob+(P.vz||0),P.y*T);c.rotation.y=P.yaw;c.rotation.x=P.pitch;
+  c.position.set(P.x*T,P.eye+bob+(P.vz||0),P.y*T);c.rotation.y=P.yaw;c.rotation.x=P.pitch;if(TP.on)tpCam(c,P,dt);
   // weapon swing
   const sw=P.swing>0?1-P.swing/G.S.swing:0;const k=sw>0?Math.sin(sw*Math.PI):0;
   R3.bk=(R3.bk||0)+((P.blocking?1:0)-(R3.bk||0))*Math.min(1,dt*14);const bk=R3.bk;
@@ -3896,7 +3926,7 @@ function frame(){
   if(G.bursts)G.bursts=G.bursts.filter(b=>!b.done);
   // projectiles
   for(const p of G.proj){if(!p.mesh){if(p.kind==='arrow'){p.mesh=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.6),p.at==='water'?new THREE.MeshBasicMaterial({color:0x6aa8ff}):p.at==='rope'?new THREE.MeshLambertMaterial({color:0xc8b48a}):R3.mat.wood);p.mesh.userData.noEl=true;}else p.mesh=new THREE.Mesh(p.kind==='fire'?R3.geo.fire:R3.geo.pebble,p.kind==='fire'?R3.mat.fire:R3.mat.pebble);p.mesh.userData.noEl=true;R3.scene.add(p.mesh);}p.mesh.position.copy(p.pos);if(p.kind==='arrow')p.mesh.lookAt(p.pos.clone().add(p.vel));}
-  feelFrame(dt);zxRender(dt);cmTick(dt);elevPass();R3.renderer.render(R3.scene,c);
+  feelFrame(dt);zxRender(dt);cmTick(dt);elevPass();tpRender(c);
   G.hudT-=dt;if(G.hudT<=0){G.hudT=.08;renderHUD();}
   G.miniT-=dt;if(G.miniT<=0){G.miniT=.2;drawMini();}
   if(G.sideDirty)renderSide();

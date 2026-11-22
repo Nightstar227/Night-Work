@@ -2464,7 +2464,7 @@ function useAbility(id){
   const P=G.P;if(G.over)return;const A=KIT[G.cls].abil.find(a=>a.id===id);if(!A)return;
   if(P.cd[id]>0){toast(`${A.name} is not ready.`);return;}
   if(A.once&&P.used[id]){toast(`${A.name} is spent.`);return;}
-  const cam=R3.camera;const dir=new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion);
+  const cam=R3.camera;const dir=new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion);if(G.cls==='wizard')G.swingN=(G.swingN||0)+1;// crew see the wizard cast
   switch(id){
     case 'bow':{const sel=P.arrowSel||'broad';if(!P.arrows||P.arrows[sel]<=0){toast(`No ${ARROWS[sel].toLowerCase()} arrows left. R to switch.`);return;}P.arrows[sel]--;breakInvis('Shooting breaks your invisibility.');
       G.proj.push({kind:'arrow',at:sel,over:new Set(),pos:cam.position.clone().add(dir.clone().multiplyScalar(.4)),vel:dir.clone().multiplyScalar(24),t:0});if(P.arrows[sel]<=0)cycleArrow();break;}
@@ -3367,7 +3367,8 @@ function jobComplete(){const w=G.w;if(!w)return false;if(!w.bank)return !!G.loot
 /* ---------- rigged class models (Plague Doctor, Warrior): one skinned mesh each with walk and run clips, loaded beside the page ---------- */
 const CMOD={lib:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/',
   doctor:{url:'models/plague_doctor.js',v:'PDM_GLB',H:2.0,prop:'censer',st:0},
-  warrior:{url:'models/warrior.js',v:'WAR_GLB',H:2.15,prop:'blade',st:0}};
+  warrior:{url:'models/warrior.js',v:'WAR_GLB',H:2.15,prop:'blade',st:0},
+  wizard:{url:'models/wizard.js',v:'WIZ_GLB',H:1.95,prop:'staff',st:0}};
 const PDM=CMOD.doctor;
 function pdmScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});}
 function cmReady(cls){const M=CMOD[cls];return !!(M&&M.st===2);}
@@ -3393,27 +3394,38 @@ function pdmLoad(){cmLoad('doctor');}
 function cmBuild(cls,g,mats,col){const M=CMOD[cls],m=THREE.SkeletonUtils.clone(M.scene),wrap=new THREE.Group(),s=M.H/M.h;wrap.add(m);wrap.rotation.y=Math.PI;wrap.scale.setScalar(s);wrap.position.y=-M.y0*s;g.add(wrap);
   const tint=new THREE.Color(1,1,1).lerp(new THREE.Color(col),.15);
   m.traverse(o=>{if(o.isMesh){o.material=new THREE.MeshLambertMaterial({map:M.tex,skinning:true,color:tint});mats.push(o.material);o.frustumCulled=false;}});
-  const mixer=new THREE.AnimationMixer(m),walk=mixer.clipAction(M.clips.walk),run=mixer.clipAction(M.clips.run);walk.play();run.play();walk.setEffectiveWeight(1);run.setEffectiveWeight(0);walk.timeScale=0;walk.time=M.idleT||0;mixer.update(0);
+  const mixer=new THREE.AnimationMixer(m),acts={};for(const k in M.clips){const ac=mixer.clipAction(M.clips[k]);if(k==='cast'||k==='die'){ac.setLoop(THREE.LoopOnce);ac.clampWhenFinished=true;}acts[k]=ac;ac.play();ac.setEffectiveWeight(0);}
+  const walk=acts.walk,run=acts.run;const st0=acts.idle?'idle':'walk';acts[st0].setEffectiveWeight(1);if(!acts.idle){walk.timeScale=0;walk.time=M.idleT||0;}mixer.update(0);
   let hand=null;m.traverse(o=>{if(o.name==='RightHand')hand=o;});
   const prop=new THREE.Group();g.add(prop);
   if(M.prop==='censer'){// the censer swings from the right hand on a short chain
     const brass=new THREE.MeshLambertMaterial({color:0x6e5a30});mats.push(brass);const ch=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.3,4),brass);ch.position.y=-.15;const pot=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),brass);pot.position.y=-.33;
     const cap=new THREE.Mesh(new THREE.ConeGeometry(.06,.07,8),brass);cap.position.y=-.27;prop.add(ch,pot,cap);}
+  if(M.prop==='staff'){// a knotted walking staff with a pale stone bound at the head
+    const wood=new THREE.MeshLambertMaterial({color:0x4a3626}),stone=new THREE.MeshBasicMaterial({color:0x9c98d8});mats.push(wood,stone);
+    const sf=new THREE.Mesh(new THREE.CylinderGeometry(.022,.03,1.6,7),wood);sf.position.y=-.05;const kn=new THREE.Mesh(new THREE.SphereGeometry(.045,7,6),wood);kn.position.y=.76;
+    const orb=new THREE.Mesh(new THREE.OctahedronGeometry(.055),stone);orb.position.y=.84;prop.add(sf,kn,orb);prop.userData.orb=orb;}
   if(M.prop==='blade'){// a plain soldier's sword in the right fist, tip down and forward
     const steel=new THREE.MeshLambertMaterial({color:0x8a8e96}),grip=new THREE.MeshLambertMaterial({color:0x3a2a1c}),guard=new THREE.MeshLambertMaterial({color:0x5a4a2a});mats.push(steel,grip,guard);
     const bl=new THREE.Mesh(new THREE.BoxGeometry(.075,.85,.02),steel);bl.position.y=-.55;const gd=new THREE.Mesh(new THREE.BoxGeometry(.24,.035,.05),guard);gd.position.y=-.1;const hd=new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,.18,6),grip);
     const pm=new THREE.Mesh(new THREE.SphereGeometry(.035,6,5),guard);pm.position.y=.1;prop.add(bl,gd,hd,pm);prop.rotation.x=.35;}
-  g.userData.pdm={M,mixer,walk,run,k:0,hand,cen:prop,sw:0,swing:M.prop==='censer'};
+  g.userData.pdm={M,mixer,acts,walk,run,w:{[st0]:1},hand,cen:prop,sw:0,swing:M.prop==='censer'};
   if(hand){g.updateMatrixWorld(true);hand.getWorldPosition(PDMV);g.worldToLocal(PDMV);prop.position.copy(PDMV);}return 1;}
 function pdmBuild(g,mats,col){return cmBuild('doctor',g,mats,col);}
 const PDMV=new THREE.Vector3();
-function pdmAnim(rr,p,U,dt){const A=U.pdm,M=A.M;if(rr.pdx==null){rr.pdx=rr.dx;rr.pdy=rr.dy;}const sp=Math.hypot(rr.dx-rr.pdx,rr.dy-rr.pdy)*T/Math.max(dt,1e-3);rr.pdx=rr.dx;rr.pdy=rr.dy;rr.psp=(rr.psp||0)+(sp-(rr.psp||0))*Math.min(1,dt*6);
-  const v=rr.psp,moving=!p.dn&&(v>.5||p.mv&&v>.2),running=moving&&!!p.sp&&!p.cr;A.k+=((running?1:0)-A.k)*Math.min(1,dt*7);A.walk.setEffectiveWeight(1-A.k);A.run.setEffectiveWeight(A.k);
-  if(moving){A.walk.timeScale=Math.max(.5,Math.min(1.9,v/(p.cr?2.2:3.4)));A.run.timeScale=Math.max(.7,Math.min(1.5,v/7.5));A.still=0;}
-  else{A.walk.timeScale=0;A.run.timeScale=0;if(!A.still){A.still=1;A.walk.time=M.idleT||0;}}
+function pdmAnim(rr,p,U,dt){const A=U.pdm,M=A.M,C=A.acts;if(rr.pdx==null){rr.pdx=rr.dx;rr.pdy=rr.dy;}const mx=rr.dx-rr.pdx,my=rr.dy-rr.pdy,sp=Math.hypot(mx,my)*T/Math.max(dt,1e-3);rr.pdx=rr.dx;rr.pdy=rr.dy;rr.psp=(rr.psp||0)+(sp-(rr.psp||0))*Math.min(1,dt*6);
+  const v=rr.psp,moving=!p.dn&&(v>.5||p.mv&&v>.2);const fwd=moving&&Math.hypot(mx,my)>1e-4?(-Math.sin(rr.dyw)*mx-Math.cos(rr.dyw)*my)/Math.hypot(mx,my):1;
+  if(p.sw!==A.lastSw){if(A.lastSw!==undefined&&C.cast&&!p.dn){C.cast.reset();C.cast.timeScale=1.7;A.castT=M.clips.cast.duration/1.7;}A.lastSw=p.sw;}A.castT=Math.max(0,(A.castT||0)-dt);
+  let st=p.dn?(C.die?'die':'idle'):A.castT>0?'cast':!moving?'idle':p.cr&&C.sneak?'sneak':fwd<-.4&&C.back?'back':p.sp&&!p.cr?'run':'walk';if(!C[st])st=st==='idle'?'walk':'walk';
+  if(st==='die'&&A.st!=='die')C.die.reset();A.st=st;
+  for(const k in C){const tw=k===st?1:0;A.w[k]=(A.w[k]||0)+(tw-(A.w[k]||0))*Math.min(1,dt*(k==='cast'||st==='cast'?12:7));C[k].setEffectiveWeight(A.w[k]);}
+  const idleFrz=st==='idle'&&!C.idle;A.walk.timeScale=idleFrz?0:Math.max(.5,Math.min(1.9,v/3.4));A.run.timeScale=Math.max(.7,Math.min(1.5,v/7.5));if(C.sneak)C.sneak.timeScale=Math.max(.6,Math.min(1.8,v/1.6));if(C.back)C.back.timeScale=Math.max(.6,Math.min(1.8,v/2.6));
+  if(idleFrz){if(!A.still){A.still=1;A.walk.time=M.idleT||0;}}else A.still=0;
+  const moving2=moving;
   A.mixer.update(dt);
-  if(A.hand){const g=rr.mesh;g.updateMatrixWorld(true);A.hand.getWorldPosition(PDMV);g.worldToLocal(PDMV);A.cen.position.copy(PDMV);if(A.swing){A.sw+=dt*(moving?6:2);A.cen.rotation.set(Math.sin(A.sw)*(moving?.35:.12),0,Math.cos(A.sw*.7)*.15);}else{const sw=rr.swingT>0?Math.sin((1-rr.swingT/.3)*Math.PI)*1.5:p.bk?.9:0;A.cen.rotation.set(.35+sw,0,p.bk?.9:0);}}}
-setTimeout(()=>{cmLoad('doctor');cmLoad('warrior');},0);
+  A.cen.visible=!(p.dn&&C.die);
+  if(A.hand){const g=rr.mesh;g.updateMatrixWorld(true);A.hand.getWorldPosition(PDMV);g.worldToLocal(PDMV);A.cen.position.copy(PDMV);if(A.swing){A.sw+=dt*(moving2?6:2);A.cen.rotation.set(Math.sin(A.sw)*(moving2?.35:.12),0,Math.cos(A.sw*.7)*.15);}else if(M.prop==='staff'){A.cen.rotation.set(A.castT>0?-.3:.08,0,0);if(A.cen.userData.orb)A.cen.userData.orb.rotation.y+=dt*2;}else{const sw=rr.swingT>0?Math.sin((1-rr.swingT/.3)*Math.PI)*1.5:p.bk?.9:0;A.cen.rotation.set(.35+sw,0,p.bk?.9:0);}}}
+setTimeout(()=>{cmLoad('doctor');cmLoad('warrior');cmLoad('wizard');},0);
 
 /* ---------- interaction ---------- */
 function findFocus(){
@@ -3724,11 +3736,11 @@ function updRemoteAvatars(dt){if(NET.bgOn)return;
   for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.x==null){if(rr.mesh)rr.mesh.visible=false;continue;}
     if(rr.mesh&&(rr.mesh.userData.cls!==p.c||rr.mesh.userData.lks!==(p.lk||'')||rr.mesh.userData.prim&&cmReady(p.c))){R3.scene.remove(rr.mesh);rr.mesh=null;}
     if(!rr.mesh){const g=buildAvatar(p.c,unpackLook(p.lk));const U=g.userData;
-      const c=document.createElement('canvas');c.width=256;c.height=64;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));sp.scale.set(1.6,.4,1);sp.position.y=p.c==='wizard'?2.75:2.35;sp.renderOrder=997;g.add(sp);
+      const c=document.createElement('canvas');c.width=256;c.height=64;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true}));sp.scale.set(1.6,.4,1);sp.position.y=p.c==='wizard'&&!U.pdm?2.75:2.35;sp.renderOrder=997;g.add(sp);
       Object.assign(U,{sp,c,label:'',lks:p.lk||''});rr.mesh=g;if(rr.dx==null){rr.dx=p.x;rr.dy=p.y;rr.dyw=p.yw;}R3.scene.add(g);}
     const g=rr.mesh,U=g.userData;const k=Math.min(1,dt*12);rr.dx+=(p.x-rr.dx)*k;rr.dy+=(p.y-rr.dy)*k;rr.dyw+=angDiff(p.yw,rr.dyw)*k;
-    g.visible=true;g.position.set(rr.dx*T,0,rr.dy*T);g.rotation.set(p.dn?-Math.PI/2:0,rr.dyw,0);if(p.dn)g.position.y=.3;
-    g.scale.set(U.sc*U.xz,U.sc*(p.cr?.7:1),U.sc*U.xz);for(const m of U.mats){m.opacity=p.iv?.22:1;m.transparent=!!p.iv;}
+    g.visible=true;g.position.set(rr.dx*T,0,rr.dy*T);const dnF=p.dn&&!(U.pdm&&U.pdm.acts.die);g.rotation.set(dnF?-Math.PI/2:0,rr.dyw,0);if(dnF)g.position.y=.3;
+    g.scale.set(U.sc*U.xz,U.sc*(p.cr&&!(U.pdm&&U.pdm.acts.sneak)?.7:1),U.sc*U.xz);for(const m of U.mats){m.opacity=p.iv?.22:1;m.transparent=!!p.iv;}
     if(U.pdm)pdmAnim(rr,p,U,dt);if(p.sw!==rr.lastSw){rr.lastSw=p.sw;rr.swingT=.3;}if(rr.swingT>0){rr.swingT-=dt;U.arm.rotation.x=-Math.sin((1-rr.swingT/.3)*Math.PI)*1.4;}else U.arm.rotation.x=p.bk?.9:0;
     const label=(p.nm||peerName(rr))+(p.dn?' (down)':'')+(G.cls==='doctor'?` ${Math.max(0,Math.round(p.hp||0))}/${p.mx||'?'}`:'');if(label!==U.label){U.label=label;const ar=fitLabel(U.c,label,CLS[p.c]?CLS[p.c].color:'#fff',48);const old=U.sp.material.map;U.sp.material.map=new THREE.CanvasTexture(U.c);U.sp.material.needsUpdate=true;if(old)old.dispose();const H=.3;U.sp.scale.set(H*ar,H,1);}}
 }
@@ -3755,7 +3767,8 @@ function buildAvatar(cls,look){
     const a=new THREE.Mesh(cyl(.12,.13,.6),mail);a.rotation.x=Math.PI/2;a.position.z=-.22;arm.add(a);const bl=new THREE.Mesh(box(.07,.02,1.05),L(0xb9bcc4));bl.position.set(0,0,-.95);arm.add(bl);const gd=new THREE.Mesh(box(.3,.04,.05),L(0x7a5a2a));gd.position.z=-.45;arm.add(gd);
     arm.position.set(.46,1.12,0);sc=1.15;}
   else if(cls==='doctor'){if(cmReady('doctor'))sc=cmBuild('doctor',g,mats,col);else{sc=buildDoctor(add,L,col,arm,{cyl,box,sph,cone});cmLoad('doctor');}}
-  else{const robe=L(col),trim=L(new THREE.Color(col).multiplyScalar(.6)),beard=L(HAIRC[lv.lk.hc]||'#e8e4dc'),hat=L(new THREE.Color(col).multiplyScalar(.75)),star=new THREE.MeshBasicMaterial({color:0xf1d36a});mats.push(star);
+  else if(cmReady('wizard')){sc=cmBuild('wizard',g,mats,col);}
+  else{cmLoad('wizard');const robe=L(col),trim=L(new THREE.Color(col).multiplyScalar(.6)),beard=L(HAIRC[lv.lk.hc]||'#e8e4dc'),hat=L(new THREE.Color(col).multiplyScalar(.75)),star=new THREE.MeshBasicMaterial({color:0xf1d36a});mats.push(star);
     add(cone(.42,1.35,16),robe,0,.68,0);add(cyl(.2,.2,.08),trim,0,1.15,0);
     add(sph(.19),skin,0,1.5,0);if(lv.lk.fh>=2)add(cone(.14,lv.lk.fh===3?.5:.28,10),beard,0,lv.lk.fh===3?1.22:1.32,lv.lk.fh===3?-.12:-.13,{rx:Math.PI+.2});
     add(cyl(.46,.46,.04,20),hat,0,1.64,0);const h1=add(cone(.24,.55,14),hat,0,1.92,0);const h2=add(cone(.13,.42,12),hat,.12,2.3,.04,{rz:-.75});add(sph(.05),star,.3,2.42,.04);

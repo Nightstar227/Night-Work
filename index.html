@@ -772,12 +772,12 @@ async function joinRoom(code,host){const r=await NET.lobby.join(code.toLowerCase
 function leaveRoom(){if(NET.room){try{NET.room.leave();}catch(e){}}NET.room=null;NET.code=null;for(const rr of NET.remote.values())if(rr.mesh&&R3.scene)R3.scene.remove(rr.mesh);NET.remote=new Map();NET.hostPeer=null;}
 function sendAct(a){if(G&&G.tavern)return;a.n=++NET.actSeq;NET.acts.push(a);if(NET.acts.length>12)NET.acts.shift();pushPresence(true);}
 function netLog(text,cls){NET.logsOut.push([++NET.logSeq,text,cls||'']);if(NET.logsOut.length>6)NET.logsOut.shift();}
-function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.yaw.toFixed(2),c:G.cls,hp:Math.max(0,Math.round(P.hp)),mx:P.max,cr:P.crouch?1:0,mv:P.moving?1:0,sp:P.sprint?1:0,iv:P.invis>0?1:0,vs:+G.vis.toFixed(2),sw:G.swingN||0,dn:G.down>0?1:0,lt:G.looted?1:0,sk:packSk(),...packDoc(),lk:packLook(),nm:charName(G.cls),bk:G.P.blocking?1:0,nm:myNick()};}
+function packMe(){const P=G.P;return {x:+P.x.toFixed(2),y:+P.y.toFixed(2),yw:+P.yaw.toFixed(2),c:G.cls,hp:Math.max(0,Math.round(P.hp)),mx:P.max,cr:P.crouch?1:0,mv:P.moving?1:0,sp:P.sprint?1:0,iv:P.invis>0?1:0,vs:+G.vis.toFixed(2),sw:G.swingN||0,dn:G.down>0?1:0,lt:G.looted?1:0,sk:packSk(),...packDoc(),...scPackMe(),lk:packLook(),nm:charName(G.cls),bk:G.P.blocking?1:0,nm:myNick()};}
 const SCODE={patrol:0,idle:1,sentry:2,suspicious:3,search:4,return:5,alert:6};const SNAME=Object.keys(SCODE);
 function packWorld(){const w=G.w;const bits=(a,f)=>a.map(x=>f(x)?1:0).join('');
   return {g:w.enemies.map(e=>[Math.round(e.x*100),Math.round(e.y*100),Math.round(e.ang*100),SCODE[e.state]??0,Math.max(0,Math.round(e.hp)),(e.dead?1:0)|(e.sick?2:0)|(e.atk>0?4:0)|(G.time-(e.hitT||-9)<.25?8:0)|(e.walking?16:0)|(e.stag>0?32:0),e.atk>0?Math.round((1-e.atk/(e.atkMax||.85))*9):0]),
-    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,st:w.stab?1:0,bx:w.crates?w.crates.map(c=>[Math.round(c.x*20),Math.round(c.y*20),c.c?(c.c==='me'?(NET.myPeer||'h'):c.c):0,c.del?1:0]):null,cg:w.crGold||0,zx:zxPack(),cr:(w.crew||[]).map(o=>w.t[o.y][o.x]),ep:(G.eproj||[]).map(p=>[Math.round(p.x*100),Math.round(p.y*100),Math.round((p.z||1.3)*100)]),lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id),dr:(w.loot||[]).filter(l=>l.drop).map(l=>[l.id,Math.round(l.x*100),Math.round(l.y*100),l.it.b,l.it.r,l.it.s])};}
-function applyWorld(W){const w=G.w;if(!W||!W.g)return;if(W.zx)zxApply(W.zx);
+    l:w.locks,td:bits(w.traps,t=>t.disarmed),tr:bits(w.traps,t=>t.revealed),to:bits(G.torches,t=>t.out),cl:w.cleared,ps:w.poisoned?1:0,sc:w.scried?1:0,lt:G.looted?1:0,al:G.alarm,bc:w.bellCut?1:0,st:w.stab?1:0,bx:w.crates?w.crates.map(c=>[Math.round(c.x*20),Math.round(c.y*20),c.c?(c.c==='me'?(NET.myPeer||'h'):c.c):0,c.del?1:0]):null,cg:w.crGold||0,zx:zxPack(),sc:scPack(),cr:(w.crew||[]).map(o=>w.t[o.y][o.x]),ep:(G.eproj||[]).map(p=>[Math.round(p.x*100),Math.round(p.y*100),Math.round((p.z||1.3)*100)]),lo:bits(w.loot||[],l=>l.taken),rf:w.enemies.slice(G.baseN).map(o=>[Math.round(o.x*100),Math.round(o.y*100)]),rn:w.enemies.filter(o=>o.runner&&!o.dead).map(o=>o.id),dr:(w.loot||[]).filter(l=>l.drop).map(l=>[l.id,Math.round(l.x*100),Math.round(l.y*100),l.it.b,l.it.r,l.it.s])};}
+function applyWorld(W){const w=G.w;if(!W||!W.g)return;if(W.zx)zxApply(W.zx);scApply(W.sc);
   if(W.bx&&w.crates){W.bx.forEach((v,i)=>{const c=w.crates[i];if(!c)return;c.x=v[0]/20;c.y=v[1]/20;c.c=v[2]||null;if(v[3]&&!c.del){c.del=true;G.looted=true;}});w.crGold=W.cg||0;}
   if(W.dr&&w.loot)for(const [id,x,y,b,r,sd] of W.dr){if(w.loot[id]||!GB[b])continue;w.loot[id]={id,x:x/100,y:y/100,it:{b,r,s:sd},taken:false,drop:true};G.featDirty=true;}
   if(W.lo&&w.loot){let ch=false;w.loot.forEach((l,i)=>{const t=W.lo[i]==='1';if(l&&t&&!l.taken){l.taken=true;ch=true;}});if(ch)G.featDirty=true;}
@@ -817,6 +817,7 @@ function hostAct(rr,a){const w=G.w,actor={key:rr.peer,cls:rr.p&&rr.p.c,name:peer
   if(a.t==='rune'){runeTrip(a.x|0,a.y|0,actor);return;}
   if(a.t==='crate'){crateAct(a.op,a.id|0,actor,a);return;}
   if(a.t==='zx'){zxHostAct(a,actor);return;}
+  if(a.t==='sc'){scHostAct(a,actor);return;}
   if(a.t==='civ'){const e=w.enemies[a.id|0];if(e&&e.civ)civHush(e,actor);return;}
   if(a.t==='hit'){const e=w.enemies[a.id];if(!e||e.dead)return;G.lastActor=actor.key;actor.rr=rr;
     const fx={};if(Array.isArray(a.fx))for(const k of a.fx)if(LEGS[k])fx[k]=1;
@@ -1034,7 +1035,7 @@ function spawnWave(){const w=G.w,[sx,sy]=w.start,B=BIOMES[w.biome];const pl=play
     const p=pl[Math.floor(Math.random()*pl.length)]||{x,y};
     w.enemies.push({id:w.enemies.length,x,y,hp:40,max:40,dmg:20,face:[0,1],base:'patrol',state:'alert',home:w.cells.findIndex(c=>c.role==='entrance'),group:null,reinf:true,seat:[x,y],homeAng:0,
       ang:0,aw:1,atk:0,cool:.5,path:null,repath:0,timer:0,unseen:0,look:0,walkPh:Math.random()*6,last:[p.x,p.y],tgt:p.key});}
-  G.foesDirty=true;const t=G.waves===1?`${n} of the watch storm in by the stairs.`:`More of the watch pour in by the stairs (${G.waves} of 3).`;log(t,'bad');if(G.mode==='host')netLog(t,'bad');}
+  scWave(n);G.foesDirty=true;const t=G.waves===1?`${n} of the watch storm in by the stairs.`:`More of the watch pour in by the stairs (${G.waves} of 3).`;log(t,'bad');if(G.mode==='host')netLog(t,'bad');}
 function updEProj(dt){if(!G.eproj)return;for(const p of G.eproj){p.t+=dt;const nx=p.x+p.vx*dt,ny=p.y+p.vy*dt;if(p.z==null){p.z=elAt(p.x,p.y)+1.3;p.vz=0;}const nz=p.z+(p.vz||0)*dt;if(opaqueT(tileAt(nx,ny))||nz<elAt(nx,ny)+.05||nz>ceilAt(nx,ny)||p.t>2.5){p.dead=true;continue;}p.x=nx;p.y=ny;p.z=nz;
     for(const pl of players()){if(Math.hypot(pl.x-p.x,pl.y-p.y)>.32)continue;const pz=pl.key==='me'?(G.P.vz||0):elAt(pl.x,pl.y);if(Math.abs(p.z-(pz+1))>1)continue;p.dead=true;const sh=G.w.enemies[p.id];const src={x:p.x-p.vx*.2,y:p.y-p.vy*.2,proj:1};
       if(pl.key==='me')hurt(p.dmg,`${p.name}'s shot hits you.`,src);else{NET.hitsOut.push({n:++NET.hitSeq,to:pl.key,d:p.dmg,m:p.name+"'s shot",id:p.id,pj:1});if(NET.hitsOut.length>8)NET.hitsOut.shift();}break;}}
@@ -1088,7 +1089,7 @@ function loadProf(){try{PROF=JSON.parse(localStorage.getItem(PROFKEY));}catch(e)
   if(!PROF||typeof PROF!=='object')PROF={gold:200,stash:{draught:2,tonic:1,firepot:0,smoke:0},belt:{draught:2,tonic:1,firepot:0,smoke:0},haul:null};
   PROF.stash=PROF.stash||{};PROF.belt=PROF.belt||{};
   for(const k of Object.keys(ITEMS)){PROF.stash[k]=PROF.stash[k]||0;PROF.belt[k]=Math.min(PROF.belt[k]||0,PROF.stash[k]);}
-  if(!PROF.ct1){PROF.ct1=1;PROF.stash.mouse=(PROF.stash.mouse||0)+2;}if(!PROF.zx1){PROF.zx1=1;const S=PROF.stash;S.portal+=1;S.spring+=2;S.pall+=1;S.fey+=1;S.spark+=1;S.oil+=1;try{localStorage.setItem(PROFKEY,JSON.stringify(PROF));}catch(e){}}return PROF;}
+  if(!PROF.sc1){PROF.sc1=1;PROF.stash.papers=(PROF.stash.papers||0)+2;PROF.stash.livery=(PROF.stash.livery||0)+1;}if(!PROF.ct1){PROF.ct1=1;PROF.stash.mouse=(PROF.stash.mouse||0)+2;}if(!PROF.zx1){PROF.zx1=1;const S=PROF.stash;S.portal+=1;S.spring+=2;S.pall+=1;S.fey+=1;S.spark+=1;S.oil+=1;try{localStorage.setItem(PROFKEY,JSON.stringify(PROF));}catch(e){}}return PROF;}
 function saveProf(){try{localStorage.setItem(PROFKEY,JSON.stringify(PROF));}catch(e){}}
 function beltTotal(){return Object.values(PROF.belt).reduce((a,b)=>a+b,0);}
 /* ================= gear, character stats and levels ================= */
@@ -1504,7 +1505,7 @@ function packSk(){if(!G||!G.S||!G.S.sk)return '';return CREWSK.filter(id=>G.S.sk
 function remSk(p,id){if(!p||!p.sk)return 0;const m=p.sk.split(',').find(x=>x.slice(0,-1)===id);return m?+m.slice(-1):0;}
 function crewSK(id){let best=SK(id);for(const rr of NET.remote.values()){const v=remSk(rr.p,id);if(v>best)best=v;}return best;}
 /* skill powers on G and T */
-function skillPowers(){const P=[],S=G.S||{};docPowers(P);
+function skillPowers(){const P=[],S=G.S||{};docPowers(P);scPowers(P);
   if(G.cls==='warrior'&&S.horn)P.push({id:'horn',key:'G',name:'War horn',cd:30});
   if(G.cls==='thief'&&SK('marked'))P.push({id:'mark',key:'G',name:'Mark for death',cd:4});
   if(G.cls==='wizard'&&SK('snare'))P.push({id:'snare',key:'G',name:'Snare ward',cd:8});
@@ -1512,7 +1513,8 @@ function skillPowers(){const P=[],S=G.S||{};docPowers(P);
   return P;}
 function usePower(key){if(!G||G.over||G.down>0||G.tavern)return;const A=skillPowers().find(p=>p.key===key);if(!A)return;const P=G.P;
   if(P.cd[A.id]>0){toast(`${A.name} is not ready.`);return;}
-  if(['chalk','fever','dsleep','evac'].includes(A.id)){if(docPower(A)===false)return;}
+  if(A.sc){if(scPower(A)===false)return;}
+  else if(['chalk','fever','dsleep','evac'].includes(A.id)){if(docPower(A)===false)return;}
   else if(A.id==='horn'){const r=G.S.horn;G.bursts=G.bursts||[];G.bursts.push({x:P.x,y:P.y,t:0,col:0xdf6a4c});P.unstop=SK('unstoppable')?15:0;
     if(G.mode==='client')sendAct({t:'taunt',r,st:SK('warhornsk')>1?1:0,wk:SK('warhornsk')?1:0});else taunt(P.x,P.y,r,'me',SK('warhornsk')>1,!!SK('warhornsk'));log('You sound the war horn. Every enemy in earshot turns on you.','good');}
   else if(A.id==='mark'){const [fx,fy]=fwd();const tg=G.w.enemies.filter(e=>!e.dead&&(e.captain||FT(e).heavy)&&!e.marked&&Math.hypot(e.x-P.x,e.y-P.y)<10&&losT(P.x,P.y,e.x,e.y)&&Math.abs(angDiff(Math.atan2(e.y-P.y,e.x-P.x),Math.atan2(fy,fx)))<.35)[0];
@@ -1716,12 +1718,12 @@ function docHit(e,o,say,who){if(o.mk&&!e.captain&&(e.sleep||e.stag>0||e.sick)&&!
 function docPowers(P){if(G.cls!=='doctor')return;if(SK('chalk'))P.push({id:'chalk',key:'G',name:'Chalk the door',cd:25});if(SK('feverish'))P.push({id:'fever',key:'T',name:'You look feverish',cd:40});
   if(SK('deathsleep'))P.push({id:'dsleep',key:'V',name:'Death-sleep',cd:0,once:true});if(SK('evac'))P.push({id:'evac',key:'B',name:'Evacuation order',cd:0,once:true});}
 function docPower(A){const P=G.P;if(A.once&&P.used[A.id]){toast(`${A.name} is spent for this job.`);return false;}
-  if(A.id==='chalk'){const r=SK('chalk')>1?10:6;if(G.mode==='client')sendAct({t:'doc',k:'chalk',r});else docChalk(P.x,P.y,r);log('You chalk a plague cross on the wall and call it out. The guards nearby find somewhere else to be.','good');return true;}
-  if(A.id==='fever'){const [fx,fy]=fwd();const up=SK('feverish')>1;const tg=G.w.enemies.filter(e=>!e.dead&&!e.captain&&Math.hypot(e.x-P.x,e.y-P.y)<8&&losT(P.x,P.y,e.x,e.y)&&Math.abs(angDiff(Math.atan2(e.y-P.y,e.x-P.x),Math.atan2(fy,fx)))<.4).sort((a,b)=>Math.hypot(a.x-P.x,a.y-P.y)-Math.hypot(b.x-P.x,b.y-P.y)).slice(0,up?2:1);
+  if(A.id==='chalk'){scDread(20);const r=SK('chalk')>1?10:6;if(G.mode==='client')sendAct({t:'doc',k:'chalk',r});else docChalk(P.x,P.y,r);log('You chalk a plague cross on the wall and call it out. The guards nearby find somewhere else to be.','good');return true;}
+  if(A.id==='fever'){scDread(25);const [fx,fy]=fwd();const up=SK('feverish')>1;const tg=G.w.enemies.filter(e=>!e.dead&&!e.captain&&Math.hypot(e.x-P.x,e.y-P.y)<8&&losT(P.x,P.y,e.x,e.y)&&Math.abs(angDiff(Math.atan2(e.y-P.y,e.x-P.x),Math.atan2(fy,fx)))<.4).sort((a,b)=>Math.hypot(a.x-P.x,a.y-P.y)-Math.hypot(b.x-P.x,b.y-P.y)).slice(0,up?2:1);
     if(!tg.length){toast('Look at a guard (not a captain) within 8 paces.');return false;}const t=up?60:40;if(G.mode==='client')sendAct({t:'doc',k:'fever',ids:tg.map(e=>e.id),t});else tg.forEach(e=>docFever(e,t));
     log(`"You look feverish." ${tg.length>1?'Two guards sit':lc(nameOf(tg[0]))+' sits'} down to wait it out.`,'good');return true;}
   if(A.id==='dsleep'){P.used.dsleep=true;const up=SK('deathsleep')>1;P.invis=up?20:10;P.hp=Math.min(P.max,P.hp+P.max*(up?.5:.3));if(G.mode==='client')sendAct({t:'slip',up:1});else slipApply('me',true);log('You drink the death-sleep and drop. Your heart all but stops. Nobody looks twice at a corpse.','good');return true;}
-  if(A.id==='evac'){P.used.evac=true;const r=SK('evac')>1?25:15;if(G.mode==='client'){sendAct({t:'doc',k:'evac',r});log('"Plague! Everybody out!" The guards file out to the street.','good');}else{const n=docEvac(P.x,P.y,r);log(n?`"Plague! Everybody out!" ${n} guard${n>1?'s':''} file out to the street.`:'Nobody near enough to hear the order.','good');}return true;}
+  if(A.id==='evac'){scDread(45);P.used.evac=true;const r=SK('evac')>1?25:15;if(G.mode==='client'){sendAct({t:'doc',k:'evac',r});log('"Plague! Everybody out!" The guards file out to the street.','good');}else{const n=docEvac(P.x,P.y,r);log(n?`"Plague! Everybody out!" ${n} guard${n>1?'s':''} file out to the street.`:'Nobody near enough to hear the order.','good');}return true;}
   return false;}
 
 /* ---------- movement: smoke step ---------- */
@@ -1749,7 +1751,7 @@ function packDoc(){if(G.cls!=='doctor')return {};const o={};const d=G.docPulse||
 function docOnKill(e){if(G.cls!=='doctor'||!SK('corpse'))return;let n=0;for(const tr of G.w.traps)if(!tr.revealed&&!tr.disarmed&&Math.hypot(tr.x+.5-e.x,tr.y+.5-e.y)<6){tr.revealed=true;n++;}
   if(SK('corpse')>1)for(const l of G.w.loot||[])if(l&&!l.taken&&Math.hypot(l.x-e.x,l.y-e.y)<8)G.explored.add(Math.floor(l.y)*G.w.W+Math.floor(l.x));if(n){G.featDirty=true;log(`Corpse reading: ${n} hidden plate${n>1?'s':''} nearby.`,'good');}}
 function docPox(e){const key=e.seen?e.seen.key:'me';let lv=0;if(key==='me')lv=G.cls==='doctor'?SK('poxwarrant'):0;else{const rr=NET.remote.get(key);lv=rr&&rr.p&&rr.p.c==='doctor'?remSk(rr.p,'poxwarrant'):0;}
-  if(!lv)return false;G.pox=G.pox||{};if((G.pox[key]||0)>=(lv>1?2:1))return false;G.pox[key]=(G.pox[key]||0)+1;const P=e.seen||G.P;e.aw=.4;e.state='suspicious';e.inv=[P.x,P.y];e.timer=1;e.look=0;e.path=null;
+  if(lv<2||G.scUnm)return false;G.pox=G.pox||{};if((G.pox[key]||0)>=1)return false;G.pox[key]=(G.pox[key]||0)+1;const P=e.seen||G.P;e.aw=.4;e.state='suspicious';e.inv=[P.x,P.y];e.timer=1;e.look=0;e.path=null;
   const t=`${nameOf(e)} sees the beak and the pox warrant and backs right off.`;if(key==='me')log(t,'good');else if(G.mode==='host')netLog(t,'good');return true;}
 CREWSK.push('poxwarrant');
 
@@ -1825,7 +1827,7 @@ function dropGear(e){if(G.mode==='client'||G.tavern||!G.w.loot)return;const ft=F
   G.w.loot.push({id:G.w.loot.length,x,y,it:{b:g.b,r:g.r,s:g.s},taken:false,drop:true});G.featDirty=true;
   if(g.r>=2){const t=`${nameOf(e)} drops something that glints ${RAR[g.r].n.toLowerCase()}.`;log(t,'good');if(G.mode==='host')netLog(t,'good');}}
 function foeXP(e){if(e.civ)return e.ko?2:0;return e.captain?80:FT(e).heavy?30:e.reinf?6:10;}
-function useBelt(i){const P=G.P,k=G.belt[i];if(!k||G.over||G.down>0||G.tavern)return;if(zxBelt(k,i))return;
+function useBelt(i){const P=G.P,k=G.belt[i];if(!k||G.over||G.down>0||G.tavern)return;if(zxBelt(k,i))return;if(scBelt(k,i))return;
   if(k==='draught'){P.heal=45*(G.S.fx&&G.S.fx.saint?2:1)*(SK('cureall')?2:1);log('You knock back a healing draught.','good');}
   else if(k==='tonic'){P.st=100;P.tonic=SK('cureall')?20:10;log('The bitter tonic burns going down. Your breath comes easy.','good');}
   else if(k==='firepot'){breakInvis('Throwing breaks your invisibility.');const cam=R3.camera;const dir=new THREE.Vector3(0,0,-1).applyQuaternion(cam.quaternion);
@@ -1952,7 +1954,7 @@ function startRun(m,cls,opts){
   G.eproj=[];G.eprojV=[];
   for(const [x,y,t] of (m.state&&m.state.ro)||[])if(w.t[y]&&CREWT.includes(w.t[y][x]))w.t[y][x]=t;w.ropes=((m.state&&m.state.ro)||[]).slice();
   w.bell=placeBell(w,m.seed);w.bellCut=!!(m.state&&m.state.bc);if(SK('wick')>1)G.P.arrows.water+=2;
-  if(w.bell&&SK('foreseen'))G.explored.add(w.bell.y*w.W+w.bell.x);if(SK('foreseen')>1){const [sx,sy]=w.start;for(let y=sy-12;y<=sy+12;y++)for(let x=sx-12;x<=sx+12;x++)if(x>=0&&y>=0&&x<w.W&&y<w.H)G.explored.add(y*w.W+x);for(const tr of w.traps)if(Math.hypot(tr.x-sx,tr.y-sy)<12)tr.revealed=true;}G.alarm=(m.state&&m.state.al)||0;G.alarmT=0;G.alertT=0;G.calmT=0;G.waves=0;G.waveT=0;civSpawn(w,m);ctRunStart(w,m);G.baseN=w.enemies.length;
+  if(w.bell&&SK('foreseen'))G.explored.add(w.bell.y*w.W+w.bell.x);if(SK('foreseen')>1){const [sx,sy]=w.start;for(let y=sy-12;y<=sy+12;y++)for(let x=sx-12;x<=sx+12;x++)if(x>=0&&y>=0&&x<w.W&&y<w.H)G.explored.add(y*w.W+x);for(const tr of w.traps)if(Math.hypot(tr.x-sx,tr.y-sy)<12)tr.revealed=true;}G.alarm=(m.state&&m.state.al)||0;G.alarmT=0;G.alertT=0;G.calmT=0;G.waves=0;G.waveT=0;civSpawn(w,m);ctRunStart(w,m);scRunStart(w,m);G.baseN=w.enemies.length;
   for(const r in G.objs)for(const o of G.objs[r])G.prev[o.id]=objDone(w,o.id);
   if(w.scried)for(let i=0;i<w.W*w.H;i++)G.explored.add(i);
   $('#board').hidden=true;$('#game').hidden=false;
@@ -2198,8 +2200,9 @@ document.addEventListener('keydown',ev=>{/*TYPINGFIX*/
   if(ev.code==='Space'&&!ev.repeat)moveAbility();
   if(ev.code==='KeyR'&&!ev.repeat)cycleArrow();
   {const bi=['Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'].indexOf(ev.code);if(bi>=0&&!ev.repeat)useBelt(bi);}
-  if(['KeyG','KeyT','KeyV','KeyB'].includes(ev.code)&&!ev.repeat)usePower(ev.code.slice(3));
+  if(['KeyG','KeyT','KeyV','KeyB','KeyH','KeyN'].includes(ev.code)&&!ev.repeat)usePower(ev.code.slice(3));
   if(ev.code==='KeyX'&&!ev.repeat&&KIT[G.cls].abil.some(a=>a.id==='trick'))useAbility('trick');
+  if(ev.code==='KeyZ'&&!ev.repeat)scToggleCover();
   if(ev.code==='KeyP'&&!lockMode)setPause(true,'Paused','Take a breath.');
   const A=KIT[G.cls].abil.find(a=>'Digit'+a.key===ev.code);if(A&&!ev.repeat)useAbility(A.id);
 });
@@ -2238,7 +2241,7 @@ function update(dt){
     const stuck=blockedAt(P.x,P.y,r);if(stuck||!blockedAt(P.x+mx,P.y,r))P.x+=mx;if(stuck||!blockedAt(P.x,P.y+my,r))P.y+=my;
     P.bob+=dt*spd*2.6;P.stepT-=dt*(P.sprint?1.6:1);
     if(P.stepT<=0){P.stepT=.5;const thief=G.cls==='thief',war=G.cls==='warrior';
-      const rad=P.crouch?(thief?0:2):P.sprint?(war?13:10):(thief?3:war?7:5);if(rad&&G.mode!=='client')noise(P.x,P.y,rad*(S.noise||1),P.sprint?.45:.3,.7,true);}}
+      const rad=P.crouch?(thief?0:2):P.sprint?(war?13:10):(thief?3:war?7:5);if(rad&&G.mode!=='client'&&!scQuietStep('me'))noise(P.x,P.y,rad*(S.noise||1),P.sprint?.45:.3,.7,true);}}
   for(const e of G.w.enemies){if(e.dead)continue;const dx=P.x-e.x,dy=P.y-e.y,d=Math.hypot(dx,dy);if(d<.34&&d>0){P.x+=dx/d*(.34-d)*.5;P.y+=dy/d*(.34-d)*.5;if(blockedAt(P.x,P.y,.24)){P.x-=dx/d*(.34-d)*.5;P.y-=dy/d*(.34-d)*.5;}}}
   P.eye+=((P.crouch?CEYE:EYE)*(G.S&&G.S.eyeK||1)-P.eye)*Math.min(1,dt*10);
   // traps
@@ -2252,11 +2255,11 @@ function update(dt){
   G.expT-=dt;if(G.expT<=0){G.expT=.25;const px=Math.floor(P.x),py=Math.floor(P.y);for(let y=py-7;y<=py+7;y++)for(let x=px-7;x<=px+7;x++){if(x<0||y<0||x>=G.w.W||y>=G.w.H)continue;const key=y*G.w.W+x;if(G.explored.has(key))continue;if(losT(P.x,P.y,x+.5,y+.5)||(opaqueT(G.w.t[y][x])&&DIRS.some(([dx,dy])=>G.explored.has((y+dy)*G.w.W+x+dx))))G.explored.add(key);}}
   if(G.mode==='client'){for(const e of G.w.enemies){if(e.tx==null)continue;const k=Math.min(1,dt*10);e.x+=(e.tx-e.x)*k;e.y+=(e.ty-e.y)*k;e.ang+=angDiff(e.tang,e.ang)*k;}}
   else{
-    if(G.mode==='host'){onRemote();for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.dn||!p.mv)continue;rr.stepT-=dt*(p.sp?1.6:1);if(rr.stepT<=0){rr.stepT=.5;const th=p.c==='thief',wa=p.c==='warrior';const rad=p.cr?(th?0:2):p.sp?(wa?13:10):(th?3:wa?7:5);if(rad)noise(p.x,p.y,rad,p.sp?.45:.3,.7,true);}}}
+    if(G.mode==='host'){onRemote();for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.dn||!p.mv)continue;rr.stepT-=dt*(p.sp?1.6:1);if(rr.stepT<=0){rr.stepT=.5;const th=p.c==='thief',wa=p.c==='warrior';const rad=p.cr?(th?0:2):p.sp?(wa?13:10):(th?3:wa?7:5);if(rad&&!scQuietStep(rr.peer))noise(p.x,p.y,rad,p.sp?.45:.3,.7,true);}}}
     for(const e of G.w.enemies)if(!e.dead)updGuard(e,dt);updAlarm(dt);updEProj(dt);if(!G.tavern)updGates(dt);}
   if(G.over)return;
   if(G.mp){NET.sendT-=dt;if(NET.sendT<=0){NET.sendT=G.mode==='host'?.1:.066;pushPresence();}updRemoteAvatars(dt);G.crewT=(G.crewT||0)-dt;if(G.crewT<=0){G.crewT=.5;renderCrew();}}
-  updProj(dt);updHaz(dt);docUpdate(dt);idUpdate(dt);obsUpdate(dt);bankUpdate(dt);zxUpdate(dt);
+  updProj(dt);updHaz(dt);docUpdate(dt);idUpdate(dt);obsUpdate(dt);bankUpdate(dt);zxUpdate(dt);scUpdate(dt);
   checkObjectives();
   G.focus=findFocus();if(!G.tavern)slipCheck(dt);
 }
@@ -2281,7 +2284,7 @@ function dodge(){const P=G.P;if(G.paused||G.down>0||P.dodgeCd>0||P.st<18)return;
   if(G.mode!=='client')noise(P.x,P.y,G.cls==='warrior'?7:4,.3,.7,true);}
 function ccCone(x,y,ang,kind,actor){const range=kind==='repel'?2.7:kind==='smoke'?2.8:2.4,arc=kind==='repel'?.95:kind==='smoke'?7:.85;let n=0;
   for(const e of G.w.enemies){if(e.dead)continue;const dx=e.x-x,dy=e.y-y,d=Math.hypot(dx,dy);if(d>range||Math.abs(elAt(e.x,e.y)-elAt(x,y))>1.6||(Math.abs(angDiff(Math.atan2(dy,dx),ang))>arc&&d>.5)||!losT(x,y,e.x,e.y))continue;n++;
-    if(kind==='repel'){const bh=actor&&actor.bh;stagger(e,e.captain&&!bh?.5:2.2,!!bh);if(!e.captain){const ux=dx/(d||1),uy=dy/(d||1);for(let i=0;i<12;i++){const nx=e.x+ux*.12,ny=e.y+uy*.12;if(!walkT(tileAt(nx,ny)))break;e.x=nx;e.y=ny;}}}
+    if(kind==='repel'){scButter(e,actor);const bh=actor&&actor.bh;stagger(e,e.captain&&!bh?.5:2.2,!!bh);if(!e.captain){const ux=dx/(d||1),uy=dy/(d||1);for(let i=0;i<12;i++){const nx=e.x+ux*.12,ny=e.y+uy*.12;if(!walkT(tileAt(nx,ny)))break;e.x=nx;e.y=ny;}}}
     else{stagger(e,e.captain?1.4:3.2);e.aw=1;if(kind==='smoke'){e.unseen=Math.max(e.unseen||0,4);e.last=[x+(Math.random()-.5)*6,y+(Math.random()-.5)*6];}}
     if(e.state!=='alert')goAlert(e,true,[x,y]);}
   noise(x,y,kind==='repel'?9:6,1,1);return n;}
@@ -2330,7 +2333,7 @@ function noise(x,y,radM,amt,cap,footstep){zxNoise(x,y,radM);if(footstep&&G.m&&G.
 }
 function stagger(e,t,force){if(e.dead)return;if(FT(e).poise&&!force)t*=.3;e.stag=Math.max(e.stag||0,t);e.atk=0;e.cool=Math.max(e.cool,.4);e.hitT=G.time;}
 function bark(e){e.barkT=G.time;}
-function seesPlayer(e){let best=0,who=null;for(const pl of players()){const a=seesOne(e,pl);if(a>best){best=a;who=pl;}}e.seen=who;return best;}
+function seesPlayer(e){return scSees(e);}
 function seesOne(e,P){
   if(P.invis)return 0;if(zxPallBlocks(e.x,e.y,P.x,P.y))return 0;
   const dx=P.x-e.x,dy=P.y-e.y,dm=Math.hypot(dx,dy)*T;if(dm>26)return 0;
@@ -2346,7 +2349,7 @@ function seesOne(e,P){
 function updGuard(e,dt){if(e.civ){updCiv(e,dt);return;}if(e.type==='lamp'&&ctLamp(e,dt))return;
   const P=G.P;e.walking=false;e.cool-=dt;if(e.taunt>0)e.taunt-=dt;if(e.weakT>0)e.weakT-=dt;if(e.crip)e.runner=false;if(e.mute>0)e.mute-=dt;if(e.sealT>0){e.sealT-=dt;e.atk=0;return;}
   if(e.stag>0){e.stag-=dt;e.atk=0;if(e.stag<=0&&e.sleep){e.sleep=false;}if(e.state!=='alert'&&e.stag<=0)goAlert(e,true);return;}
-  let amt=seesPlayer(e);
+  if(scGuardPre(e,dt))return;let amt=seesPlayer(e);
   if(FT(e).smell){const sm=FT(e).smell;for(const pl of players()){if(pl.invis)continue;const d=Math.hypot(pl.x-e.x,pl.y-e.y);if(d<sm&&(d<1.2||losT(e.x,e.y,pl.x,pl.y))){const a=.5+1.2*(1-d/sm);if(a>amt){amt=a;e.seen=pl;}}}}
   const SP=e.seen;
   if(amt>0){e.aw+=amt*dt*1.3;e.last=[SP.x,SP.y];e.tgt=SP.key;e.unseen=0;}
@@ -2408,7 +2411,7 @@ function updGuard(e,dt){if(e.civ){updCiv(e,dt);return;}if(e.type==='lamp'&&ctLam
 function fwd(){return [-Math.sin(G.P.yaw),-Math.cos(G.P.yaw)];}
 /* Combat roles: Wizard clears crowds but barely scratches captains; Thief wins duels and, with venom prepped, can assassinate a captain; Warrior is good at both. */
 function applyHit(e,cls,kind,o){
-  o=o||{};const actor=o.actor||null,me=!actor||actor.key==='me',who=me?'You':actor.name;if(e.dead)return;
+  o=o||{};scOnHit(e,o.actor);const actor=o.actor||null,me=!actor||actor.key==='me',who=me?'You':actor.name;if(e.dead)return;
   const say=(t,c)=>{if(me)log(t,c);if(G.mode==='host')netLog(me?t.replace(/^You /,'The host '):t,c);};
   if(e.civ&&['melee','charge','cleave','counter'].includes(kind)){e.quietKO=true;e.ko=true;say(`${who==='You'?'You knock':who+' knocks'} ${lc(nameOf(e))} out cold.`,'good');kill(e,actor);return;}
   if(ctShield(e,kind,actor,say))return;
@@ -3045,7 +3048,7 @@ function civPanic(e,src){if(e.dead||e.cowerT>0&&!src)return;const first=e.state!
 function civHush(e,actor){if(e.dead)return;e.cowerT=90;e.state='sentry';e.aw=0;e.path=null;e.seat=[e.x,e.y];e.homeAng=e.ang;const me=!actor||actor.key==='me';
   const lines=['puts a finger to their lips and nods, shaking','sinks down against the wall and stays very quiet','whispers "I never saw you" and covers their eyes'];const l=lines[e.id%lines.length];
   if(me)log(`${nameOf(e)} ${l}.`,'good');else log(`${actor.name} hushes ${lc(nameOf(e))}.`);if(G.mode==='host')netLog(`${nameOf(e)} ${l}.`,'good');}
-function updCiv(e,dt){e.walking=false;if(e.stag>0){e.stag-=dt;if(e.stag<=0&&e.state!=='alert'&&!(e.cowerT>0))civPanic(e);return;}
+function updCiv(e,dt){e.walking=false;scGuardPre(e,dt);if(e.stag>0){e.stag-=dt;if(e.stag<=0&&e.state!=='alert'&&!(e.cowerT>0))civPanic(e);return;}
   if(e.cowerT>0){e.cowerT-=dt;e.state='sentry';return;}
   // notice: civilians are jumpy but not trained
   if(e.state!=='alert'){let amt=seesPlayer(e);if(amt>0){e.aw+=amt*dt*.9;e.last=[e.seen.x,e.seen.y];}else e.aw=Math.max(0,e.aw-dt*.2);
@@ -3292,9 +3295,9 @@ function mpPark(R){R.hostAway=true;R.down=1e9;R.P.x=-100;R.P.y=-100;R.keys={};R.
 /* the background world, stepped every frame while the host is in the back room */
 function mpBgStep(dt){const R=NET.run;if(!R||G===R)return;const TV=G;NET.bgOn=true;G=R;
   try{G.down=1e9;G.keys={};update(dt);onRemote();
-    for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.dn||!p.mv)continue;rr.stepT-=dt*(p.sp?1.6:1);if(rr.stepT<=0){rr.stepT=.5;const th=p.c==='thief',wa=p.c==='warrior';const rad=p.cr?(th?0:2):p.sp?(wa?13:10):(th?3:wa?7:5);if(rad)noise(p.x,p.y,rad,p.sp?.45:.3,.7,true);}}
+    for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.dn||!p.mv)continue;rr.stepT-=dt*(p.sp?1.6:1);if(rr.stepT<=0){rr.stepT=.5;const th=p.c==='thief',wa=p.c==='warrior';const rad=p.cr?(th?0:2):p.sp?(wa?13:10):(th?3:wa?7:5);if(rad&&!scQuietStep(rr.peer))noise(p.x,p.y,rad,p.sp?.45:.3,.7,true);}}
     for(const e of G.w.enemies)if(!e.dead)updGuard(e,dt);updAlarm(dt);updEProj(dt);updGates(dt);
-    updProj(dt);updHaz(dt);docUpdate(dt);idUpdate(dt);obsUpdate(dt);bankUpdate(dt);zxUpdate(dt);
+    updProj(dt);updHaz(dt);docUpdate(dt);idUpdate(dt);obsUpdate(dt);bankUpdate(dt);zxUpdate(dt);scUpdate(dt);
     if(G.looted&&jobComplete()&&!NET.end)mpEndBg(true);}
   catch(err){console.error('background job',err);}finally{G=TV;NET.bgOn=false;}}
 /* what the host's presence carries for the crew still on the job */
@@ -3518,9 +3521,353 @@ function zbDead(e,g,U,dt){const Z=U.zb,C=Z.acts,d=C[Z.V.die];U.sp.visible=false;
   if(!e.ko&&!e.quietKO&&!e.undead&&typeof visTex==='function'){if(!U.pool){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:visTex('pool'),transparent:true,depthWrite:false,opacity:.9}));m.rotation.x=-Math.PI/2;m.rotation.z=Math.random()*6;m.renderOrder=1;
       m.position.set(e.x*T,.02+elAt(e.x,e.y),e.y*T);m.userData.noEl=true;m.scale.setScalar(.01);R3.scene.add(m);U.pool=m;U.poolT=0;}U.poolT+=dt;U.pool.scale.setScalar(Math.min(1.5,.2+U.poolT*.5));if(U.pool.parent!==R3.scene)R3.scene.add(U.pool);}}
 
+/*SOCIN*/
+/* ---------- social stealth: covers, room zones, doubt, questioning (Patter), and the four social branches ----------
+   A cover says who you claim to be. While a guard believes it, seeing you raises his DOUBT instead of his awareness.
+   Doubt climbs when you trespass (a room your cover doesn't allow) or act out of role. At half doubt he calls you over
+   and you talk (Patter); at full doubt, or a failed line, your cover is blown for him and everyone in earshot. */
+const COVERS={guest:{n:'Guest',acc:0},servant:{n:'Servant',acc:1},watch:{n:'Watchman',acc:1},plague:{n:'Plague officer',acc:2},glamour:{n:'Glamour',acc:1},
+  porter:{n:'Porter',acc:1},prisoner:{n:'Prisoner',acc:1},bearer:{n:'Stretcher bearer',acc:2}};
+const ZONEN=['Public','Staff','Restricted','Vault'];
+const ROLEZONE={entrance:0,hall:0,tavern:0,larder:1,pool:1,patient:1,captain:2,barracks:2,vault:3};
+Object.assign(SCODE,{question:7,chat:8,gawk:9,order:10,errand:11,leave:12,berserk:13});SNAME.length=0;SNAME.push(...Object.keys(SCODE));
+/* the four social branches */
+SKILLS.thief.Grifter=[['patter','Patter',1,'Z: dress the part. Guest cover: Public rooms, and Staff rooms with forged papers on your belt. Your bluffs land 20% more often and cost less nerve.','Exit Line: once per job, a guard who sees through you hesitates 3 s before he shouts.'],
+  ['readmark','Read the Mark',1,'Looking at a guard shows his temper and his price. Bribes cost 30% less.','Bribes always work on a guard who takes them, and you can tell who is too stubborn to bother.'],
+  ['captive','Captive Audience',2,'E on an unsuspicious guard while in cover: chat him up for 15 s. He only has eyes for you.','30 s, and the guard beside him listens in too.'],
+  ['sleight','Sleight',2,'While chatting, E lifts his purse without a flicker of doubt.','Then E again plants a stolen trinket on him: soon his own mates march him out.'],
+  ['vouch','Vouch',3,'Crewmates within 4 paces count as your porters: they share a cover with Staff access while they act in role.','They stay your porters for 20 s after leaving your side.'],
+  ['scene','Staged Scene',3,'H: stage a scene where you aim (a spilled drink, a quarrel). Guards within 8 paces who aren\'t hunting wander over to gawk for 15 s.','14 paces, 25 s.'],
+  ['longcon','Long Con',4,'E on a servant or clerk while in cover: make them your contact. Doubt never rises within 6 paces of a contact, for the whole crew.','Two contacts, and each slips you the guard rota: every guard shows through the walls for 30 s.']];
+SKILLS.warrior['Bent Copper']=[['badge','Flash the Badge',1,'Z: pin on your old watch badge. Watchman cover: Public and Staff rooms. Pull rank when questioned (not on captains: they outrank you).','Restricted rooms too, and Pull rank works 10% more often.'],
+  ['escort','Prisoner Escort',1,'Crewmates within 3 paces of you walk as your prisoners: they share your cover and your rooms while they act in role.','6 paces.'],
+  ['orders','Orders',2,'H on a guard below your rank while wearing the badge: send him to search where you aim.','His mates within 4 paces go with him.'],
+  ['standdown','Stand Down',2,'B while wearing the badge: searching and suspicious guards within 12 paces go back to their posts.','If no guard is hunting anyone, the shouting dies down too (Shouts back to Quiet).'],
+  ['plant','Plant Evidence',3,'E on a guard who isn\'t hunting you, while in cover: plant stolen silver. 8 s later a mate finds it and marches him out.','Works on captains too, and a framed captain\'s whole squad escorts him out.'],
+  ['interrog','Interrogation',3,'E on a staggered or sleeping guard: lean on him for 3 s. He gives up every guard on the job: you see them through walls for 20 s.','40 s, and he gives up the traps nearby too.'],
+  ['callwatch','Call In the Watch',4,'When the watch storms in on a loud job, they spend their first 20 s arresting house guards instead of you.','60 s.']];
+SKILLS.wizard.Trickster=[['nodoff','Nod Off',1,'H on a guard who isn\'t hunting: he falls asleep for 30 s. Silent.','Works on searching guards too, and lasts 60 s.'],
+  ['hush','Hush',1,'While glamoured or invisible you make no noise at all.','Crewmates within 3 paces are hushed too.'],
+  ['borrowed','Borrowed Face',2,'Z: glamour yourself as a servant for 20 s (Staff rooms). Once a minute.','40 s, and you pass for a house guard (Restricted rooms).'],
+  ['butter','Butterfingers',2,'Guards you Repel fumble: they can\'t swing for 3 s.','They drop their purse too.'],
+  ['muddle','Muddle',3,'N on a guard: he forgets the last few seconds. Doubt and awareness gone, questioning or shouting cut off (captains keep their awareness). Also a Patter line when you\'re questioned.','Every guard within 3 paces of him forgets your blown cover too.'],
+  ['rats','Rats in the Walls',3,'H at a wall instead of a guard: scratching and squeaking in the wall. Guards within 8 paces go to look.','Real rats pour out, and gnaw through the alarm bell rope if it\'s within 5 paces.'],
+  ['badidea','Bad Idea',4,'B on a guard below captain: he wanders off to cut the alarm bell rope, then goes for a long walk.','On a loud job he turns on his mates for 10 s instead.']];
+{const Q=SKILLS.doctor['Quarantine Officer'],set=(id,b,u)=>{const s=Q.find(x=>x[0]===id);if(s){s[3]=b;s[4]=u;}};
+  set('poxwarrant','Z: the beak and a plague warrant. Plague officer cover: Public, Staff and Restricted rooms. Show warrant when questioned (85%).','Once per job a failed warrant check still passes, and the first guard to spot you uncovered backs off.');
+  set('keepback','Guards keep their distance: in plague cover, standing close never raises doubt, and doubt rises 30% slower. You are also 15% harder to notice.','50% slower, and 25% harder to notice.');
+  set('stretcher','Crewmates within 3 paces of you carry your stretcher: they share your cover and rooms, and can carry loot openly. They are also 25% harder to spot.','6 paces, and 40% harder to spot.');}
+for(const [c,br] of [['thief','Grifter'],['warrior','Bent Copper'],['wizard','Trickster'],['doctor','Quarantine Officer']])for(const s of SKILLS[c][br])SKBYID[s[0]]={id:s[0],n:s[1],t:s[2],b:s[3],u:s[4],cls:c,br};
+CREWSK.push('patter','vouch','escort','badge','keepback','hush','callwatch','borrowed','butter','readmark');
+ITEMS.papers={name:'Forged papers',short:'Papers',price:45,passive:true,desc:'Show them when a guard questions you: 90% to pass (60% against a captain). Used up either way. With papers on your belt, a guest cover also opens Staff rooms.'};
+ITEMS.livery={name:'Stolen livery',short:'Livery',price:55,desc:'Use: change into a servant\'s livery out of sight. Servant cover for the rest of the job: Public and Staff rooms. Any class.'};
+for(const c in KIT)KIT[c].lines.push('<b>Cover</b> <kbd>Z</kbd>: dress the part (class social branch, or stolen livery). While a guard believes your cover he gets <i>doubtful</i> (the eye over his head) instead of alarmed. Rooms you shouldn\'t be in, running, crouching, blocking or carrying loot raise doubt; striking or picking locks in view blows your cover at once. At half doubt he calls you over: answer with <kbd>1</kbd>–<kbd>6</kbd>.');
+
+/* ---------- zones ---------- */
+function scRunStart(w,m){G.sc={nerve:100,dread:0,contacts:0,exitUsed:false,poxFree:false,ansN:0,hud:0,burnAll:{},burned:{},myD:{},qs:[],cov:null,covT:-1};G.P.cv=null;
+  const W=w.W,H=w.H,z=new Uint8Array(W*H).fill(w.bank?0:1);
+  for(const c of w.cells||[]){const v=ROLEZONE[c.role];if(v==null)continue;for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++)if(x>=0&&y>=0&&x<W&&y<H)z[y*W+x]=v;}
+  w.zone=z;}
+function scZone(x,y){const w=G.w;if(!w||!w.zone)return 1;const tx=Math.floor(x),ty=Math.floor(y);if(tx<0||ty<0||tx>=w.W||ty>=w.H)return 1;return w.zone[ty*w.W+tx];}
+
+/* ---------- who is wearing what ---------- */
+function scSk(pl,id){return pl.key==='me'?SK(id):(pl.rr&&pl.rr.p?remSk(pl.rr.p,id):0);}
+function scOwn(pl){if(pl.key==='me'){const c=G.P.cv;if(!c)return null;if(c.t&&G.time>c.t){G.P.cv=null;log('Your glamour fades.','bad');return null;}return c.k;}return (pl.rr&&pl.rr.p&&pl.rr.p.cv)||null;}
+function scCovers(){if(G.sc&&G.sc.covT===G.time)return G.sc.cov;const out={},ps=players();
+  for(const pl of ps){const k=scOwn(pl);if(!k)continue;let acc=COVERS[k].acc;
+    if(k==='guest'&&(pl.key==='me'?G.belt&&G.belt.includes('papers'):pl.rr&&pl.rr.p&&pl.rr.p.pp))acc=1;
+    if(k==='watch'&&scSk(pl,'badge')>1)acc=2;if(k==='glamour'&&scSk(pl,'borrowed')>1)acc=2;
+    out[pl.key]={k,acc,carry:false,lead:null};}
+  for(const pl of ps){if(out[pl.key])continue;let best=null;
+    for(const q of ps){const c=out[q.key];if(!c||c.lead||q===pl)continue;const d=Math.hypot(q.x-pl.x,q.y-pl.y);
+      const vo=scSk(q,'vouch'),es=scSk(q,'escort'),sb=scSk(q,'stretcher');
+      if(sb&&c.k==='plague'&&d<(sb>1?6:3)){best={k:'bearer',acc:c.acc,carry:true,lead:q.key};break;}
+      if(es&&c.k==='watch'&&d<(es>1?6:3)){best={k:'prisoner',acc:c.acc,carry:false,lead:q.key};break;}
+      if(vo&&d<4){best={k:'porter',acc:1,carry:false,lead:q.key};G.sc.vouchT=G.sc.vouchT||{};G.sc.vouchT[pl.key]=G.time+(vo>1?20:0);break;}}
+    if(!best&&G.sc.vouchT&&G.sc.vouchT[pl.key]>G.time)best={k:'porter',acc:1,carry:false,lead:'?'};
+    if(best)out[pl.key]=best;}
+  if(G.sc){G.sc.cov=out;G.sc.covT=G.time;}return out;}
+function scBk(key,k){return key+':'+k;}
+function scCovered(pl,e){if(G.tavern||!G.sc)return null;const c=scCovers()[pl.key];if(!c)return null;const bk=scBk(pl.key,c.k);
+  if(e.hitBy===pl.key){(e.burn=e.burn||{})[bk]=1;return null;}
+  if(e.burn&&e.burn[bk])return null;if(G.sc.burnAll[bk])return null;if(e.watchT>0)return null;return c;}
+function scFlags(pl){if(pl.key==='me'){const P=G.P;return {sp:P.sprint&&P.moving,cr:P.crouch,bk:P.blocking,sw:P.swing>0||G.time-(G.swingStart||-9)<.7,ch:!!(P.chan&&!P.chan.soc),ca:!!(G.looted||myCrate())};}
+  const rr=pl.rr,p=rr&&rr.p;if(!p)return {};if(rr.scSw!==p.sw){if(rr.scSw!=null)rr.scSwT=G.time;rr.scSw=p.sw;}
+  return {sp:!!(p.sp&&p.mv),cr:!!p.cr,bk:!!p.bk,sw:G.time-(rr.scSwT||-9)<.8,ch:!!p.ch,ca:!!(p.ca||p.lt)};}
+function scNearContact(pl){for(const e of G.w.enemies)if(e.contact&&!e.dead&&Math.hypot(e.x-pl.x,e.y-pl.y)<3)return true;return false;}
+
+/* host: a guard sees a covered player. Doubt instead of awareness. */
+function scSaw(e,pl,a,c){const dt=G.scDt||.016,fl=scFlags(pl);
+  if(fl.sw||fl.ch){if(e.civ){e.dq=e.dq||{};e.dq[pl.key]=1;return;}scUnmask(e,pl,'red');return;}
+  let r=.025;const z=scZone(pl.x,pl.y);if(z>c.acc)r+=.4*(z-c.acc)*(z===3?2:1);
+  if(fl.sp)r+=.35;if(fl.cr)r+=.3;if(fl.bk)r+=.25;if(fl.ca&&!c.carry)r+=.4;
+  const d=Math.hypot(pl.x-e.x,pl.y-e.y);if(d<1.3&&c.k!=='plague')r+=.12;
+  if(e.captain)r*=2;if(e.captain&&(c.k==='watch'||c.k==='prisoner'))r+=.3;
+  if(c.k==='glamour'&&FT(e).smell)r+=.8;
+  r*=[1,1.5,2.5,5][G.alarm||0]||1;
+  if(e.trust&&e.trust[pl.key]>G.time)r*=.25;
+  if(c.k==='plague'||c.k==='bearer'){const lead=c.k==='plague'?pl:players().find(p=>p.key===c.lead);const kb=lead?scSk(lead,'keepback'):0;r*=kb>1?.5:kb?.7:1;}
+  if(scNearContact(pl))r=0;if(e.civ)r*=.6;if(e.state==='question')r*=.3;if(e.state==='chat'&&e.chat&&e.chat.k===pl.key)r*=.3;
+  const k=Math.min(1.3,Math.max(.35,a));e.dq=e.dq||{};e.dqS=e.dqS||{};e.dq[pl.key]=Math.min(e.state==='question'&&e.q&&e.q.k===pl.key?.95:1,(e.dq[pl.key]||0)+r*k*dt);e.dqS[pl.key]=G.time;}
+/* host: anyone striking a guard is never a guest to him again */
+function scOnHit(e,actor){if(!G.sc)return;const key=actor&&actor.key?actor.key:(G.lastActor||'me');e.hitBy=key;}
+/* the patched seesPlayer */
+function scSees(e){let best=0,who=null;const foc=e.state==='question'&&e.q?e.q.k:e.state==='chat'&&e.chat?e.chat.k:null;
+  if(e.watchT>0)return (e.seen=null,0);
+  for(const pl of players()){if(foc&&pl.key!==foc&&Math.hypot(pl.x-e.x,pl.y-e.y)>1.3)continue;let a=seesOne(e,pl);
+    if(a>0){const c=scCovered(pl,e);if(c){scSaw(e,pl,Math.min(a,1.3),c);a=0;}}
+    if(a>best){best=a;who=pl;}}
+  e.seen=who;return best;}
+
+/* ---------- guards: doubt, questioning and the social states ---------- */
+function scEnd(e,trustKey,tt){e.q=null;e.chat=null;e.gk=null;e.od=null;e.er=null;e.lv=null;e.bz=null;e.state='return';e.path=null;e.aw=Math.min(e.aw,.2);e.inv=null;if(trustKey){e.trust=e.trust||{};e.trust[trustKey]=G.time+(tt||40);}}
+function scPl(key){return players().find(p=>p.key===key)||null;}
+function scSay(key,t,cls){if(key==='me')log(t,cls);else if(G.mode==='host')netLog(t,cls);}
+function scGuardPre(e,dt){if(!G.sc||G.tavern)return false;G.scDt=dt;
+  if(e.watchT>0)return scWatchStep(e,dt);
+  if(e.q&&e.state!=='question')e.q=null;if(e.chat&&e.state!=='chat')e.chat=null;
+  // doubt fades when he can't see you
+  if(e.dq)for(const k in e.dq){if(G.time-((e.dqS&&e.dqS[k])||0)>.25){e.dq[k]-=.035*dt;if(e.dq[k]<=0)delete e.dq[k];}}
+  if(e.dq&&!['alert','berserk'].includes(e.state))for(const k in e.dq){const v=e.dq[k],pl=scPl(k);if(!pl){delete e.dq[k];continue;}
+    if(v>=1){if(e.civ){delete e.dq[k];civPanic(e,[pl.x,pl.y]);return false;}scUnmask(e,pl,'doubt');return false;}
+    if(v>=.5&&!e.civ&&['idle','patrol','sentry','return','suspicious','search'].includes(e.state)&&!G.w.enemies.some(o=>o!==e&&!o.dead&&o.state==='question'&&o.q&&o.q.k===k)){
+      G.sc.qn=(G.sc.qn||0)+1;e.state='question';e.q={k,ph:'go',t:0,n:G.sc.qn};e.path=null;bark(e);break;}}
+  switch(e.state){
+    case 'question':{const q=e.q,pl=q&&scPl(q.k);if(!pl){scEnd(e);break;}q.t+=dt;const d=Math.hypot(pl.x-e.x,pl.y-e.y);
+      if(q.ph==='hes'){turnTo(e,Math.atan2(pl.y-e.y,pl.x-e.x),dt*4);if(q.t>3){e.q=null;e.state='patrol';e.seen=pl;e.tgt=pl.key;goAlert(e);}break;}
+      if(q.ph==='go'){if(d<2.2||q.t>8){q.ph='ask';q.t=0;scSay(q.k,`${nameOf(e)}: "You there. Hold up a moment."`,'bad');}else moveTo(e,pl.x,pl.y,1.8,dt);break;}
+      turnTo(e,Math.atan2(pl.y-e.y,pl.x-e.x),dt*6);
+      if(d>4.5){e.dq=e.dq||{};e.dq[q.k]=(e.dq[q.k]||.5)+.3;q.ph='go';q.t=0;scSay(q.k,`${nameOf(e)}: "Oi! I'm talking to you!"`,'bad');if(e.dq[q.k]>=1)scUnmask(e,pl,'doubt');}
+      else if(q.t>11){scSay(q.k,`${nameOf(e)} doesn't like your silence.`,'bad');scUnmask(e,pl,'patter');}
+      break;}
+    case 'chat':{const c=e.chat,pl=c&&scPl(c.k);if(!pl){scEnd(e);break;}c.t-=dt;turnTo(e,Math.atan2(pl.y-e.y,pl.x-e.x),dt*6);if(c.t<=0||Math.hypot(pl.x-e.x,pl.y-e.y)>3){scEnd(e,c.k,30);scSay(c.k,`${nameOf(e)} wanders back to his post, still chuckling.`);}break;}
+    case 'gawk':{const g=e.gk;if(!g){scEnd(e);break;}g.t-=dt;if(Math.hypot(g.x-e.x,g.y-e.y)>1.8)moveTo(e,g.x,g.y,1.5,dt);else turnTo(e,Math.atan2(g.y-e.y,g.x-e.x),dt*5);if(g.t<=0)scEnd(e);break;}
+    case 'order':{const o=e.od;if(!o){scEnd(e);break;}if(!o.there){if(moveTo(e,o.x,o.y,1.6,dt)||Math.hypot(o.x-e.x,o.y-e.y)<.6||(o.t+=dt)>25)o.there=true;}else{o.look-=dt;e.ang+=dt*1.4*Math.sin(G.time*1.1+e.id);if(o.look<=0)scEnd(e);}break;}
+    case 'errand':{const r=e.er;if(!r){scEnd(e);break;}r.t+=dt;
+      if(r.ph==='bell'){const b=G.w.bell;if(!b||G.w.bellCut){r.ph='away';break;}if(Math.hypot(b.px-e.x,b.py-e.y)<.6||moveTo(e,b.px,b.py,1.7,dt)){G.w.bellCut=true;G.featDirty=true;const t=`${nameOf(e)} saws through the alarm bell rope, then wanders off humming.`;log(t,'good');if(G.mode==='host')netLog(t,'good');r.ph='away';}
+        else if(r.t>40)r.ph='away';break;}
+      if(r.ph==='away'){if(!r.dest){r.dest=scFarCell(e);}if(moveTo(e,r.dest[0],r.dest[1],1.4,dt)||Math.hypot(r.dest[0]-e.x,r.dest[1]-e.y)<.8){r.ph='idle';r.t=0;}break;}
+      e.ang+=dt*.5*Math.sin(G.time*.4+e.id);if(r.t>40)scEnd(e);break;}
+    case 'leave':{const L=e.lv;if(!L){scEnd(e);break;}L.t+=dt;const s=G.w.start;
+      if(L.fetch!=null){const o=G.w.enemies[L.fetch];if(!o||o.dead){L.fetch=null;}else if(Math.hypot(o.x-e.x,o.y-e.y)>1.2&&L.t<15){moveTo(e,o.x,o.y,2,dt);break;}else{L.fetch=null;}}
+      if(moveTo(e,s[0]+.5,s[1]+.5,1.5,dt)||Math.hypot(s[0]+.5-e.x,s[1]+.5-e.y)<1||L.t>60){e.dead=true;e.evac=true;e.found=true;e.x=-40;e.y=-40;G.foesDirty=true;}break;}
+    case 'berserk':{const b=e.bz;if(!b){scEnd(e);break;}b.t-=dt;if(b.t<=0){e.state='alert';e.aw=1;e.bz=null;break;}
+      const tg=G.w.enemies.filter(o=>o!==e&&!o.dead&&!o.civ).sort((a,c)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(c.x-e.x,c.y-e.y))[0];if(!tg)break;
+      const d=Math.hypot(tg.x-e.x,tg.y-e.y);if(d>1)moveTo(e,tg.x,tg.y,3,dt);else{turnTo(e,Math.atan2(tg.y-e.y,tg.x-e.x),dt*8);if(e.cool<=0){e.cool=1.3;applyHit(tg,null,'raw',{d:e.dmg,actor:{key:'_bz',name:nameOf(e)}});}}break;}
+  }
+  return false;}
+function scFarCell(e){const w=G.w;let best=null,bd=-1;for(const c of w.cells||[]){if(c.role==='vault'||c.role==='barracks')continue;const x=(c.x0+c.x1)/2+.5,y=(c.y0+c.y1)/2+.5,d=Math.hypot(x-e.x,y-e.y);if(d>bd&&walkT(tileAt(x,y))){bd=d;best=[x,y];}}return best||[e.x,e.y];}
+function scUnmask(e,pl,why){if(e.dead)return;const c=scCovers()[pl.key];const bk=scBk(pl.key,c?c.k:'none');
+  if(e.civ){civPanic(e,[pl.x,pl.y]);return;}
+  e.burn=e.burn||{};e.burn[bk]=1;for(const o of G.w.enemies)if(!o.dead&&!o.civ&&o!==e&&(Math.hypot(o.x-e.x,o.y-e.y)<10||(e.group&&o.group===e.group)))(o.burn=o.burn||{})[bk]=1;
+  G.sc.burned[pl.key]=G.time;if(G.alarm>=2)G.sc.burnAll[bk]=1;if(e.dq)delete e.dq[pl.key];
+  const who=pl.key==='me'?'Your':(peerName(pl.rr)+"'s");
+  if(why!=='red'&&scExitLine(pl)){e.state='question';e.q={k:pl.key,ph:'hes',t:0,n:0};scSay(pl.key,`Exit Line: "Is that the time? My oven!" ${nameOf(e)} hesitates. Get out of sight!`,'good');return;}
+  scSay(pl.key,why==='red'?`Caught red-handed! ${who} cover is blown.`:`${nameOf(e)} sees through you. ${who} cover is blown.`,'bad');if(G.mode==='host'&&pl.key!=='me')netLog(`${who} cover is blown.`,'bad');
+  e.q=null;e.chat=null;if(e.state==='alert')e.state='patrol';e.seen=pl;e.tgt=pl.key;e.aw=1;G.scUnm=true;try{goAlert(e);}finally{G.scUnm=false;}}
+function scExitLine(pl){if(scSk(pl,'patter')<2)return false;if(pl.key==='me'){if(G.sc.exitUsed)return false;G.sc.exitUsed=true;return true;}const rr=pl.rr;if(!rr||rr.scExit)return false;rr.scExit=true;return true;}
+function scAnswer(e,key,ok,o){if(!e||e.dead||e.state!=='question'||!e.q||e.q.k!==key||e.q.ph!=='ask')return;const pl=scPl(key);if(!pl)return;
+  if(o==='walk'){e.q.n=G.sc.qn=(G.sc.qn||0)+1;e.dq=e.dq||{};e.dq[key]=Math.min(1,(e.dq[key]||.5)+.3);e.q.ph='go';e.q.t=0;if(e.dq[key]>=1)scUnmask(e,pl,'doubt');return;}
+  if(o==='muddle'){scMuddle(e,key,0);return;}
+  if(ok){if(e.dq)delete e.dq[key];scEnd(e,key,45);}else scUnmask(e,pl,'patter');}
+
+/* ---------- the Patter prompt ---------- */
+function scStubborn(e){return !!(e.captain||((e.id*2654435761+(G.m&&G.m.seed||0))>>>0)%4===0);}
+function scPrice(e){return Math.round(((e.captain?40:15)+(e.id*7%4)*5)*(SK('readmark')?.7:1));}
+function scOptions(e){const c=scCovers()['me'];const k=c?c.k:null,o=[],sc=G.sc,cap=!!e.captain,al=G.alarm||0;
+  const pat=SK('patter'),bc=pat?15:25;
+  o.push({id:'bluff',n:'Bluff',p:Math.max(.05,.45+(pat?.2:0)+(k==='glamour'&&SK('borrowed')>1?.2:0)-(cap?.2:0)-[0,.1,.25,.4][al]),nerve:bc});
+  if(G.belt&&G.belt.includes('papers'))o.push({id:'papers',n:'Show papers',p:cap?.6:.9,nerve:0});
+  if(k==='watch'||k==='prisoner')o.push({id:'rank',n:'Pull rank',p:cap?0:FT(e).heavy?.65:.82+(SK('badge')>1?.1:0),nerve:15,note:cap?'outranked':''});
+  if(k==='plague'||k==='bearer')o.push({id:'warrant',n:'Show warrant',p:cap?.5:.85,nerve:0});
+  const price=scPrice(e);o.push({id:'bribe',n:`Bribe (${price}g)`,p:scStubborn(e)?0:SK('readmark')>1?1:.75,nerve:10,gold:price,hide:!SK('readmark')});
+  if(SK('muddle')&&!(G.P.cd.muddle>0))o.push({id:'muddle',n:'Muddle him',p:1,nerve:0});
+  o.push({id:'walk',n:'Walk off (he follows)',p:null,nerve:0});
+  return o;}
+function scOpenPrompt(id,n){const e=G.w.enemies[id];if(!e)return;const o=scOptions(e);G.scPr={id,n,o,t:10};
+  let el=document.getElementById('scPat');if(!el){el=document.createElement('div');el.id='scPat';el.style.cssText='position:absolute;left:50%;bottom:84px;transform:translateX(-50%);min-width:300px;max-width:92%;background:rgba(10,10,14,.9);border:1px solid var(--lantern,#e9a94b);border-radius:8px;padding:8px 12px;font-size:.92rem;z-index:6;pointer-events:none;text-shadow:0 1px 2px #000';($('#viewwrap')||document.body).appendChild(el);}
+  el.hidden=false;scRenderPrompt();sfx&&sfx('clink',G.P.x,G.P.y);}
+function scRenderPrompt(){const el=document.getElementById('scPat'),pr=G.scPr;if(!el||!pr)return;const e=G.w.enemies[pr.id];const nv=Math.round(G.sc.nerve);
+  el.innerHTML=`<div style="color:var(--lantern,#e9a94b);margin-bottom:4px">${esc(nameOf(e))}: "And who might you be?" <span class="dim">· nerve ${nv}</span></div>`+pr.o.map((x,i)=>{const no=(x.nerve>nv)||(x.gold&&PROF.gold<x.gold);const pc=x.p==null?'':x.note?` <span class="bad">${x.note}</span>`:x.hide&&x.id==='bribe'?' <span class="dim">??%</span>':` <span class="dim">${Math.round(x.p*100)}%</span>`;
+    return `<div style="opacity:${no?.4:1}"><kbd>${i+1}</kbd> ${esc(x.n)}${pc}${x.nerve?` <span class="dim">(${x.nerve} nerve)</span>`:''}</div>`;}).join('')+`<div style="height:3px;background:#333;margin-top:6px"><i style="display:block;height:3px;width:${Math.max(0,pr.t/10*100)}%;background:var(--lantern,#e9a94b)"></i></div>`;}
+function scClosePrompt(){G.scPr=null;const el=document.getElementById('scPat');if(el)el.hidden=true;}
+function scChoose(i){const pr=G.scPr;if(!pr)return;const x=pr.o[i];if(!x)return;const e=G.w.enemies[pr.id];if(!e){scClosePrompt();return;}const sc=G.sc;
+  if(x.nerve>sc.nerve){toast('Not enough nerve for that. Breathe, or pick another line.');return;}if(x.gold&&PROF.gold<x.gold){toast(`You need ${x.gold} gold.`);return;}
+  sc.ansN=pr.n;scClosePrompt();let ok=x.p==null?null:Math.random()<x.p;sc.nerve-=x.nerve;
+  if(x.id==='papers'){const j=G.belt.indexOf('papers');if(j>=0)G.belt[j]=null;G.sideDirty=true;}
+  if(x.id==='bribe'){PROF.gold-=x.gold;saveProf&&saveProf();if(!ok)sc.nerve-=10;}
+  if(x.id==='warrant'&&!ok&&SK('poxwarrant')>1&&!sc.poxFree){sc.poxFree=true;ok=true;log('The guard squints at the smudged warrant... and waves you on. (Pox Warrant)','good');}
+  if(x.id==='muddle'){G.P.cd.muddle=25*(1-(G.S.cdr||0));G.sideDirty=true;}
+  if(ok===false)sc.nerve=Math.max(0,sc.nerve-x.nerve);
+  const lines={bluff:ok?'"Just here for the master. He\'s expecting me." He buys it.':'"Expecting you, is he?" He doesn\'t buy a word.',papers:ok?'He reads your papers twice, then hands them back.':'He holds your papers up to the lamp. The ink is wrong.',
+    rank:ok?'"Watch business. Back to your post, lad." He snaps straight.':(e.captain?'"I know every watchman in this city, and you\'re not one."':'"Funny, I don\'t know your face, sergeant."'),warrant:ok?'He sees the seal, the beak, and backs off fast.':'"Plague warrant? Signed by who?"',
+    bribe:ok?'The coins vanish into his glove. "Never saw you."':'He pockets the coin and grabs your arm anyway.',muddle:'You snap your fingers. His eyes glaze. "Where was I?"',walk:'You walk off. He follows, frowning.'};
+  sc.nerve=Math.max(0,sc.nerve);log(lines[x.id]||'',ok===false?'bad':ok?'good':undefined);
+  if(G.mode==='client')sendAct({t:'sc',k:'ans',id:pr.id,ok:ok?1:0,o:x.id});else scAnswer(e,'me',ok,x.id);}
+addEventListener('keydown',ev=>{if(!G||!G.scPr)return;const m=/^Digit([1-9])$/.exec(ev.code);if(!m)return;ev.stopImmediatePropagation();ev.preventDefault();if(!ev.repeat)scChoose(+m[1]-1);},true);
+
+/* ---------- local update: nerve, glamour, prompt, HUD ---------- */
+function scUpdate(dt){if(G.tavern){if(!NET.bgOn){const el=document.getElementById('scHud');if(el)el.innerHTML='';}return;}if(!G.sc)return;if(NET.bgOn){scHostTick();return;}const sc=G.sc,P=G.P;
+  const myKey=G.mode==='client'?NET.myPeer:'me';
+  // nerve
+  const watched=scMyDoubtMax()>.08;sc.nerve=Math.min(100,sc.nerve+(watched?1:5)*dt);if(sc.dread>0)sc.dread=Math.max(0,sc.dread-1.5*dt);
+  // questions for me
+  let mine=null;if(G.mode==='client')mine=(sc.qs||[]).find(q=>q[1]===myKey);else{const e=G.w.enemies.find(o=>!o.dead&&o.state==='question'&&o.q&&o.q.k==='me'&&o.q.ph==='ask');if(e)mine=[e.id,'me',e.q.n];}
+  if(mine&&!G.scPr&&mine[2]!==sc.ansN&&G.down<=0)scOpenPrompt(mine[0],mine[2]);
+  if(G.scPr){if(!mine||mine[0]!==G.scPr.id){scClosePrompt();}else{G.scPr.t-=dt;if(G.scPr.t<=0){const i=G.scPr.o.findIndex(x=>x.id==='walk');scChoose(i);}else{sc.prT=(sc.prT||0)-dt;if(sc.prT<=0){sc.prT=.25;scRenderPrompt();}}}}
+  if(G.mode!=='client')scHostTick();
+  // HUD
+  sc.hud-=dt;if(sc.hud<=0){sc.hud=.2;scHud();}}
+function scHostTick(){const sc=G.sc;for(const e of G.w.enemies){if(e.dead||!e.plantT||G.time<e.plantT)continue;scArrest(e);}
+  if(G.alarm>=2)for(const e of G.w.enemies)if(e.burn)for(const bk in e.burn)sc.burnAll[bk]=1;}
+function scMyDoubt(e){if(G.mode==='client')return (G.sc&&G.sc.myD[e.id])||0;return (e.dq&&e.dq.me)||0;}
+function scMyDoubtMax(){let m=0;for(const e of G.w.enemies)if(!e.dead){const d=scMyDoubt(e);if(d>m)m=d;}return m;}
+function scHud(){let el=document.getElementById('scHud');if(!el){const b=document.querySelector('.hudbl');if(!b)return;el=document.createElement('div');el.id='scHud';el.style.cssText='font-size:.8rem;text-shadow:0 1px 2px #000;line-height:1.3';b.appendChild(el);}
+  const P=G.P,sc=G.sc;const c=scCovers()['me'];
+  if(!c){el.innerHTML=G.cls==='doctor'&&sc.dread>1?`<span class="dim">Dread ${Math.round(sc.dread)}</span>`:'';return;}
+  const z=scZone(P.x,P.y),burnt=G.mode==='client'?sc.burnedMe:G.time-(sc.burned.me||-99)<60;const tres=z>c.acc;
+  const glam=P.cv&&P.cv.t?` ${Math.max(0,Math.ceil(P.cv.t-G.time))}s`:'';
+  el.innerHTML=`<b style="color:${burnt?'#ff7a66':'var(--lantern,#e9a94b)'}">${esc(COVERS[c.k].n)}${glam}</b>${burnt?' <span class="bad">blown nearby</span>':''} · <span class="${tres?'bad':'dim'}">${ZONEN[z]} room${tres?': trespassing':''}</span>`+
+    `<div class="bar" style="height:4px;margin-top:3px" title="Nerve"><i style="width:${Math.round(sc.nerve)}%;background:#c9b07a"></i></div>`+(G.cls==='doctor'&&sc.dread>1?`<span class="dim">Dread ${Math.round(sc.dread)}${sc.dread>70?' <span class="bad">(near panic)</span>':''}</span>`:'');}
+/* the vis line */
+function scVisTag(){if(!G.sc||G.tavern)return '';const c=scCovers()['me'];if(!c)return '';const m=scMyDoubtMax();return m>.05?` · doubt ${Math.round(m*100)}%`:' · in cover';}
+
+/* ---------- putting a cover on (Z) ---------- */
+function scToggleCover(){if(!G||G.tavern||G.over||G.down>0)return;const P=G.P;
+  if(P.cv){P.cv=null;log('You drop the act.');G.sc.covT=-1;return;}
+  let k=null,how='';
+  if(G.cls==='thief'&&SK('patter')){k='guest';how='You straighten your collar and put on your best manners. Guest cover.';}
+  else if(G.cls==='warrior'&&SK('badge')){k='watch';how='You pin on the old watch badge. Watchman cover.';}
+  else if(G.cls==='doctor'&&SK('poxwarrant')){k='plague';how='Beak on, warrant out. Plague officer cover.';}
+  else if(G.cls==='wizard'&&SK('borrowed')){if(P.cd.bface>0){toast(`Borrowed Face is not ready (${P.cd.bface.toFixed(0)} s).`);return;}const up=SK('borrowed')>1;P.cv={k:'glamour',t:G.time+(up?40:20)};P.cd.bface=60*(1-(G.S.cdr||0));G.sc.covT=-1;log(up?'You borrow a house guard\'s face. Glamour for 40 s.':'You borrow a servant\'s face. Glamour for 20 s.','good');return;}
+  const li=G.belt?G.belt.indexOf('livery'):-1;
+  if(!k&&li>=0){k='servant';how='You shrug into the stolen livery. Servant cover.';}
+  if(!k){toast('You have no cover. Learn your class\'s social branch, or buy stolen livery at the stash.');return;}
+  const seen=G.w.enemies.some(e=>!e.dead&&!e.civ&&Math.hypot(e.x-P.x,e.y-P.y)<9&&losT(e.x,e.y,P.x,P.y)&&Math.abs(angDiff(Math.atan2(P.y-e.y,P.x-e.x),e.ang))<1.1);
+  if(seen){toast('Not with eyes on you. Get out of sight to change.');return;}
+  P.chan={t:0,dur:1.5,soc:1,label:'Getting into character',done:()=>{if(k==='servant'){const j=G.belt.indexOf('livery');if(j<0)return;G.belt[j]=null;G.sideDirty=true;}P.cv={k,t:0};G.sc.covT=-1;log(how,'good');}};}
+function scBelt(k,i){if(k==='papers'){toast('Forged papers come out when a guard questions you.');return true;}if(k==='livery'){if(G.P.cv){toast('You are already in cover. Z to drop it first.');return true;}scToggleCover();return true;}return false;}
+/* footsteps in cover sound like anyone else's */
+function scQuietStep(key){if(!G.sc||G.tavern)return false;const pl=key==='me'?{key:'me',x:G.P.x,y:G.P.y}:scPl(key);if(!pl)return false;
+  const glam=q=>q.key==='me'?(G.P.invis>0||!!(G.P.cv&&G.P.cv.k==='glamour')):!!(q.rr&&q.rr.p&&(q.rr.p.iv||q.rr.p.cv==='glamour'));
+  if(scSk(pl,'hush')&&glam(pl))return true;
+  for(const q of players()){if(q.key===pl.key)continue;if(scSk(q,'hush')>1&&glam(q)&&Math.hypot(q.x-pl.x,q.y-pl.y)<1.5)return true;}
+  const c=scCovers()[pl.key];if(!c)return false;const f=scFlags(pl);return !f.sp&&!f.cr;}
+/* ---------- focus (E) on people ---------- */
+function scLookGuard(r,civOk){const P=G.P,[fx,fy]=fwd(),fa=Math.atan2(fy,fx);let best=null,bd=99;for(const e of G.w.enemies){if(e.dead||(e.civ&&!civOk)||(!e.civ&&civOk==='only'))continue;const dx=e.x-P.x,dy=e.y-P.y,d=Math.hypot(dx,dy);if(d>r||Math.abs(angDiff(Math.atan2(dy,dx),fa))>(d<1.6?.7:.25)||!losT(P.x,P.y,e.x,e.y))continue;if(d<bd){bd=d;best=e;}}return best;}
+function scFocus(){if(!G.sc||!G.P.cv&&!scCovers()['me'])return null;const c=scCovers()['me'];if(!c)return null;const e=scLookGuard(1.6,true);if(!e)return null;
+  const calm=['idle','patrol','sentry','return','chat','gawk','order'].includes(e.state);
+  if(e.civ){if(SK('longcon')&&!e.contact&&G.sc.contacts<(SK('longcon')>1?2:1)&&e.state!=='alert')return {kind:'sc',op:'contact',e,cx:e.x,cy:e.y,label:{act:true,text:`<b>E</b> Make ${lc(nameOf(e))} your contact <span class="dim">(Long Con)</span>`}};return null;}
+  if(G.cls==='thief'&&e.state==='chat'&&SK('sleight')){if(!e.picked)return {kind:'sc',op:'lift',e,cx:e.x,cy:e.y,label:{act:true,text:'<b>E</b> Lift his purse <span class="dim">(Sleight)</span>'}};
+    if(SK('sleight')>1&&!e.plantT)return {kind:'sc',op:'plant',e,cx:e.x,cy:e.y,label:{act:true,text:'<b>E</b> Plant a stolen trinket on him <span class="dim">(Sleight)</span>'}};}
+  if(G.cls==='warrior'&&SK('interrog')&&e.stag>0)return {kind:'sc',op:'interrog',e,cx:e.x,cy:e.y,label:{act:true,text:'<b>E</b> Lean on him <span class="dim">(Interrogation)</span>'}};
+  if(G.cls==='warrior'&&SK('plant')&&calm&&!e.plantT&&(!e.captain||SK('plant')>1))return {kind:'sc',op:'plant',e,cx:e.x,cy:e.y,label:{act:true,text:`<b>E</b> Plant stolen silver on ${lc(nameOf(e))} <span class="dim">(Plant Evidence)</span>`}};
+  if(G.cls==='thief'&&SK('captive')&&calm&&e.state!=='chat'&&scMyDoubt(e)<.5)return {kind:'sc',op:'chat',e,cx:e.x,cy:e.y,label:{act:true,text:`<b>E</b> Chat up ${lc(nameOf(e))} <span class="dim">(Captive Audience)</span>`}};
+  return null;}
+function scInteract(c){if(c.kind!=='sc')return false;const e=c.e,op=c.op;
+  if(op==='interrog'){G.P.chan={t:0,dur:3,soc:1,label:`Leaning on ${lc(nameOf(e))}`,done:()=>{const up=SK('interrog')>1;G.glimpse=up?40:20;G.divineAt=null;if(up)for(const tr of G.w.traps)if(!tr.disarmed&&Math.hypot(tr.x-e.x,tr.y-e.y)<10)tr.revealed=true;G.featDirty=true;log('"All right, all right!" He gives up every post and patrol. You can see the guards through the walls.','good');}};return true;}
+  if(op==='lift'){if(e.picked)return true;e.picked=true;const it=makeItem('purse',0,1);if(!bagAdd(G.cls,it)){toast('No room in your bag.');e.picked=false;return true;}gainXP(8);G.sideDirty=true;log(`Mid-laugh, you lift ${lc(nameOf(e))}'s purse. He never feels a thing.`,'good');return true;}
+  if(op==='contact'){G.sc.contacts++;if(G.mode==='client')sendAct({t:'sc',k:'contact',id:e.id,up:SK('longcon')>1?1:0});else scContact(e,'me');log(`A quiet word and a coin: ${lc(nameOf(e))} is your contact now. Nobody gets suspicious near them.`,'good');if(SK('longcon')>1){G.glimpse=30;G.divineAt=null;log('They slip you the guard rota. You know where every guard is for 30 s.','good');}return true;}
+  const a={t:'sc',k:op,id:e.id};
+  if(op==='chat'){a.d=SK('captive')>1?30:15;a.two=SK('captive')>1?1:0;log(`You catch ${lc(nameOf(e))}'s eye and start a story about the master's daughter.`,'good');}
+  if(op==='plant'){a.up=G.cls==='warrior'?(SK('plant')>1?1:0):0;log(`You slip stolen silver into ${lc(nameOf(e))}'s coat.`,'good');}
+  if(G.mode==='client')sendAct(a);else scHostAct(a,{key:'me',name:'You'});return true;}
+function scInfoText(){if(!G.sc||G.tavern||!SK('readmark'))return '';const e=scLookGuard(8);if(!e||e.civ)return '';const st=scStubborn(e);const d=scMyDoubt(e);
+  return `${esc(nameOf(e))} · ${st?(SK('readmark')>1?'<span class="bad">too stubborn to bribe</span>':'a hard case'):`takes bribes <span class="dim">(${scPrice(e)}g)</span>`}${e.captain?' · knows every face':''}${d>.02?` · doubt ${Math.round(d*100)}%`:''}`;}
+
+/* ---------- host actions ---------- */
+function scHostAct(a,actor){const w=G.w,e=w.enemies[a.id|0];const key=actor.key;
+  if(a.k==='ans'){scAnswer(e,key,!!a.ok,a.o);return;}
+  if(a.k==='scene'||a.k==='rats'){scGawk(+a.x,+a.y,+a.r||8,+a.d||15,a.k==='rats'&&a.up);return;}
+  if(a.k==='panic'){raiseAlarm(1,'"PLAGUE!" Panic spreads through the building.');return;}
+  if(!e||e.dead)return;
+  if(a.k==='chat'){scChat(e,key,+a.d||15,a.two);return;}
+  if(a.k==='plant'){e.plantT=G.time+8;e.plantUp=!!a.up;return;}
+  if(a.k==='contact'){scContact(e,key);return;}
+  if(a.k==='order'){scOrder(e,+a.x,+a.y,a.up);return;}
+  if(a.k==='nod'){scNod(e,a.up);return;}
+  if(a.k==='muddle'){scMuddle(e,key,a.up);return;}
+  if(a.k==='bad'){scBadIdea(e,a.up);return;}
+  if(a.k==='stand'){scStandDown(+a.x,+a.y,a.up);return;}}
+function scChat(e,key,d,two){if(e.state==='alert'||e.civ)return;e.state='chat';e.chat={k:key,t:d};e.path=null;if(e.dq)delete e.dq[key];
+  if(two){const o=G.w.enemies.find(o=>o!==e&&!o.dead&&!o.civ&&o.state!=='alert'&&Math.hypot(o.x-e.x,o.y-e.y)<2.5);if(o){o.state='chat';o.chat={k:key,t:d};o.path=null;}}}
+function scContact(e,key){e.contact=true;e.cowerT=0;e.state='idle';e.aw=0;}
+function scGawk(x,y,r,d,rats){let n=0;for(const e of G.w.enemies){if(e.dead||e.civ||e.state==='alert'||e.state==='question'||e.state==='chat'||Math.hypot(e.x-x,e.y-y)>r)continue;e.state='gawk';e.gk={x,y,t:d};e.path=null;n++;}
+  noise(x,y,4,.05,.1);if(rats){const b=G.w.bell;if(b&&!G.w.bellCut&&Math.hypot(b.px-x,b.py-y)<5){G.w.bellCut=true;G.featDirty=true;const t='Rats swarm the bell rope and gnaw it through.';log(t,'good');if(G.mode==='host')netLog(t,'good');}}return n;}
+function scOrder(e,x,y,up){const list=[e];if(up)for(const o of G.w.enemies)if(o!==e&&!o.dead&&!o.civ&&!o.captain&&o.state!=='alert'&&Math.hypot(o.x-e.x,o.y-e.y)<4&&list.length<3)list.push(o);
+  for(const o of list){o.state='order';o.od={x:x+(Math.random()-.5)*1.5,y:y+(Math.random()-.5)*1.5,t:0,look:8};o.path=null;o.aw=0;}return list.length;}
+function scNod(e,up){if(e.state==='alert'||(!up&&(e.state==='search'||e.state==='question')))return false;const t=(up?60:30)*(e.captain?.4:1);e.stag=Math.max(e.stag||0,t);e.atk=0;e.sleep=true;e.sleepHard=true;e.hitT=G.time;return true;}
+function scMuddle(e,key,up){e.aw=e.captain?e.aw:0;e.dq={};e.q=null;if(e.state==='alert'&&!e.captain){e.state='return';e.last=null;e.unseen=0;}else if(['question','suspicious','search','chat'].includes(e.state))scEnd(e);
+  if(e.hitBy===key)e.hitBy=null;if(e.burn)for(const bk in e.burn)if(bk.startsWith(key+':'))delete e.burn[bk];
+  if(up)for(const o of G.w.enemies)if(o!==e&&!o.dead&&Math.hypot(o.x-e.x,o.y-e.y)<3&&o.burn)for(const bk in o.burn)if(bk.startsWith(key+':'))delete o.burn[bk];}
+function scBadIdea(e,up){if(e.captain||e.civ)return false;if(up&&G.alarm>=1){e.state='berserk';e.bz={t:10};e.path=null;const t=`${nameOf(e)} turns on his own mates!`;log(t,'good');if(G.mode==='host')netLog(t,'good');return true;}
+  e.state='errand';e.er={ph:G.w.bell&&!G.w.bellCut?'bell':'away',t:0};e.path=null;e.aw=0;return true;}
+function scStandDown(x,y,up){let n=0;for(const e of G.w.enemies){if(e.dead||e.civ||Math.hypot(e.x-x,e.y-y)>12)continue;if(['search','suspicious'].includes(e.state)){scEnd(e);e.aw=0;n++;}}
+  if(up&&G.alarm===1&&!G.w.enemies.some(e=>!e.dead&&!e.civ&&e.state==='alert')){G.alarm=0;G.alertT=0;G.calmT=0;G.sideDirty=true;const t='"Stand down, lads. False alarm." The shouting dies away.';log(t,'good');if(G.mode==='host')netLog(t,'good');}return n;}
+function scArrest(e){const up=e.plantUp;e.plantT=0;const by=G.w.enemies.filter(o=>o!==e&&!o.dead&&!o.civ&&o.state!=='alert'&&Math.hypot(o.x-e.x,o.y-e.y)<16).sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y))[0];
+  if(!by){const t=`${nameOf(e)} finds the silver in his coat and quietly keeps it.`;log(t);if(G.mode==='host')netLog(t);return;}
+  e.state='leave';e.lv={t:0};e.path=null;e.q=null;by.state='leave';by.lv={t:0,fetch:e.id};by.path=null;let n=2;
+  if(up&&e.group)for(const o of G.w.enemies)if(o!==e&&o!==by&&!o.dead&&o.group===e.group&&o.state!=='alert'){o.state='leave';o.lv={t:0};o.path=null;n++;}
+  const t=`${nameOf(by)} finds stolen silver on ${lc(nameOf(e))} and marches him out${n>2?`, with ${n-2} more of the squad`:''}.`;log(t,'good');if(G.mode==='host')netLog(t,'good');}
+/* Call In the Watch */
+function scWave(n){const lv=crewSK('callwatch');if(!lv)return;const w=G.w;for(const e of w.enemies.slice(-n)){e.watchT=lv>1?60:20;e.state='return';}const t='The watch storm in... and start collaring the house guards. (Call In the Watch)';log(t,'good');if(G.mode==='host')netLog(t,'good');}
+function scWatchStep(e,dt){e.watchT-=dt;e.walking=false;if(e.watchT<=0){e.watchT=0;e.state='alert';e.aw=1;return false;}
+  const tg=G.w.enemies.filter(o=>!o.dead&&!o.civ&&!o.reinf&&o.state!=='leave').sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y))[0];
+  if(!tg){e.state='return';return true;}if(Math.hypot(tg.x-e.x,tg.y-e.y)>1.1){moveTo(e,tg.x,tg.y,2.6,dt);return true;}
+  tg.state='leave';tg.lv={t:0};tg.path=null;const t=`The watch collars ${lc(nameOf(tg))} and drags him off.`;log(t,'good');if(G.mode==='host')netLog(t,'good');return true;}
+/* Butterfingers (host, from Repel) */
+function scButter(e,actor){const key=actor&&actor.key||'me';const lv=key==='me'?(G.cls==='wizard'?SK('butter'):0):(()=>{const rr=NET.remote.get(key);return rr&&rr.p?remSk(rr.p,'butter'):0;})();if(!lv||e.dead)return;
+  e.cool=Math.max(e.cool||0,3);e.atk=0;if(lv>1&&!e.purseDrop&&!e.civ){e.purseDrop=true;if(key==='me'){if(bagAdd(G.cls,makeItem('purse',0,1)))log(`${nameOf(e)} fumbles and drops his purse. You scoop it up.`,'good');}}}
+
+/* ---------- powers (H, N, B) ---------- */
+function scPowers(P){const c=G.cls;
+  if(c==='thief'&&SK('scene'))P.push({id:'scene',key:'H',name:'Staged scene',cd:30,sc:1});
+  if(c==='warrior'&&SK('orders'))P.push({id:'orders',key:'H',name:'Orders',cd:12,sc:1});
+  if(c==='warrior'&&SK('standdown'))P.push({id:'stand',key:'B',name:'Stand down',cd:40,sc:1});
+  if(c==='wizard'&&(SK('nodoff')||SK('rats')))P.push({id:'nod',key:'H',name:SK('nodoff')&&SK('rats')?'Nod off / Rats':SK('nodoff')?'Nod off':'Rats in the walls',cd:20,sc:1});
+  if(c==='wizard'&&SK('muddle'))P.push({id:'muddle',key:'N',name:'Muddle',cd:25,sc:1});
+  if(c==='wizard'&&SK('badidea'))P.push({id:'bad',key:'B',name:'Bad idea',cd:60,sc:1});}
+function scAim(max){const P=G.P,[fx,fy]=fwd();let x=P.x,y=P.y;for(let s=.25;s<=max;s+=.25){const nx=P.x+fx*s,ny=P.y+fy*s;if(!walkT(tileAt(nx,ny)))break;x=nx;y=ny;}return [x,y];}
+function scSend(a){if(G.mode==='client')sendAct(a);else scHostAct(a,{key:'me',name:'You'});}
+function scPower(A){const P=G.P,id=A.id;
+  if(id==='scene'){const up=SK('scene')>1,[x,y]=scAim(10);scSend({t:'sc',k:'scene',x:+x.toFixed(2),y:+y.toFixed(2),r:up?14:8,d:up?25:15});G.bursts=G.bursts||[];G.bursts.push({x,y,t:0,col:0xe9c46a});log('A goblet crashes, someone shrieks about a stolen kiss... heads turn.','good');return;}
+  if(id==='orders'){if(!P.cv||P.cv.k!=='watch'){toast('Pin your badge on first (Z).');return false;}const e=scLookGuard(10);if(!e||e.civ){toast('Look at a guard to give him orders.');return false;}if(e.captain){toast('He outranks you.');return false;}if(e.state==='alert'){toast('He\'s past taking orders.');return false;}
+    const [x,y]=scAim(14);scSend({t:'sc',k:'order',id:e.id,x:+x.toFixed(2),y:+y.toFixed(2),up:SK('orders')>1?1:0});log(`"You! Search over there. Now." ${nameOf(e)} hurries off.`,'good');return;}
+  if(id==='stand'){if(!P.cv||P.cv.k!=='watch'){toast('Pin your badge on first (Z).');return false;}scSend({t:'sc',k:'stand',x:+P.x.toFixed(2),y:+P.y.toFixed(2),up:SK('standdown')>1?1:0});log('"Stand down! Back to your posts!"','good');return;}
+  if(id==='nod'){const e=scLookGuard(10);if(e&&!e.civ&&SK('nodoff')){if(e.state==='alert'){toast('Too wide awake. Not on a guard who is hunting.');return false;}scSend({t:'sc',k:'nod',id:e.id,up:SK('nodoff')>1?1:0});log(`You murmur a lullaby. ${nameOf(e)} slumps against the wall, snoring.`,'good');return;}
+    if(SK('rats')){const [x,y]=scAim(10);scSend({t:'sc',k:'rats',x:+x.toFixed(2),y:+y.toFixed(2),r:4,d:12,up:SK('rats')>1?1:0});log(SK('rats')>1?'Rats pour out of the wall, squealing.':'Scratching and squeaking starts up inside the wall.','good');return;}
+    toast('Look at a guard.');return false;}
+  if(id==='muddle'){const e=scLookGuard(10);if(!e||e.civ){toast('Look at a guard to muddle him.');return false;}scSend({t:'sc',k:'muddle',id:e.id,up:SK('muddle')>1?1:0});log(`${nameOf(e)} blinks, frowns, and forgets what he was doing.`,'good');return;}
+  if(id==='bad'){const e=scLookGuard(10);if(!e||e.civ||e.captain){toast('Look at a guard below captain.');return false;}scSend({t:'sc',k:'bad',id:e.id,up:SK('badidea')>1?1:0});log(`You whisper a bad idea into ${lc(nameOf(e))}'s ear.`,'good');return;}}
+/* Dread, for the Quarantine Officer's scares */
+function scDread(n){if(!G.sc)return;G.sc.dread+=n;if(G.sc.dread>=100){G.sc.dread=40;log('Too much fear: someone screams "PLAGUE!" and panic spreads.','bad');if(G.mode==='client')sendAct({t:'sc',k:'panic'});else raiseAlarm(1,'"PLAGUE!" Panic spreads through the building.');}}
+
+/* ---------- co-op sync ---------- */
+function scPackMe(){if(!G||!G.sc||G.tavern)return {};const P=G.P;return {cv:P.cv?P.cv.k:'',ch:P.chan&&!P.chan.soc?1:0,ca:G.looted||myCrate()?1:0,pp:G.belt&&G.belt.includes('papers')?1:0};}
+function scPack(){if(!G.sc)return null;const d={},q=[],b=[];for(const e of G.w.enemies){if(e.dead)continue;if(e.dq)for(const k in e.dq){if(k==='me')continue;const v=Math.round(e.dq[k]*20);if(v>0)(d[k]=d[k]||[]).push([e.id,v]);}
+    if(e.state==='question'&&e.q&&e.q.ph==='ask'&&e.q.k!=='me')q.push([e.id,e.q.k,e.q.n]);}
+  for(const k in G.sc.burned)if(k!=='me'&&G.time-G.sc.burned[k]<60)b.push(k);return {d,q,b};}
+function scApply(S){if(!S||!G.sc)return;const me=NET.myPeer;const m={};for(const [id,v] of (S.d&&S.d[me])||[])m[id]=v/20;G.sc.myD=m;G.sc.qs=S.q||[];G.sc.burnedMe=(S.b||[]).includes(me);}
+
+/* ---------- icons over guards ---------- */
+const SCSPR={};
+function scSpr(key,draw){if(SCSPR[key])return SCSPR[key];const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');draw(g);SCSPR[key]=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true});return SCSPR[key];}
+function scEye(lv){const i=Math.max(1,Math.min(5,Math.ceil(lv*5)));return scSpr('eye'+i,g=>{const col=['#d8d0b0','#e9c46a','#e9a94b','#ef7a3a','#ff5a4a'][i-1];
+  g.lineWidth=6;g.strokeStyle='#000';g.beginPath();g.ellipse(32,32,26,15,0,0,Math.PI*2);g.stroke();g.fillStyle='rgba(0,0,0,.55)';g.fill();
+  g.save();g.beginPath();g.ellipse(32,32,26,15,0,0,Math.PI*2);g.clip();g.fillStyle=col;g.fillRect(6,47-30*i/5,52,30*i/5);g.restore();
+  g.lineWidth=3;g.strokeStyle=col;g.beginPath();g.ellipse(32,32,26,15,0,0,Math.PI*2);g.stroke();g.fillStyle='#111';g.beginPath();g.arc(32,32,7,0,Math.PI*2);g.fill();});}
+function scTxt(key,ch,col){return scSpr(key,g=>{g.font='bold 44px Georgia, serif';g.textAlign='center';g.textBaseline='middle';g.lineWidth=6;g.strokeStyle='#000';g.strokeText(ch,32,30);g.fillStyle=col;g.fillText(ch,32,30);});}
+function scIcon(e,U){if(G.tavern||!G.sc||e.dead)return;const s=e.state;
+  if(s==='question'){U.sp.visible=true;U.sp.material=scTxt('q','…?','#e9a94b');U.sp.scale.setScalar(.55);return;}
+  if(s==='chat'){U.sp.visible=true;U.sp.material=scTxt('c','…','#c9b07a');U.sp.scale.setScalar(.5);return;}
+  if(s==='gawk'){U.sp.visible=true;U.sp.material=scTxt('g','!?','#c9b07a');U.sp.scale.setScalar(.4);return;}
+  if(e.contact){U.sp.visible=true;U.sp.material=scTxt('k','♦','#5cc2a0');U.sp.scale.setScalar(.35);return;}
+  if(U.sp.visible)return;const d=scMyDoubt(e);if(d>.04){U.sp.visible=true;U.sp.material=scEye(d);U.sp.scale.setScalar(.5);}}
+
 /* ---------- interaction ---------- */
 function findFocus(){
   {const bf=G.tavern?null:bankFocus();if(bf)return bf;}
+  {const sf=G.tavern?null:scFocus();if(sf)return sf;}
   {const zf=G.tavern?null:zxFocus();if(zf)return zf;}
   {const cf=G.tavern?null:civFocus();if(cf)return cf;}
   const P=G.P,w=G.w,C=G.cls,[fx,fy]=fwd(),fa=Math.atan2(fy,fx),cands=[];
@@ -3583,7 +3930,7 @@ function interact(){
   if(c.kind==='coffer'){cofferUse(c.l);return;}
   if(c.kind==='tile'&&c.t===PATIENT){const P=G.P;P.chan={t:0,dur:G.S.stab||4,label:'Stabilising the informant',hold:SK('steady')>1,done:()=>{const d={k:'tile',x:c.x,y:c.y};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}};return;}
   if(c.kind==='tile'&&c.t===MIASMA&&SK('purge')){const ts=[];for(let y=c.y-4;y<=c.y+4;y++)for(let x=c.x-4;x<=c.x+4;x++)if(G.w.t[y]&&G.w.t[y][x]===MIASMA&&Math.hypot(x-G.P.x+.5,y-G.P.y+.5)<4.5)ts.push([x,y]);for(const [x,y] of ts){const d={k:'tile',x,y,pg:SK('purge')};if(G.mode==='client')sendAct(Object.assign({t:'use'},d));else doUse(d,{key:'me',cls:G.cls,name:'You'});}return;}
-  if(bankInteract(c))return;if(zxInteract(c))return;if(civInteract(c))return;
+  if(bankInteract(c))return;if(scInteract(c))return;if(zxInteract(c))return;if(civInteract(c))return;
   if(obsInteract(c))return;
   if(c.kind==='pocket'){pickPocket(c.e);return;}
   const d={k:c.kind,id:c.kind==='trap'?c.tr.id:c.kind==='torch'?c.to.id:c.kind==='loot'?c.l.id:undefined,x:c.x,y:c.y,rw:c.kind==='trap'?SK('rewire'):0,pz:SK('poisoner')>1?1:0,sd:G.cls==='doctor'?SK('sleepdraught'):0,pg:G.cls==='doctor'?SK('purge'):0,bq:bgIs('bouncer')?1:0};
@@ -3694,10 +4041,10 @@ function renderHUD(){
   $('#hpFill').style.width=Math.max(0,P.hp/P.max*100)+'%';$('#stFill').style.width=Math.max(0,P.st)+'%';$('#stFill').classList.toggle('low',P.st<25||P.guardBroken>0);
   const v=G.vis;const g=Math.round(30+v*200);$('#gem').style.background=`radial-gradient(circle at 40% 35%, rgb(${g+25},${g},${Math.round(g*.6)}), rgb(${Math.round(g*.35)},${Math.round(g*.3)},${Math.round(g*.2)}))`;
   const hunting=G.w.enemies.filter(e=>!e.dead&&!e.civ&&e.state==='alert').length,sus=G.w.enemies.filter(e=>!e.dead&&(e.state==='suspicious'||e.state==='search')).length;
-  $('#visTxt').textContent=(P.invis>0?'Invisible':v<.12?'Hidden':v<.4?'In shadow':v<.7?'Visible':'Exposed')+(P.crouch?' · crouched':'')+(hunting?` · ${hunting} on alert`:sus?` · ${sus} suspicious`:'');
+  $('#visTxt').textContent=(P.invis>0?'Invisible':v<.12?'Hidden':v<.4?'In shadow':v<.7?'Visible':'Exposed')+(P.crouch?' · crouched':'')+(hunting?` · ${hunting} on alert`:sus?` · ${sus} suspicious`:'')+scVisTag();
   $('#hudBelt').innerHTML=G.tavern||!G.belt?'':G.belt.map((k,i)=>`<div class="ab ${k?'':'off'}"><kbd>${[5,6,7,8,9,0][i]}</kbd>${k?ITEMS[k].short||ITEMS[k].name:'empty'}</div>`).join('');
   $('#hudAb').innerHTML=KIT[G.cls].abil.map(A=>{const cd=P.cd[A.id]||0,spent=A.once&&P.used[A.id];return `<div class="ab ${cd>0||spent?'off':''}"><kbd>${A.key}</kbd>${A.name}${A.id==='venom'&&P.venom?' (coated)':''}${A.id==='bow'&&P.arrows?`: ${ARROWS[P.arrowSel]} ${P.arrows[P.arrowSel]}`:''}${cd>0?` ${cd.toFixed(1)}`:''}${spent?' (spent)':''}<span class="cdf" style="width:${cd>0?100-cd/A.cd*100:100}%"></span></div>`;}).join('')+(G.tavern?'':skillPowers().map(A=>{const cd=P.cd[A.id]||0;return `<div class="ab ${cd>0?'off':''}"><kbd>${A.key}</kbd>${A.name}${cd>0?` ${cd.toFixed(1)}`:''}<span class="cdf" style="width:${cd>0?100-cd/A.cd*100:100}%"></span></div>`;}).join(''));
-  const pr=$('#prompt');if(P.chan){pr.hidden=false;pr.innerHTML=`${esc(P.chan.label)}… <b>${Math.floor(P.chan.t/P.chan.dur*100)}%</b> <span class="dim">hold still</span>`;}else if(G.focus&&G.focus.label.text){pr.hidden=false;pr.innerHTML=G.focus.label.text;}else pr.hidden=true;
+  const pr=$('#prompt');if(P.chan){pr.hidden=false;pr.innerHTML=`${esc(P.chan.label)}… <b>${Math.floor(P.chan.t/P.chan.dur*100)}%</b> <span class="dim">hold still</span>`;}else if(G.focus&&G.focus.label.text){pr.hidden=false;pr.innerHTML=G.focus.label.text;}else{const si=scInfoText();if(si){pr.hidden=false;pr.innerHTML=si;}else pr.hidden=true;}
   $('#xhair').classList.toggle('hot',!!(G.focus&&G.focus.label.act));
   $('#invisov').classList.toggle('on',P.invis>0);
   if(G.flash){const f=$('#flashov');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),60);G.flash=false;}
@@ -3956,7 +4303,7 @@ function frame(){
     const wp=e.atk>0?1-e.atk/(e.atkMax||1):0;
     if(e.stag>0){U.inner.rotation.x=.3;U.inner.rotation.z=Math.sin(t*9)*.18;U.arm.rotation.x=-.6;}
     else{U.inner.rotation.z=0;U.inner.rotation.x=(e.type==='swarm'?-.25:0)+(e.atk>0?-.25*wp:0)+(G.time-(e.hitT||-9)<.2?.25:0);U.arm.rotation.x=e.atk>0?(wp<.85?2.3*wp/.85:2.3-(wp-.85)/.15*3.4):0;}
-    const s=e.state;U.sp.visible=(s==='alert'||s==='suspicious'||s==='search')&&!(e.atk>0);U.sp.material=s==='alert'||e.runner?R3.sX:R3.sQ;if(e.runner)U.sp.scale.setScalar(.7+.15*Math.sin(t*12));else U.sp.scale.setScalar(.45);
+    const s=e.state;U.sp.visible=(s==='alert'||s==='suspicious'||s==='search')&&!(e.atk>0);U.sp.material=s==='alert'||e.runner?R3.sX:R3.sQ;if(e.runner)U.sp.scale.setScalar(.7+.15*Math.sin(t*12));else U.sp.scale.setScalar(.45);scIcon(e,U);
     const gl=G.glimpse>0&&(!G.divineAt||Math.hypot(e.x-G.divineAt[0],e.y-G.divineAt[1])<10*(G.S.divR||1));U.gh.visible=gl;
     U.bodyMat.color.set(e.sick?'#8fbf6a':e.civCol||BIOMES[G.w.biome].foeCol);if(e.civ&&e.cowerT>0){U.inner.position.y=-.32;U.inner.rotation.x=.35;}if(e.hp<e.max)U.bodyMat.color.multiplyScalar(.7+.3*e.hp/e.max);if(e.atk>0)U.bodyMat.color.lerp(new THREE.Color(0xff3020),.55*wp);U.bodyMat.emissive&&U.bodyMat.emissive.setRGB(e.atk>0?.35*wp:0,0,0);});
   // enemy shots

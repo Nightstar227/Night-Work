@@ -3375,7 +3375,8 @@ const CMOD={lib:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/',
   wizard:{url:'models/wizard.js',v:'WIZ_GLB',H:2.2,prop:'staff',st:0},
   thief:{url:'models/thief.js',v:'THF_GLB',H:1.9,prop:'dagger',st:0},
   fence:{url:'models/fence.js',v:'FEN_GLB',H:1.8,npc:true,st:0,wait:[],rot:-Math.PI/2},
-  gambler:{url:'models/gambler.js',v:'GAM_GLB',H:1.8,npc:true,st:0,wait:[],rot:Math.PI/2}};
+  gambler:{url:'models/gambler.js',v:'GAM_GLB',H:1.8,npc:true,st:0,wait:[],rot:Math.PI/2},
+  zombie:{url:'models/zombie.js',v:'ZOM_GLB',H:1.85,npc:true,st:0}};
 const PDM=CMOD.doctor;
 function pdmScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});}
 function cmReady(cls){const M=CMOD[cls];return !!(M&&M.st===2);}
@@ -3386,7 +3387,7 @@ async function cmLoad(cls){const M=CMOD[cls];if(!M||M.st||typeof THREE==='undefi
     sc.traverse(o=>{if(o.isMesh&&o.material&&o.material.map){M.tex=o.material.map;M.tex.encoding=THREE.LinearEncoding;M.tex.anisotropy=4;}});
     M.clips={};for(const a of gl.animations)M.clips[a.name]=a;
     // keep every clip in place: pin the hips' ground-plane drift to the rest pose (some clips carry root motion)
-    let hr=null;sc.traverse(o=>{if(o.name==='Hips'&&!hr)hr=o.position.clone();});for(const c of gl.animations)for(const tr of c.tracks){if(!/Hips\.position$/.test(tr.name))continue;const v=tr.values,x0=hr?hr.x:v[0],z0=hr?hr.z:v[2];for(let i=0;i<v.length;i+=3){v[i]=x0;v[i+2]=z0;}}const base=M.clips.walk||M.clips.idle;if(!base||!M.npc&&!M.clips.run)throw new Error('missing clips');
+    let hr=null;sc.traverse(o=>{if((o.name==='Hips'||o.name==='pelvis')&&!hr)hr=o.position.clone();});for(const c of gl.animations)for(const tr of c.tracks){if(!/(Hips|pelvis)\.position$/.test(tr.name))continue;const v=tr.values,x0=hr?hr.x:v[0],z0=hr?hr.z:v[2];for(let i=0;i<v.length;i+=3){v[i]=x0;v[i+2]=z0;}}const base=M.clips.walk||M.clips.idle;if(!base||!M.npc&&!M.clips.run)throw new Error('missing clips');
     {const m=THREE.SkeletonUtils.clone(sc),mx=new THREE.AnimationMixer(m),a=mx.clipAction(base);a.play();let lf,rf;m.traverse(o=>{if(o.name==='LeftFoot')lf=o;if(o.name==='RightFoot')rf=o;});
       // the standing pose: the moment in the walk where the feet pass each other
       const A=new THREE.Vector3(),B=new THREE.Vector3(),d=base.duration;let best=0,bd=1e9;for(let i=0;i<(M.clips.walk?32:0);i++){a.time=d*i/32;mx.update(0);m.updateMatrixWorld(true);if(!lf||!rf)break;lf.getWorldPosition(A);rf.getWorldPosition(B);const s=Math.abs(A.z-B.z);if(s<bd){bd=s;best=a.time;}}M.idleT=best;
@@ -3480,6 +3481,36 @@ function tpCam(c,P,dt){tpAvatar(dt);const w=G.w,yaw=P.yaw,pit=P.pitch,head=(P.vz
 /* render with the first-person hands hidden */
 function tpRender(c){if(!TP.on){if(TP.av)TP.av.visible=false;R3.renderer.render(R3.scene,c);return;}const hid=[];for(const k of c.children){if(k.isLight||!k.visible)continue;k.visible=false;hid.push(k);}
   R3.renderer.render(R3.scene,c);for(const k of hid)k.visible=true;}
+
+/*ZBIN*/
+/* ---------- the restless dead: crypt guards, colossi and bone archers wear the withered-wraith model.
+   Every one rolls its own gait, attack, idle, pace, size and pallor from its id, so no two shamble alike ---------- */
+const ZB_TYPES=['guard','brute','slinger'];
+function zbWants(e){return !!e.undead&&ZB_TYPES.includes(e.type||'guard');}
+function zbRoll(e){const R=mulberry(((G.m&&G.m.seed)||7)*31+e.id*977+13);const pick=a=>a[Math.floor(R()*a.length)];
+  return {walk:pick(['walk','walk2','walk3','walk2']),run:pick(['run','run2','walk','walk2']),atk:e.type==='slinger'?'atk1':pick(['atk1','atk2']),
+    pace:.82+R()*.36,size:(e.type==='brute'?1.3:e.captain?1.12:1)*(.93+R()*.14),lean:(R()-.5)*.12,tint:pick([0xffffff,0xd8e0d0,0xe6d8c8,0xc8d0dc,0xd0c8c0]),off:R()*5};}
+function zbMesh(e,g,inner){const M=CMOD.zombie,V=zbRoll(e),m=THREE.SkeletonUtils.clone(M.scene),wrap=new THREE.Group(),s=M.H/M.h*V.size;wrap.add(m);wrap.rotation.y=Math.PI;wrap.rotation.z=V.lean;wrap.scale.setScalar(s);wrap.position.y=-M.y0*s;g.add(wrap);
+  const mat=new THREE.MeshLambertMaterial({map:M.tex,skinning:true,color:V.tint});m.traverse(o=>{if(o.isMesh){o.material=mat;o.frustumCulled=false;}});
+  const mixer=new THREE.AnimationMixer(m),acts={};for(const k in M.clips){const a=mixer.clipAction(M.clips[k]);if(/^atk|^hit|^die/.test(k)){a.setLoop(THREE.LoopOnce);a.clampWhenFinished=true;}a.play();a.setEffectiveWeight(0);acts[k]=a;}
+  acts.idle.setEffectiveWeight(1);acts.idle.time=V.off%M.clips.idle.duration;for(const k of ['walk','walk2','walk3','run','run2'])if(acts[k])acts[k].time=V.off%M.clips[k].duration;mixer.update(0);
+  if(e.captain){const cr=new THREE.Mesh(R3.geo.crown,R3.mat.crown);cr.scale.setScalar(.9);g.add(cr);let hd=null;m.traverse(o=>{if(o.name==='head')hd=o;});V.crown=cr;V.head=hd;}
+  return {V,mixer,acts,w:{idle:1},st:'idle',mat};}
+const ZBV=new THREE.Vector3();
+function zbAnim(e,g,U,dt){const Z=U.zb,V=Z.V,C=Z.acts;
+  const far=Math.hypot(e.x-G.P.x,e.y-G.P.y)>26;if(far&&!Z.first)return;Z.first=0;
+  if(e.atk>0&&!(Z.atkOn>0)){const a=C[V.atk];a.reset();const dur=a.getClip().duration;a.timeScale=Math.max(.8,dur/Math.max(.35,(e.atkMax||.9)+.25));Z.atkOn=dur/a.timeScale;}
+  Z.atkOn=Math.max(0,(Z.atkOn||0)-dt);
+  const hitNow=G.time-(e.hitT||-9)<.08&&!(e.blockT&&G.time-e.blockT<.1);if(hitNow&&!(Z.hitOn>0)){C.hit.reset();C.hit.timeScale=1.6;Z.hitOn=.7;}Z.hitOn=Math.max(0,(Z.hitOn||0)-dt);
+  const alert=e.state==='alert';let st=Z.atkOn>0?V.atk:(e.stag>0||Z.hitOn>0)?'hit':e.walking?(alert?V.run:V.walk):'idle';if(!C[st])st='walk';Z.st=st;
+  for(const k in C){const tw=k===st?1:0;Z.w[k]=(Z.w[k]||0)+(tw-(Z.w[k]||0))*Math.min(1,dt*(st===V.atk||st==='hit'?14:6));C[k].setEffectiveWeight(Z.w[k]);}
+  const mv=alert?1.25:1;for(const k of ['walk','walk2','walk3'])C[k]&&(C[k].timeScale=V.pace*mv);for(const k of ['run','run2'])C[k]&&(C[k].timeScale=V.pace*.95);
+  Z.mixer.update(dt);if(V.crown&&V.head){g.updateMatrixWorld(true);V.head.getWorldPosition(ZBV);g.worldToLocal(ZBV);V.crown.position.set(ZBV.x,ZBV.y+.18,ZBV.z);}}
+/* death: the slow fall backward instead of toppling like a plank */
+function zbDead(e,g,U,dt){const Z=U.zb,C=Z.acts;U.sp.visible=false;U.gh.visible=false;g.rotation.set(0,Math.atan2(-Math.cos(e.ang),-Math.sin(e.ang)),0);
+  if(!Z.dead){Z.dead=1;C.die.reset();C.die.timeScale=1.4;C.die.time=C.die.getClip().duration*.38;/* skip the long stagger before the fall */for(const k in C){Z.w[k]=k==='die'?1:0;C[k].setEffectiveWeight(Z.w[k]);}}
+  if(C.die.time<C.die.getClip().duration)Z.mixer.update(dt);
+  if(!U.thud&&C.die.time>=C.die.getClip().duration*.8){U.thud=1;if(typeof feelParts==='function')feelParts(e.x,e.y,elAt(e.x,e.y)+.1,6,[0x5a5048,0x3a342e],{sp:1.2,up:.8});}}
 
 /*SOCIN*/
 /* ---------- social stealth: covers, room zones, doubt, questioning (Patter), and the four social branches ----------
@@ -4125,10 +4156,11 @@ function foeMesh(e){const B=BIOMES[G.w.biome];const g=new THREE.Group();g.rotati
     if(ty==='swarm'){inner.rotation.x=-.25;}
     if(ty==='civ'){arm.scale.setScalar(.01);const cap=new THREE.Mesh(R3.geo.crown,R3.mat.woodDark);cap.position.y=1.68;cap.scale.set(1.05,.5,1.05);inner.add(cap);}
     if(e.reinf){const hel=new THREE.Mesh(new THREE.SphereGeometry(.24,12,8,0,6.29,0,1.6),R3.mat.iron);hel.position.y=1.55;inner.add(hel);}
-    visFoe(e,g,inner,body,bodyMat,ty);ctFoe(e,g,inner,ty);
+    if(zbWants(e)&&cmReady('zombie')){inner.remove(body,head,nose);for(const k of [...inner.children])if(k!==arm)inner.remove(k);arm.visible=false;arm.scale.setScalar(.001);var zb=zbMesh(e,g,inner);}
+    else{if(zbWants(e))cmLoad('zombie');visFoe(e,g,inner,body,bodyMat,ty);ctFoe(e,g,inner,ty);}
     const sp=new THREE.Sprite(R3.sQ);sp.scale.set(.45,.45,.45);sp.position.y=2.15;sp.renderOrder=999;g.add(sp);
     const gh=new THREE.Mesh(R3.geo.ghost,R3.mat.ghost);gh.position.y=1;gh.renderOrder=998;g.add(gh);
-    g.userData={bodyMat,inner,arm,sp,gh};R3.scene.add(g);return g;}
+    g.userData={bodyMat,inner,arm,sp,gh,zb:typeof zb!=='undefined'?zb:null,zbPrim:zbWants(e)&&!(typeof zb!=='undefined'&&zb)};R3.scene.add(g);return g;}
 function updRemoteAvatars(dt){if(NET.bgOn)return;
   if(!R3.ok)return;
   for(const rr of NET.remote.values()){const p=rr.p;if(!p||p.x==null){if(rr.mesh)rr.mesh.visible=false;continue;}
@@ -4254,10 +4286,10 @@ function frame(){
   visFrame(dt,c);R3.plight.position.copy(c.position);R3.plight.color.set(P.invis>0?0x9a95f5:0xc8d0ff);
   // guards
   if(G.foesDirty){while(R3.foes.length<G.w.enemies.length)R3.foes.push(foeMesh(G.w.enemies[R3.foes.length]));G.foesDirty=false;}
-  G.w.enemies.forEach((e,i)=>{const g=R3.foes[i];if(!g)return;const U=g.userData;
+  G.w.enemies.forEach((e,i)=>{let g=R3.foes[i];if(!g)return;if(g.userData.zbPrim&&cmReady('zombie')&&!e.dead){R3.scene.remove(g);g=R3.foes[i]=foeMesh(e);}const U=g.userData;
     g.position.set(e.x*T,0,e.y*T);
-    if(e.dead){visDead(e,g,U,dt);return;}if(U.deadT){U.deadT=0;U.thud=0;U.arm.visible=true;}
-    g.rotation.set(0,Math.atan2(-Math.cos(e.ang),-Math.sin(e.ang)),0);
+    if(e.dead){if(U.zb)zbDead(e,g,U,dt);else visDead(e,g,U,dt);return;}if(U.zb&&U.zb.dead){U.zb.dead=0;U.thud=0;}if(U.deadT){U.deadT=0;U.thud=0;U.arm.visible=true;}
+    g.rotation.set(0,Math.atan2(-Math.cos(e.ang),-Math.sin(e.ang)),0);if(U.zb)zbAnim(e,g,U,dt);
     if(e.walking)e.walkPh+=dt*9;U.inner.position.y=e.walking?Math.abs(Math.sin(e.walkPh))*.06:0;visLegs(e,U,dt);ctFoeAnim(e,U);
     const wp=e.atk>0?1-e.atk/(e.atkMax||1):0;
     if(e.stag>0){U.inner.rotation.x=.3;U.inner.rotation.z=Math.sin(t*9)*.18;U.arm.rotation.x=-.6;}

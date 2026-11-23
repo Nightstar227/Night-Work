@@ -3376,7 +3376,8 @@ const CMOD={lib:'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/',
   thief:{url:'models/thief.js',v:'THF_GLB',H:1.9,prop:'dagger',st:0},
   fence:{url:'models/fence.js',v:'FEN_GLB',H:1.8,npc:true,st:0,wait:[],rot:-Math.PI/2},
   gambler:{url:'models/gambler.js',v:'GAM_GLB',H:1.8,npc:true,st:0,wait:[],rot:Math.PI/2},
-  zombie:{url:'models/zombie.js',v:'ZOM_GLB',H:1.85,npc:true,st:0}};
+  zombie:{url:'models/zombie.js',v:'ZOM_GLB',H:1.85,npc:true,st:0},
+  guardm:{url:'models/guard.js',v:'GRD_GLB',H:1.9,npc:true,st:0}};
 const PDM=CMOD.doctor;
 function pdmScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s);});}
 function cmReady(cls){const M=CMOD[cls];return !!(M&&M.st===2);}
@@ -3483,34 +3484,42 @@ function tpRender(c){if(!TP.on){if(TP.av)TP.av.visible=false;R3.renderer.render(
   R3.renderer.render(R3.scene,c);for(const k of hid)k.visible=true;}
 
 /*ZBIN*/
-/* ---------- the restless dead: crypt guards, colossi and bone archers wear the withered-wraith model.
-   Every one rolls its own gait, attack, idle, pace, size and pallor from its id, so no two shamble alike ---------- */
-const ZB_TYPES=['guard','brute','slinger'];
-function zbWants(e){return !!e.undead&&ZB_TYPES.includes(e.type||'guard');}
-function zbRoll(e){const R=mulberry(((G.m&&G.m.seed)||7)*31+e.id*977+13);const pick=a=>a[Math.floor(R()*a.length)];
-  return {walk:pick(['walk','walk2','walk3','walk2']),run:pick(['run','run2','walk','walk2']),atk:e.type==='slinger'?'atk1':pick(['atk1','atk2']),
-    pace:.82+R()*.36,size:(e.type==='brute'?1.3:e.captain?1.12:1)*(.93+R()*.14),lean:(R()-.5)*.12,tint:pick([0xffffff,0xd8e0d0,0xe6d8c8,0xc8d0dc,0xd0c8c0]),off:R()*5};}
-function zbMesh(e,g,inner){const M=CMOD.zombie,V=zbRoll(e),m=THREE.SkeletonUtils.clone(M.scene),wrap=new THREE.Group(),s=M.H/M.h*V.size;wrap.add(m);wrap.rotation.y=Math.PI;wrap.rotation.z=V.lean;wrap.scale.setScalar(s);wrap.position.y=-M.y0*s;g.add(wrap);
+/* ---------- rigged foes. The restless dead wear the withered wraith; house guards wear the man-at-arms.
+   Every foe rolls its own gait, alert gait, attack, flinch, fall, pace, size and colouring from its id, so no two move alike ---------- */
+const FOEM={
+  zombie:{wants:(e,ty)=>!!e.undead&&['guard','brute','slinger'].includes(ty),walks:['walk','walk2','walk3','walk2'],runs:['run','run2','walk','walk2'],atks:['atk1','atk2'],slingAtk:'atk1',hits:['hit'],dies:['die'],dieSkip:.38,
+    tints:[0xffffff,0xd8e0d0,0xe6d8c8,0xc8d0dc,0xd0c8c0],lean:.12},
+  guardm:{wants:(e,ty)=>!e.undead&&!e.civ&&G.w&&G.w.biome==='keep'&&['guard','brute'].includes(ty),walks:['walk','walk2','walk3','walk'],runs:['run','run2','run3'],atks:['atk1','atk2','atk3'],hits:['hit','hit2'],dies:['die','die2'],dieSkip:0,
+    tints:[0xffffff,0xf0e8e0,0xe0e4ec,0xece4d4,0xdcd8d0],lean:.03}};
+function zbKind(e){const ty=e.type||'guard';for(const k in FOEM)if(FOEM[k].wants(e,ty))return k;return null;}
+function zbWants(e){return !!zbKind(e);}
+function zbRoll(e,F){const R=mulberry(((G.m&&G.m.seed)||7)*31+e.id*977+13);const pick=a=>a[Math.floor(R()*a.length)];
+  return {walk:pick(F.walks),run:pick(F.runs),atk:e.type==='slinger'&&F.slingAtk?F.slingAtk:pick(F.atks),hit:pick(F.hits),die:pick(F.dies),
+    pace:.82+R()*.36,size:(e.type==='brute'?1.3:e.captain?1.12:1)*(.93+R()*.14),lean:(R()-.5)*F.lean,tint:pick(F.tints),off:R()*5};}
+function zbMesh(e,g,inner,key){const M=CMOD[key],F=FOEM[key],V=zbRoll(e,F),m=THREE.SkeletonUtils.clone(M.scene),wrap=new THREE.Group(),s=M.H/M.h*V.size;wrap.add(m);wrap.rotation.y=Math.PI;wrap.rotation.z=V.lean;wrap.scale.setScalar(s);wrap.position.y=-M.y0*s;g.add(wrap);
   const mat=new THREE.MeshLambertMaterial({map:M.tex,skinning:true,color:V.tint});m.traverse(o=>{if(o.isMesh){o.material=mat;o.frustumCulled=false;}});
-  const mixer=new THREE.AnimationMixer(m),acts={};for(const k in M.clips){const a=mixer.clipAction(M.clips[k]);if(/^atk|^hit|^die/.test(k)){a.setLoop(THREE.LoopOnce);a.clampWhenFinished=true;}a.play();a.setEffectiveWeight(0);acts[k]=a;}
-  acts.idle.setEffectiveWeight(1);acts.idle.time=V.off%M.clips.idle.duration;for(const k of ['walk','walk2','walk3','run','run2'])if(acts[k])acts[k].time=V.off%M.clips[k].duration;mixer.update(0);
+  const mixer=new THREE.AnimationMixer(m),acts={};for(const k in M.clips){const a=mixer.clipAction(M.clips[k]);if(/^atk|^hit|^die|^block/.test(k)){a.setLoop(THREE.LoopOnce);a.clampWhenFinished=true;}a.play();a.setEffectiveWeight(0);acts[k]=a;}
+  acts.idle.setEffectiveWeight(1);for(const k in acts)if(/^walk|^run|^idle/.test(k))acts[k].time=V.off%M.clips[k].duration;mixer.update(0);
   if(e.captain){const cr=new THREE.Mesh(R3.geo.crown,R3.mat.crown);cr.scale.setScalar(.9);g.add(cr);let hd=null;m.traverse(o=>{if(o.name==='head')hd=o;});V.crown=cr;V.head=hd;}
-  return {V,mixer,acts,w:{idle:1},st:'idle',mat};}
+  return {key,F,V,mixer,acts,w:{idle:1},st:'idle',mat};}
 const ZBV=new THREE.Vector3();
 function zbAnim(e,g,U,dt){const Z=U.zb,V=Z.V,C=Z.acts;
-  const far=Math.hypot(e.x-G.P.x,e.y-G.P.y)>26;if(far&&!Z.first)return;Z.first=0;
+  if(Math.hypot(e.x-G.P.x,e.y-G.P.y)>26&&!Z.first)return;Z.first=0;
   if(e.atk>0&&!(Z.atkOn>0)){const a=C[V.atk];a.reset();const dur=a.getClip().duration;a.timeScale=Math.max(.8,dur/Math.max(.35,(e.atkMax||.9)+.25));Z.atkOn=dur/a.timeScale;}
   Z.atkOn=Math.max(0,(Z.atkOn||0)-dt);
-  const hitNow=G.time-(e.hitT||-9)<.08&&!(e.blockT&&G.time-e.blockT<.1);if(hitNow&&!(Z.hitOn>0)){C.hit.reset();C.hit.timeScale=1.6;Z.hitOn=.7;}Z.hitOn=Math.max(0,(Z.hitOn||0)-dt);
-  const alert=e.state==='alert';let st=Z.atkOn>0?V.atk:(e.stag>0||Z.hitOn>0)?'hit':e.walking?(alert?V.run:V.walk):'idle';if(!C[st])st='walk';Z.st=st;
-  for(const k in C){const tw=k===st?1:0;Z.w[k]=(Z.w[k]||0)+(tw-(Z.w[k]||0))*Math.min(1,dt*(st===V.atk||st==='hit'?14:6));C[k].setEffectiveWeight(Z.w[k]);}
-  const mv=alert?1.25:1;for(const k of ['walk','walk2','walk3'])C[k]&&(C[k].timeScale=V.pace*mv);for(const k of ['run','run2'])C[k]&&(C[k].timeScale=V.pace*.95);
+  const blocked=C.block&&e.blockT&&G.time-e.blockT<.1;if(blocked&&!(Z.blkOn>0)){C.block.reset();C.block.timeScale=1.2;Z.blkOn=.45;}Z.blkOn=Math.max(0,(Z.blkOn||0)-dt);
+  const hitNow=G.time-(e.hitT||-9)<.08&&!blocked;if(hitNow&&!(Z.hitOn>0)){const h=C[V.hit];h.reset();h.timeScale=Math.max(1.6,h.getClip().duration/.7);Z.hitOn=.7;}Z.hitOn=Math.max(0,(Z.hitOn||0)-dt);
+  const alert=e.state==='alert';let st=Z.atkOn>0?V.atk:Z.blkOn>0?'block':(e.stag>0||Z.hitOn>0)?V.hit:e.walking?(alert?V.run:V.walk):'idle';if(!C[st])st='walk';Z.st=st;
+  const quick=/^atk|^hit|^block/.test(st);for(const k in C){const tw=k===st?1:0;Z.w[k]=(Z.w[k]||0)+(tw-(Z.w[k]||0))*Math.min(1,dt*(quick?14:6));C[k].setEffectiveWeight(Z.w[k]);}
+  const mv=alert?1.25:1;for(const k in C){if(/^walk/.test(k))C[k].timeScale=V.pace*mv;else if(/^run/.test(k))C[k].timeScale=V.pace*.95;}
   Z.mixer.update(dt);if(V.crown&&V.head){g.updateMatrixWorld(true);V.head.getWorldPosition(ZBV);g.worldToLocal(ZBV);V.crown.position.set(ZBV.x,ZBV.y+.18,ZBV.z);}}
-/* death: the slow fall backward instead of toppling like a plank */
-function zbDead(e,g,U,dt){const Z=U.zb,C=Z.acts;U.sp.visible=false;U.gh.visible=false;g.rotation.set(0,Math.atan2(-Math.cos(e.ang),-Math.sin(e.ang)),0);
-  if(!Z.dead){Z.dead=1;C.die.reset();C.die.timeScale=1.4;C.die.time=C.die.getClip().duration*.38;/* skip the long stagger before the fall */for(const k in C){Z.w[k]=k==='die'?1:0;C[k].setEffectiveWeight(Z.w[k]);}}
-  if(C.die.time<C.die.getClip().duration)Z.mixer.update(dt);
-  if(!U.thud&&C.die.time>=C.die.getClip().duration*.8){U.thud=1;if(typeof feelParts==='function')feelParts(e.x,e.y,elAt(e.x,e.y)+.1,6,[0x5a5048,0x3a342e],{sp:1.2,up:.8});}}
+/* death: a proper fall instead of toppling like a plank */
+function zbDead(e,g,U,dt){const Z=U.zb,C=Z.acts,d=C[Z.V.die];U.sp.visible=false;U.gh.visible=false;g.rotation.set(0,Math.atan2(-Math.cos(e.ang),-Math.sin(e.ang)),0);
+  if(!Z.dead){Z.dead=1;d.reset();d.timeScale=1.4;d.time=d.getClip().duration*(Z.F.dieSkip||0);for(const k in C){Z.w[k]=C[k]===d?1:0;C[k].setEffectiveWeight(Z.w[k]);}}
+  if(d.time<d.getClip().duration)Z.mixer.update(dt);
+  if(!U.thud&&d.time>=d.getClip().duration*.8){U.thud=1;if(typeof feelParts==='function')feelParts(e.x,e.y,elAt(e.x,e.y)+.1,6,[0x5a5048,0x3a342e],{sp:1.2,up:.8});}
+  if(!e.ko&&!e.quietKO&&!e.undead&&typeof visTex==='function'){if(!U.pool){const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:visTex('pool'),transparent:true,depthWrite:false,opacity:.9}));m.rotation.x=-Math.PI/2;m.rotation.z=Math.random()*6;m.renderOrder=1;
+      m.position.set(e.x*T,.02+elAt(e.x,e.y),e.y*T);m.userData.noEl=true;m.scale.setScalar(.01);R3.scene.add(m);U.pool=m;U.poolT=0;}U.poolT+=dt;U.pool.scale.setScalar(Math.min(1.5,.2+U.poolT*.5));if(U.pool.parent!==R3.scene)R3.scene.add(U.pool);}}
 
 /*SOCIN*/
 /* ---------- social stealth: covers, room zones, doubt, questioning (Patter), and the four social branches ----------
@@ -4156,8 +4165,8 @@ function foeMesh(e){const B=BIOMES[G.w.biome];const g=new THREE.Group();g.rotati
     if(ty==='swarm'){inner.rotation.x=-.25;}
     if(ty==='civ'){arm.scale.setScalar(.01);const cap=new THREE.Mesh(R3.geo.crown,R3.mat.woodDark);cap.position.y=1.68;cap.scale.set(1.05,.5,1.05);inner.add(cap);}
     if(e.reinf){const hel=new THREE.Mesh(new THREE.SphereGeometry(.24,12,8,0,6.29,0,1.6),R3.mat.iron);hel.position.y=1.55;inner.add(hel);}
-    if(zbWants(e)&&cmReady('zombie')){inner.remove(body,head,nose);for(const k of [...inner.children])if(k!==arm)inner.remove(k);arm.visible=false;arm.scale.setScalar(.001);var zb=zbMesh(e,g,inner);}
-    else{if(zbWants(e))cmLoad('zombie');visFoe(e,g,inner,body,bodyMat,ty);ctFoe(e,g,inner,ty);}
+    if(zbWants(e)&&cmReady(zbKind(e))){inner.remove(body,head,nose);for(const k of [...inner.children])if(k!==arm)inner.remove(k);arm.visible=false;arm.scale.setScalar(.001);var zb=zbMesh(e,g,inner,zbKind(e));}
+    else{if(zbWants(e))cmLoad(zbKind(e));visFoe(e,g,inner,body,bodyMat,ty);ctFoe(e,g,inner,ty);}
     const sp=new THREE.Sprite(R3.sQ);sp.scale.set(.45,.45,.45);sp.position.y=2.15;sp.renderOrder=999;g.add(sp);
     const gh=new THREE.Mesh(R3.geo.ghost,R3.mat.ghost);gh.position.y=1;gh.renderOrder=998;g.add(gh);
     g.userData={bodyMat,inner,arm,sp,gh,zb:typeof zb!=='undefined'?zb:null,zbPrim:zbWants(e)&&!(typeof zb!=='undefined'&&zb)};R3.scene.add(g);return g;}
@@ -4286,7 +4295,7 @@ function frame(){
   visFrame(dt,c);R3.plight.position.copy(c.position);R3.plight.color.set(P.invis>0?0x9a95f5:0xc8d0ff);
   // guards
   if(G.foesDirty){while(R3.foes.length<G.w.enemies.length)R3.foes.push(foeMesh(G.w.enemies[R3.foes.length]));G.foesDirty=false;}
-  G.w.enemies.forEach((e,i)=>{let g=R3.foes[i];if(!g)return;if(g.userData.zbPrim&&cmReady('zombie')&&!e.dead){R3.scene.remove(g);g=R3.foes[i]=foeMesh(e);}const U=g.userData;
+  G.w.enemies.forEach((e,i)=>{let g=R3.foes[i];if(!g)return;if(g.userData.zbPrim&&cmReady(zbKind(e))&&!e.dead){R3.scene.remove(g);g=R3.foes[i]=foeMesh(e);}const U=g.userData;
     g.position.set(e.x*T,0,e.y*T);
     if(e.dead){if(U.zb)zbDead(e,g,U,dt);else visDead(e,g,U,dt);return;}if(U.zb&&U.zb.dead){U.zb.dead=0;U.thud=0;}if(U.deadT){U.deadT=0;U.thud=0;U.arm.visible=true;}
     g.rotation.set(0,Math.atan2(-Math.cos(e.ang),-Math.sin(e.ang)),0);if(U.zb)zbAnim(e,g,U,dt);
